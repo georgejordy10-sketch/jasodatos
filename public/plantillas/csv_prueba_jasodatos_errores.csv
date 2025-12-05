@@ -1,0 +1,11 @@
+empresa,fecha,producto,cantidad,precio_unitario
+,2025-10-01,Router Cisco 2900,5,350.75
+Claro Ecuador,01-10-2025,Switch Catalyst 2960,3,420
+Claro Ecuador,2025-10-03,,10,150
+TelecomLatam,2025-10-01,Cable UTP Cat6,-50,1.25
+TelecomLatam,2025-10-02,Servidor HP DL380,2,dos mil
+TelecomLatam,2025-10-03,Firewall Fortinet,1,1800
+DataSolutions,,Access Point Ubiquiti,12,85.5
+DataSolutions,2025-10-02,Patch Panel 24P,,55
+DataSolutions,2025-10-03,Switch PoE 24P,2,
+NetCorp,2025/10/01,UPS APC 1500VA,3,430
