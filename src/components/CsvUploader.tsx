@@ -257,7 +257,7 @@ function LowStockBars({
           </div>
 
           {/* Línea 2: título compacto + regla */}
-          <div style={{ fontWeight: 700, fontSize: 12 }}>
+          <div style={{ fontWeight: 700, fontSize: 28 }}>
             Stock en riesgo · Regla: mínimo {threshold} unidades
           </div>
 
@@ -475,9 +475,7 @@ function LowStockBars({
     lineHeight: 1.1,
     whiteSpace: 'nowrap',
     color: stockTxtColor,        // rojo / naranja / verde
-    textShadow:
-      '0 0 4px rgba(0,0,0,0.55),' + // 🔹 halo oscuro suave
-      '0 0 1px rgba(0,0,0,0.9)',   // micro-contraste
+    textShadow: 'none',         
   }}
 >
   {rightMsg}
@@ -747,10 +745,14 @@ export default function CsvUploader({
   const [loadingChat, setLoadingChat] = useState(false);
   const [heavyMode, setHeavyMode] = useState(false); // muestra banner "modo pesado"
   const [uiCapped, setUiCapped] = useState(false);   // avisa si la UI está limitada por tope de filas
-  const SHOW_WA_PROMO = false;
-  const [sendingWA, setSendingWA] = useState(false);
-  const MAX_WA_CHARS = 900;
-  const SHOW_UPLOAD_IN_HEADER = true;
+
+// 🔹 WhatsApp
+const SHOW_WA_PROMO = false;
+const [sendingWA, setSendingWA] = useState(false);
+const MAX_WA_CHARS = 900;
+
+// UI header
+const SHOW_UPLOAD_IN_HEADER = true;
 
   // Vista: Preview -> Análisis
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -872,6 +874,8 @@ const RANGE_BADGE = useMemo(() => {
   // Progreso / worker (streaming)
   const parserRef = useRef<Papa.Parser | null>(null);
   const [parsedRowsCounter, setParsedRowsCounter] = useState(0);
+  // 👉 nuevo: referencia directa al <input type="file" />
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // agregados (si decides mostrarlos en vivo)
   const [agg, setAgg] = useState(() => ({
@@ -921,37 +925,33 @@ const RANGE_BADGE = useMemo(() => {
     return hdrs.map(norm).includes('tipo_movimiento');
   }, [headers, rows]);
 
-const missingColumns = useMemo<string[]>(() => {
-  const hdrs = (Array.isArray(headers) && headers.length > 0)
-    ? headers
-    : Object.keys(rows?.[0] ?? {});
-  const norm = (s: string) => normalizeHeader(s);
-  const normalizedHeaders = new Set(hdrs.map(norm));
-  return (REQ_MIN ?? []).map(norm).filter((col) => !normalizedHeaders.has(col));
-}, [headers, rows]);
+  const missingColumns = useMemo<string[]>(() => {
+    const hdrs = (Array.isArray(headers) && headers.length > 0)
+      ? headers
+      : Object.keys(rows?.[0] ?? {});
+    const norm = (s: string) => normalizeHeader(s);
+    const normalizedHeaders = new Set(hdrs.map(norm));
+    return (REQ_MIN ?? []).map(norm).filter((col) => !normalizedHeaders.has(col));
+  }, [headers, rows]);
 
-// ✅ Mostrar “Columnas faltantes” solo tras carga real con faltantes
-const SHOW_MISSING = !!firstFlushDone && (missingColumns?.length ?? 0) > 0;
+  // ✅ Mostrar “Columnas faltantes” solo tras carga real con faltantes
+  const SHOW_MISSING = !!firstFlushDone && (missingColumns?.length ?? 0) > 0;
 
-// Nuevo: solo se puede explorar si NO hay columnas faltantes
-const CAN_EXPLORE = HAS_DATA && !SHOW_MISSING;
+  // Nuevo: solo se puede explorar si NO hay columnas faltantes
+  const CAN_EXPLORE = HAS_DATA && !SHOW_MISSING;
 
-// Pantalla 1: mostrar preview (tabla + CTA)
-const SHOW_PREVIEW =
-  firstFlushDone && !SHOW_MISSING && !showAnalysis && filteredRows.length > 0;
+  // Pantalla 1: mostrar preview (tabla + CTA)
+  const SHOW_PREVIEW =
+    firstFlushDone && !SHOW_MISSING && !showAnalysis && filteredRows.length > 0;
 
-// (opcional) resets de navegación
-useEffect(() => { if (SHOW_MISSING) setShowAnalysis(false); }, [SHOW_MISSING]);
-useEffect(() => { if (firstFlushDone) setShowAnalysis(false); }, [firstFlushDone]);
+  // Resets de la vista (añádelos aquí, después de las flags):
+  useEffect(() => {
+    if (SHOW_MISSING) setShowAnalysis(false);
+  }, [SHOW_MISSING]);
 
-// Resets de la vista (añádelos aquí, después de las flags):
-useEffect(() => {
-  if (SHOW_MISSING) setShowAnalysis(false);
-}, [SHOW_MISSING]);
-
-useEffect(() => {
-  if (firstFlushDone) setShowAnalysis(false);
-}, [firstFlushDone]);
+  useEffect(() => {
+    if (firstFlushDone) setShowAnalysis(false);
+  }, [firstFlushDone]);
 
   const unknownColumns = useMemo<string[]>(() => {
     const hdrs = (Array.isArray(headers) && headers.length > 0)
@@ -1547,35 +1547,59 @@ useEffect(() => {
       },
     });
   }
+
   // Builder de copy para WhatsApp
-  function buildSmartPromoText(
+function buildSmartPromoText(
     insights: any,
     resumen: any,
-    donutData: Array<{ name: string; value: number }>
+    donutData: Array<{ name: string; value: number }>,
+    extraBlock?: string,
   ) {
-    const topName = insights?.topProd?.name || donutData?.[0]?.name || 'nuestro producto estrella';
+    const topName =
+      insights?.topProd?.name ||
+      donutData?.[0]?.name ||
+      'nuestro producto estrella';
+
     const share = (insights?.topProd?.share ?? 0) * 100;
     const desde = insights?.rango?.desde || '';
     const hasta = insights?.rango?.hasta || '';
 
-    const ventas = typeof resumen?.totalVentas === 'number' ? resumen.totalVentas : 0;
-    const unidades = typeof resumen?.totalUnidades === 'number' ? resumen.totalUnidades : 0;
+    const ventas =
+      typeof resumen?.totalVentas === 'number' ? resumen.totalVentas : 0;
+    const unidades =
+      typeof resumen?.totalUnidades === 'number'
+        ? resumen.totalUnidades
+        : 0;
 
     const kpi = [
       `Ventas: ${fmtMoney(ventas)}`,
       `Unidades: ${unidades.toLocaleString('es-EC')}`,
       share > 0 ? `Top contribuye: ${share.toFixed(1)}%` : null,
-    ].filter(Boolean).join(' · ');
+    ]
+      .filter(Boolean)
+      .join(' · ');
 
-    return `🚀 Promo inteligente – JasoDatos
+    // Bloque opcional con el contenido del menú 1–10 (lo conectamos después en JasoBotQA)
+    const extra =
+      extraBlock && extraBlock.trim().length > 0
+        ? `\n${extraBlock.trim()}`
+        : '';
+
+    let msg = `🚀 Promo inteligente – JasoDatos
 ${topName} en combo especial por tiempo limitado.
 Válida ${desde && hasta ? `del ${desde} al ${hasta}` : 'por tiempo limitado'}.
 
-${kpi}
+${kpi}${extra}
 
 Responde a este mensaje para más info. #JasoDatos`;
-  }
 
+    // Seguridad: no pasarse del límite de WhatsApp
+    if (msg.length > MAX_WA_CHARS) {
+      msg = msg.slice(0, MAX_WA_CHARS - 3) + '...';
+    }
+
+    return msg;
+  }
   const descargarResumen = useCallback(() => {
     if (!resumen) return;
 
@@ -1636,11 +1660,16 @@ Responde a este mensaje para más info. #JasoDatos`;
     downloadCSV('reporte_errores.csv', filas);
   }, [rowIssues]);
 
-  // Limpia archivo y vista
+  // Limpia archivo, vista y selección del input
   function limpiarArchivo() {
-    try { parserRef.current?.abort?.(); } catch {}
+    // 1) Abortamos el parser si está activo
+    try {
+      parserRef.current?.abort?.();
+    } catch {
+      // ignorar errores del abort
+    }
 
-    // Datos y meta
+    // 2) Reseteamos todos los estados ligados al archivo
     setRows([]);
     setHeaders([]);
     setFileName('');
@@ -1648,12 +1677,11 @@ Responde a este mensaje para más info. #JasoDatos`;
     setParsedRowsCounter(0);
     setFirstFlushDone(false);
 
-    // UI/flags
-    setUiCapped(false);
     setLoading(false);
+    setUiCapped(false);
     setHeavyMode(false);
 
-    // Filtros y paginación
+    // filtros y paginación
     setFEmpresa('');
     setFProducto('');
     setFDesde('');
@@ -1669,9 +1697,16 @@ Responde a este mensaje para más info. #JasoDatos`;
       porEmpresa:  new Map<string, number>(),
       porFecha:    new Map<string, number>(),
     });
+
+    setShowAnalysis(false);
+
+    // 3) Dejamos “virgen” el input de archivo
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }
 
-    function TablaPreview() {
+  function TablaPreview() {
     return (
       <div
         id="tabla-preview"
@@ -1871,6 +1906,7 @@ Responde a este mensaje para más info. #JasoDatos`;
       </div>
     );
   }
+
   /* ===== UI ===== */
   return (
     <div
@@ -1919,7 +1955,14 @@ Responde a este mensaje para más info. #JasoDatos`;
         {/* ░ Seleccionar archivo ░ */}
         <div style={controlShell}>
           <div style={slot}>
-            <input id="csv-input" type="file" accept=".csv" onChange={handleFile} style={{ display: 'none' }} />
+            <input
+              ref={fileInputRef}
+              id="csv-input"
+              type="file"
+              accept=".csv"
+              onChange={handleFile}
+              style={{ display: 'none' }}
+            />
             <label
               htmlFor="csv-input"
               style={{
@@ -2216,8 +2259,7 @@ Responde a este mensaje para más info. #JasoDatos`;
           })()}
         </div>
       )}
-
-      {/* ✅ Columnas faltantes (solo post-carga) */}
+ {/* ✅ Columnas faltantes (solo post-carga) */}
       {SHOW_MISSING && (
         <div
           style={{
@@ -2237,7 +2279,6 @@ Responde a este mensaje para más info. #JasoDatos`;
           <span style={{ opacity: 0.95 }}>{missingColumns.join(', ')}</span>
         </div>
       )}
-
       {/* Reporte de errores por fila (opcional) */}
       {SHOW_INVALID_BANNER && firstFlushDone && !SHOW_MISSING && !!rowIssues.length && rows.length > 0 && (
         <div
@@ -2437,7 +2478,14 @@ Responde a este mensaje para más info. #JasoDatos`;
             </button>
           </div>
 
-          <JasoBotQA insights={insights} resumen={resumen} />
+          <JasoBotQA
+  insights={insights}
+  resumen={resumen}
+  onSendWhatsApp={(extraBlock: string) => {
+    const msg = buildSmartPromoText(insights, resumen, donutData ?? [], extraBlock);
+    openWhatsAppSafe(msg);
+  }}
+/>
         </section>
       )}
 
@@ -2577,13 +2625,13 @@ Responde a este mensaje para más info. #JasoDatos`;
                 <span
                   className="jaso-title"
                   style={{
-                    fontSize: 45,
+                    fontSize: 39,
                     fontWeight: 800,
                     letterSpacing: 0.2,
                     textShadow: '0 1px 0 rgba(0,0,0,0.15)',
                   }}
                 >
-                  Indicadores de desempeño 📊
+                  Indicadores de desempeño
                 </span>
 
                 {typeof kpiVentas === 'number' &&
@@ -2772,7 +2820,7 @@ Responde a este mensaje para más info. #JasoDatos`;
             <div style={{ marginBottom: 8 }}>
               <div
                 style={{
-                  fontSize: 24,
+                  fontSize: 30,
                   fontWeight: 800,
                   marginBottom: 4,
                   letterSpacing: 0.2,
@@ -2787,7 +2835,7 @@ Responde a este mensaje para más info. #JasoDatos`;
                   lineHeight: 1.4,
                 }}
               >
-                Línea azul: ventas reales · Línea verde: tendencia · Líneas punteadas: rango típico
+                Línea blanca: ventas reales · Línea verde: tendencia · Líneas punteadas: rango típico
               </div>
             </div>
 
@@ -2800,20 +2848,41 @@ Responde a este mensaje para más info. #JasoDatos`;
     padding: 0,          // sin relleno interno
   }}
 >
-  <TrendLine
-    data={trendReady ?? []}
-    xKey="fecha"
-    yKey="total"
-    avgKey="trend"
-    upperKey="upper"
-    lowerKey="lower"
-    smooth
-    currency="USD"
-    regression="quad"
-    xLabel="Fecha"
-    yLabel="Ventas (USD)"
-    height={300}
-  />
+<TrendLine
+  data={trendReady ?? []}
+  xKey="fecha"
+  yKey="total"
+  avgKey="trend"
+  upperKey="upper"
+  lowerKey="lower"
+  smooth
+  currency="USD"
+  regression="quad"
+  xLabel="Fecha"
+  yLabel="Ventas (USD)"
+  height={300}
+  strokeColors={{
+    ventas: '#f5f5f5',     // 🔵 Azul real
+    tendencia: '#22C55E',  // 🟢 Verde fuerte
+    upper: '#FACC15',      // 🟡 Amarillo punteado
+    lower: '#D97706',      // 🟠 Amarillo oscuro punteado
+  }}
+  strokeWidths={{
+    ventas: 2.5,
+    tendencia: 4,
+    upper: 2,
+    lower: 2,
+  }}
+  strokeStyles={{
+    upper: '5 5',   // punteado tipo banda
+    lower: '5 5',
+  }}
+  dotStyle={{
+    fill: '#ffffff',
+    stroke: '#2563EB',
+    strokeWidth: 2,
+  }}
+/>
 </div>
           </div>
         </section>

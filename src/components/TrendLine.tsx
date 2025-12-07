@@ -3,7 +3,7 @@
 import React from 'react';
 import {
   ResponsiveContainer,
-  ComposedChart,   // 👈 en lugar de LineChart
+  ComposedChart, // 👈 en lugar de LineChart
   Line,
   Area,
   XAxis,
@@ -11,6 +11,31 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+
+type StrokeColors = {
+  ventas?: string;
+  tendencia?: string;
+  upper?: string;
+  lower?: string;
+};
+
+type StrokeWidths = {
+  ventas?: number;
+  tendencia?: number;
+  upper?: number;
+  lower?: number;
+};
+
+type StrokeStyles = {
+  upper?: string; // p.ej. '5 5'
+  lower?: string;
+};
+
+type DotStyle = {
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+};
 
 type TrendLineProps = {
   data: any[];
@@ -25,6 +50,10 @@ type TrendLineProps = {
   xLabel?: string;
   yLabel?: string;
   height?: number;
+  strokeColors?: StrokeColors;
+  strokeWidths?: StrokeWidths;
+  strokeStyles?: StrokeStyles;
+  dotStyle?: DotStyle;
 };
 
 function formatCurrency(value: number, currency = 'USD') {
@@ -52,6 +81,10 @@ export default function TrendLine({
   xLabel,
   yLabel,
   height = 320,
+  strokeColors,
+  strokeWidths,
+  strokeStyles,
+  dotStyle,
 }: TrendLineProps) {
   // ticks del eje Y: 0, 100, 200, ... hasta el máximo redondeado
   const values = (data ?? [])
@@ -69,6 +102,21 @@ export default function TrendLine({
       currency: 'USD',
       maximumFractionDigits: 2,
     }).format(n ?? 0);
+
+  // 🎨 Colores y grosores efectivos (con defaults)
+  const COLORS = {
+    ventas: strokeColors?.ventas ?? '#f5f5f5', // azul
+    tendencia: strokeColors?.tendencia ?? '#22C55E', // verde fuerte
+    upper: strokeColors?.upper ?? '#FACC15', // amarillo claro
+    lower: strokeColors?.lower ?? '#D97706', // ámbar
+  };
+
+  const WIDTH = {
+    ventas: strokeWidths?.ventas ?? 2.5,
+    tendencia: strokeWidths?.tendencia ?? 4,
+    upper: strokeWidths?.upper ?? 2,
+    lower: strokeWidths?.lower ?? 2,
+  };
 
   // etiquetas para tooltip (sin “total”)
   const seriesLabels: Record<string, string> = {
@@ -99,18 +147,18 @@ export default function TrendLine({
         {payload.map((entry: any, idx: number) => {
           const dk = entry.dataKey as string;
           const labelTxt = seriesLabels[dk];
-          if (!labelTxt) return null; // 👈 ignoramos series sin label (ningún “total”)
+          if (!labelTxt) return null; // 👈 ignoramos series sin label
 
           const val = Number(entry.value ?? 0);
 
           const color =
             dk === lowerKey
-              ? '#FACC15'
+              ? COLORS.lower
               : dk === upperKey
-              ? '#EAB308'
+              ? COLORS.upper
               : dk === avgKey
-              ? '#22C55E'
-              : '#60A5FA';
+              ? COLORS.tendencia
+              : COLORS.ventas;
 
           return (
             <div
@@ -203,7 +251,7 @@ export default function TrendLine({
           fill="url(#ventasBand)"
           fillOpacity={1}
           isAnimationActive={false}
-          name={undefined}      // no sale en la leyenda
+          name={undefined} // no sale en la leyenda
           legendType="none"
         />
 
@@ -231,20 +279,22 @@ export default function TrendLine({
         {/* Bandas */}
         {lowerKey && (
           <Line
-            type="monotone"
+            type={smooth ? 'monotone' : 'linear'}
             dataKey={lowerKey}
-            stroke="#FACC15"
-            strokeDasharray="6 9"
+            stroke={COLORS.lower}
+            strokeDasharray={strokeStyles?.lower ?? '5 5'}
+            strokeWidth={WIDTH.lower}
             dot={false}
             name="Banda inferior"
           />
         )}
         {upperKey && (
           <Line
-            type="monotone"
+            type={smooth ? 'monotone' : 'linear'}
             dataKey={upperKey}
-            stroke="#EAB308"
-            strokeDasharray="6 9"
+            stroke={COLORS.upper}
+            strokeDasharray={strokeStyles?.upper ?? '5 5'}
+            strokeWidth={WIDTH.upper}
             dot={false}
             name="Banda superior"
           />
@@ -253,10 +303,10 @@ export default function TrendLine({
         {/* Tendencia */}
         {avgKey && (
           <Line
-            type="monotone"
+            type={smooth ? 'monotone' : 'linear'}
             dataKey={avgKey}
-            stroke="#16A34A"
-            strokeWidth={3.5}
+            stroke={COLORS.tendencia}
+            strokeWidth={WIDTH.tendencia}
             dot={false}
             name="Tendencia"
           />
@@ -266,10 +316,15 @@ export default function TrendLine({
         <Line
           type={smooth ? 'monotone' : 'linear'}
           dataKey={yKey}
-          stroke="#F5F5F5"
-          strokeWidth={3}
-          dot={{ r: 4, stroke: '#d7fc04ff', strokeWidth: 1, fill: '#1D4ED8' }}
-          activeDot={{ r: 9 }}
+          stroke={COLORS.ventas}
+          strokeWidth={WIDTH.ventas}
+          dot={{
+            r: 4,
+            stroke: dotStyle?.stroke ?? '#FFFFFF',
+            strokeWidth: dotStyle?.strokeWidth ?? 2,
+            fill: dotStyle?.fill ?? COLORS.ventas,
+          }}
+          activeDot={{ r: 8 }}
           name="Ventas"
         />
       </ComposedChart>

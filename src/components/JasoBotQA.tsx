@@ -4,27 +4,62 @@ import { useState } from 'react';
 type KV = { key: string; total: number };
 type LowItem = { sku: string; producto: string; stock: number };
 
+type Insights = {
+  ventas7?: number;
+  deltaVentas7?: number;
+  topProd?: { name?: string; share?: number; monto?: number };
+  lowStock?: LowItem[];
+  rango?: { desde?: string; hasta?: string };
+};
+
+type Resumen = {
+  totalVentas?: number;
+  porProducto?: KV[];
+  porEmpresa?: KV[];
+  porFecha?: KV[];
+};
+
+function openWhatsAppSafe(raw: string) {
+  if (typeof window === 'undefined') return;
+  const MAX_WA_CHARS = 900;
+
+  const msg = (raw ?? '').trim().slice(0, MAX_WA_CHARS);
+  if (!msg) return;
+
+  const enc = encodeURIComponent(msg);
+  const isMobile =
+    typeof navigator !== 'undefined'
+      ? /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent)
+      : false;
+
+  const urlMobileDeep = `whatsapp://send?text=${enc}`;
+  const urlMobileHttp = `https://api.whatsapp.com/send?text=${enc}`;
+  const urlDesktopWeb = `https://web.whatsapp.com/send?text=${enc}`;
+
+  const primary = isMobile ? urlMobileDeep : urlDesktopWeb;
+  const fallback = urlMobileHttp;
+
+  try {
+    const win = window.open(primary, '_blank');
+    if (!win) {
+      window.location.href = fallback;
+    }
+  } catch {
+    window.location.href = fallback;
+  }
+}
+
 export default function JasoBotQA({
   insights,
   resumen,
 }: {
-  insights: {
-    ventas7?: number;
-    deltaVentas7?: number;
-    topProd?: { name?: string; share?: number; monto?: number };
-    lowStock?: LowItem[];
-    rango?: { desde?: string; hasta?: string };
-  };
-  resumen: {
-    totalVentas?: number;
-    porProducto?: KV[];
-    porEmpresa?: KV[];
-    porFecha?: KV[];
-  };
+  insights: Insights;
+  resumen: Resumen;
 }) {
   const [qInput, setQInput] = useState('');
   const [reply, setReply] = useState<string>('');
   const [loadingChat, setLoadingChat] = useState(false);
+  const [sendingWA, setSendingWA] = useState(false);
 
   function buildContext() {
     return {
@@ -53,10 +88,12 @@ export default function JasoBotQA({
 
   async function handleAsk() {
     const trimmed = qInput.trim();
+    if (!trimmed) return;
     if (trimmed === '0') {
       handleClear();
       return;
     }
+
     try {
       setLoadingChat(true);
       const context = buildContext();
@@ -74,8 +111,25 @@ export default function JasoBotQA({
     }
   }
 
+  async function handleSendWhatsApp() {
+    if (!reply.trim() || sendingWA) return;
+    setSendingWA(true);
+    try {
+      openWhatsAppSafe(reply);
+    } finally {
+      setTimeout(() => setSendingWA(false), 800);
+    }
+  }
+
   return (
-    <div style={{ display: 'grid', gap: 6, width: '100%', marginTop: 12 }}>
+    <div
+      style={{
+        display: 'grid',
+        gap: 6,
+        width: '100%',
+        marginTop: 12,
+      }}
+    >
       <pre
         style={{
           margin: 0,
@@ -99,7 +153,15 @@ export default function JasoBotQA({
 9 Rango analizado
 10 Recomendación de hoy`}</pre>
 
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* Input + botones principales */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          alignItems: 'center',
+          flexWrap: 'wrap',
+        }}
+      >
         <input
           placeholder='Escribe un número del (1–10) o "ventas 7 días"'
           value={qInput}
@@ -110,7 +172,15 @@ export default function JasoBotQA({
               else void handleAsk();
             }
           }}
-          style={{ flex: 1, padding: 8, border: '1px solid #fff', borderRadius: 8, fontSize: 12, background: '#fff', color: '#4f46e5',  }}
+          style={{
+            flex: 1,
+            padding: 8,
+            border: '1px solid #fff',
+            borderRadius: 8,
+            fontSize: 12,
+            background: '#fff',
+            color: '#4f46e5',
+          }}
         />
 
         <button
@@ -149,19 +219,62 @@ export default function JasoBotQA({
         </button>
       </div>
 
+      {/* Resultado + botón WhatsApp */}
       {!!reply && (
-        <div
-          style={{
-            whiteSpace: 'pre-wrap',
-            fontSize: 13,
-            color: '#4f46e5',
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            borderRadius: 8,
-            padding: 10,
-          }}
-        >
-          {reply}
+        <div style={{ display: 'grid', gap: 6 }}>
+          <div
+            style={{
+              whiteSpace: 'pre-wrap',
+              fontSize: 13,
+              color: '#4f46e5',
+              background: '#fff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              padding: 10,
+            }}
+          >
+            {reply}
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleSendWhatsApp}
+              disabled={sendingWA}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 6,
+                background: '#1D4ED8',
+                color: '#F5F5F5',
+                fontWeight: 700,
+                fontSize: 12,
+                border: '1px solid #e5e7eb',
+                cursor: sendingWA ? 'not-allowed' : 'pointer',
+                boxShadow: '0 2px 6px rgba(79,70,229,0.28)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+              title="Enviar este resultado a tu WhatsApp"
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 999,
+                  background: '#F5F5F5',
+                }}
+              />
+              {sendingWA ? 'Enviando…' : 'Enviar este resultado a WhatsApp'}
+            </button>
+          </div>
         </div>
       )}
     </div>
