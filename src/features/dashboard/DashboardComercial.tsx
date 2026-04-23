@@ -17,26 +17,25 @@ import {
 } from "recharts";
 import type { ProcessDatasetResult } from "@/core/ingestion/readDataset";
 import BenchmarkingSucursales from "@/features/dashboard/BenchmarkingSucursales";
-import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { buildAlerts } from "@/features/alerts/buildAlerts";
+import ProfileSettingsPanel from "@/features/settings/ProfileSettingsPanel";
+import { useProfileSettings } from "@/features/settings/useProfileSettings";
+import type { ChannelKey } from "@/features/settings/types";
+import SubscriptionPlansPanel from "@/features/subscription/SubscriptionPlansPanel";
+import { useSubscriptionPlan } from "@/features/subscription/useSubscriptionPlan";
+import type { SubscriptionPlan } from "@/features/subscription/types";
+import HeroHeader from "@/features/dashboard/HeroHeader";
+import KpiSection from "@/features/dashboard/KpiSection";
+import AlertsSection from "@/features/dashboard/AlertsSection";
+import FilterBar from "@/features/dashboard/FilterBar";
+import DetailTableSection from "@/features/dashboard/DetailTableSection";
 type Props = {
   processedData: ProcessDatasetResult;
   onClearFile?: () => void;
   onSelectAnotherFile?: () => void;
 };
-
-type DetailRow = {
-  fecha: string;
-  sucursal: string;
-  producto: string;
-  cantidad: number;
-  precio_unitario: number;
-  costo_unitario: number;
-  stock: number | null;
-  canal: string;
-};
-
 type StockRiskRow = {
   producto: string;
   stock: number;
@@ -66,7 +65,14 @@ const COLORS = [
   "#94A3B8",
   "#14B8A6",
 ];
-
+function slugifyFileName(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .toLowerCase();
+}
 function toNumber(value: unknown): number {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
 
@@ -101,19 +107,49 @@ function toText(value: unknown, fallback = "-"): string {
   if (typeof value === "number") return String(value);
   return fallback;
 }
-
-function formatMoney(value: number): string {
-  return value.toLocaleString("es-EC", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  });
+function resolveAxisCurrencySymbol(code: string): string {
+  if (code === "COP") return "COP";
+  if (code === "MXN") return "MXN";
+  if (code === "PEN") return "S/";
+  if (code === "EUR") return "€";
+  return "$";
 }
 
-function formatInt(value: number): string {
-  return value.toLocaleString("es-EC", { maximumFractionDigits: 0 });
+function getAxisWidth(currencyCode: string): number {
+  if (currencyCode === "COP") return 86;
+  if (currencyCode === "MXN") return 78;
+  if (currencyCode === "PEN") return 70;
+  return 62;
+}
+function formatMoney(value: number, locale = "es-EC", currencyCode = "USD"): string {
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    return new Intl.NumberFormat("es-EC", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
 }
 
+function formatInt(value: number, locale = "es-EC"): string {
+  try {
+    return new Intl.NumberFormat(locale, {
+      maximumFractionDigits: 0,
+    }).format(value);
+  } catch {
+    return new Intl.NumberFormat("es-EC", {
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
+}
 function parseDateLike(value: unknown): Date | null {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
 
@@ -169,7 +205,56 @@ function isWithinRange(value: unknown, fromDate: string, toDate: string): boolea
   if (toDate && key > toDate) return false;
   return true;
 }
+function getChannelDisplayName(key: ChannelKey): string {
+  if (key === "ecommerce") return "e-commerce";
+  if (key === "mayorista") return "mayorista";
+  return "tienda física";
+}
+function normalizeChannelKey(value: unknown): ChannelKey | null {
+  const raw = toText(value, "").trim().toLowerCase();
 
+  if (!raw) return null;
+
+  const normalized = raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (
+    normalized === "e-commerce" ||
+    normalized === "ecommerce" ||
+    normalized === "online" ||
+    normalized === "canal online" ||
+    normalized === "web"
+  ) {
+    return "ecommerce";
+  }
+
+  if (normalized === "mayorista" || normalized === "wholesale") {
+    return "mayorista";
+  }
+
+  if (
+    normalized === "tienda fisica" ||
+    normalized === "fisico" ||
+    normalized === "retail" ||
+    normalized === "local"
+  ) {
+    return "tiendaFisica";
+  }
+
+  return null;
+}
+
+function isRowChannelEnabled(
+  row: Record<string, unknown>,
+  channelsEnabled: Record<ChannelKey, boolean>
+): boolean {
+  const key = normalizeChannelKey(row.canal);
+
+  if (!key) return true;
+
+  return channelsEnabled[key];
+}
 function buildTopProducts(rows: Record<string, unknown>[]): PiePoint[] {
   const map = new Map<string, number>();
 
@@ -203,21 +288,26 @@ function buildSalesTrend(rows: Record<string, unknown>[]): SalesPoint[] {
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
 
-function buildStockRisk(rows: Record<string, unknown>[]): StockRiskRow[] {
+function buildStockRisk(
+  rows: Record<string, unknown>[],
+  stockMin: number
+): StockRiskRow[] {
   const rowsWithStock = rows.filter(
     (row) => row.stock !== undefined && row.stock !== null && row.stock !== ""
   );
+
+  const minimo = Math.max(0, stockMin);
+  const criticalThreshold = Math.max(1, Math.round(minimo * 0.5));
 
   return rowsWithStock
     .map((row) => {
       const stock = toNumber(row.stock);
       const producto = toText(row.producto, "Sin producto");
-      const minimo = 20;
       const diasCobertura = stock <= 0 ? 0 : Math.max(1, Math.round(stock / 5));
 
       let estado = "Óptimo";
       if (stock <= 0) estado = "Sin stock";
-      else if (stock <= 10) estado = "Crítico";
+      else if (stock <= criticalThreshold) estado = "Crítico";
       else if (stock <= minimo) estado = "En riesgo";
 
       return {
@@ -233,15 +323,8 @@ function buildStockRisk(rows: Record<string, unknown>[]): StockRiskRow[] {
 }
 function buildChannelData(rows: Record<string, unknown>[]) {
   const validRows = rows.filter((row) => {
-    const canal = toText(row.canal, "").trim().toLowerCase();
-
-    return (
-      canal !== "" &&
-      canal !== "inventario" &&
-      canal !== "inventory" &&
-      row.canal !== undefined &&
-      row.canal !== null
-    );
+    const channelKey = normalizeChannelKey(row.canal);
+    return channelKey !== null;
   });
 
   const byDateAndChannel = new Map<string, Record<string, number | string>>();
@@ -249,13 +332,16 @@ function buildChannelData(rows: Record<string, unknown>[]) {
 
   for (const row of validRows) {
     const fecha = toDateKey(row.fecha);
-    const canal = toText(row.canal, "Sin canal");
+    const channelKey = normalizeChannelKey(row.canal);
+
+    if (!channelKey) continue;
+
     const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
 
-    channels.add(canal);
+    channels.add(channelKey);
 
     const current = byDateAndChannel.get(fecha) ?? { fecha };
-    current[canal] = toNumber(current[canal]) + venta;
+    current[channelKey] = toNumber(current[channelKey]) + venta;
     byDateAndChannel.set(fecha, current);
   }
 
@@ -269,61 +355,10 @@ function buildChannelData(rows: Record<string, unknown>[]) {
     hasChannelData: validRows.length > 0,
   };
 }
-function buildDetails(rows: Record<string, unknown>[]): DetailRow[] {
-  return rows.slice(0, 5).map((row) => ({
-    fecha: toDateKey(row.fecha),
-    sucursal: toText(row.sucursal),
-    producto: toText(row.producto),
-    cantidad: toNumber(row.cantidad),
-    precio_unitario: toNumber(row.precio_unitario),
-    costo_unitario: toNumber(row.costo_unitario),
-    stock:
-      row.stock === undefined || row.stock === null || row.stock === ""
-        ? null
-        : toNumber(row.stock),
-    canal: toText(row.canal, "-"),
-  }));
-}
-function buildAlerts(
+function buildJasoBotInsights(
   rows: Record<string, unknown>[],
-  trendData: SalesPoint[],
-  stockCritico: number | null
-): string[] {
-  const alerts: string[] = [];
-
-  if (typeof stockCritico === "number" && stockCritico > 0) {
-    alerts.push(`${stockCritico} productos están en stock crítico.`);
-  }
-
-  if (trendData.length >= 2) {
-    const last = trendData[trendData.length - 1]?.ventas ?? 0;
-    const prev = trendData[trendData.length - 2]?.ventas ?? 0;
-    if (prev > 0 && last < prev) {
-      const pct = (((last - prev) / prev) * 100).toFixed(1);
-      alerts.push(`Las ventas del último período cayeron ${pct}% frente al anterior.`);
-    }
-  }
-
-  const sucursalMap = new Map<string, number>();
-  for (const row of rows) {
-    const sucursal = toText(row.sucursal, "Sin sucursal");
-    const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
-    sucursalMap.set(sucursal, (sucursalMap.get(sucursal) ?? 0) + venta);
-  }
-
-  const sucursales = [...sucursalMap.entries()].sort((a, b) => a[1] - b[1]);
-  if (sucursales.length > 1) {
-    alerts.push(`Enfócate en ${sucursales[0][0]}: es la sucursal con menor participación.`);
-  }
-
-  if (alerts.length === 0) {
-    alerts.push("El período filtrado no muestra alertas críticas.");
-  }
-
-  return alerts.slice(0, 4);
-}
-
-function buildJasoBotInsights(rows: Record<string, unknown>[]) {
+  stockMin: number
+) {
   if (!rows.length) {
     return {
       mensajePrincipal: "No hay suficiente información para generar recomendaciones comerciales.",
@@ -369,7 +404,7 @@ function buildJasoBotInsights(rows: Record<string, unknown>[]) {
   const topCanal = [...ventasPorCanal.entries()].sort((a, b) => b[1] - a[1])[0];
 
   const productosCriticos = productosConStock
-    .filter((item) => item.stock <= 20)
+    .filter((item) => item.stock <= stockMin)
     .sort((a, b) => a.stock - b.stock)
     .slice(0, 3);
 
@@ -419,9 +454,9 @@ function buildJasoBotInsights(rows: Record<string, unknown>[]) {
     recomendaciones.push(`Activa promoción en ${lowSucursal[0]}`);
   }
 
-  if (topCanal) {
-    recomendaciones.push(`Potencia ventas en canal ${topCanal[0]}`);
-  }
+if (topCanal && topCanal[0]) {
+  recomendaciones.push(`Potencia ventas en canal ${topCanal[0]}`);
+}
 
   const nombreProductoTop = topProducto?.[0] ?? "tu producto líder";
   const nombreSucursalTop = topSucursal?.[0] ?? "tu mejor sucursal";
@@ -447,7 +482,9 @@ function buildJasoBotInsights(rows: Record<string, unknown>[]) {
   insights.push(`Enfócate en: ${nombreProductoTop}`);
   insights.push(`Sucursal líder: ${nombreSucursalTop}`);
   insights.push(`Sucursal a reforzar: ${nombreSucursalBaja}`);
+  if (nombreCanalTop && nombreCanalTop !== "tu canal principal") {
   insights.push(`Canal con mayor aporte: ${nombreCanalTop}`);
+}
 
   if (productosCriticos.length > 0) {
     const nombresCriticos = productosCriticos.map((p) => p.producto).join(", ");
@@ -474,9 +511,78 @@ const [toDate, setToDate] = useState("");
 const [pageSize, setPageSize] = useState(25);
 const [currentPage, setCurrentPage] = useState(1);
 const [searchTerm, setSearchTerm] = useState("");
-const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 const [actionNotice, setActionNotice] = useState("");
+const [settingsOpen, setSettingsOpen] = useState(false);
+const {
+  settings,
+  updateSettings,
+  updateThreshold,
+  updateChannel,
+  resetSettings,
+} = useProfileSettings();
+const [plansOpen, setPlansOpen] = useState(false);
 
+const {
+  currentPlan,
+  setCurrentPlan,
+  hasFeature,
+  planLabel,
+} = useSubscriptionPlan();
+
+const canUseBenchmarking = hasFeature("benchmarking");
+const canUseAssistant = hasFeature("assistant");
+const canExportPdf = hasFeature("pdf_export");
+const canUseWhatsappByPlan = hasFeature("whatsapp_actions");
+const activeChannels = useMemo(() => {
+  return (Object.entries(settings.channelsEnabled) as [ChannelKey, boolean][])
+    .filter(([, enabled]) => enabled)
+    .map(([key]) => key);
+}, [settings.channelsEnabled]);
+
+const activeChannelsLabel = activeChannels.length
+  ? activeChannels.map(getChannelDisplayName).join(" · ")
+  : "Ninguno";
+const safeLocale = (() => {
+  const candidate = (settings.locale || "").trim();
+
+  if (!candidate) return "es-EC";
+
+  try {
+    const supported = Intl.NumberFormat.supportedLocalesOf([candidate]);
+    return supported.length ? supported[0] : "es-EC";
+  } catch {
+    return "es-EC";
+  }
+})();
+
+const safeCurrencyCode = settings.currencyCode || "USD";
+const axisCurrencySymbol = resolveAxisCurrencySymbol(safeCurrencyCode);
+const axisWidth = getAxisWidth(safeCurrencyCode);
+const formatInt = (value: number): string => {
+  try {
+    return new Intl.NumberFormat(safeLocale, {
+      maximumFractionDigits: 0,
+    }).format(value);
+  } catch {
+    return new Intl.NumberFormat("es-EC", {
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
+};
+const formatCompactMoney = (value: number): string => {
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+
+  if (abs >= 1000) {
+    return `${sign}${axisCurrencySymbol}${(abs / 1000).toFixed(abs % 1000 === 0 ? 0 : 1)}k`;
+  }
+
+  try {
+    return `${sign}${axisCurrencySymbol}${Math.round(abs).toLocaleString(safeLocale)}`;
+  } catch {
+    return `${sign}${axisCurrencySymbol}${Math.round(abs).toLocaleString("es-EC")}`;
+  }
+};
   const sucursalOptions = useMemo(() => {
     return [
       "Todas",
@@ -490,7 +596,6 @@ const [actionNotice, setActionNotice] = useState("");
       ...new Set(processedData.validRows.map((row) => toText(row.producto, "Sin producto"))),
     ];
   }, [processedData.validRows]);
-
 const filteredRows = useMemo(() => {
   return processedData.validRows.filter((row) => {
     const sucursal = toText(row.sucursal, "Sin sucursal");
@@ -499,88 +604,145 @@ const filteredRows = useMemo(() => {
     const matchSucursal = selectedSucursal === "Todas" || sucursal === selectedSucursal;
     const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
     const matchDate = isWithinRange(row.fecha, fromDate, toDate);
+    const matchChannel = isRowChannelEnabled(row, settings.channelsEnabled);
 
-    return matchSucursal && matchProducto && matchDate;
+    return matchSucursal && matchProducto && matchDate && matchChannel;
   });
-}, [processedData.validRows, selectedSucursal, selectedProducto, fromDate, toDate]);
-  const benchmarkRows = useMemo(() => {
-    return processedData.validRows.filter((row) => {
+}, [
+  processedData.validRows,
+  selectedSucursal,
+  selectedProducto,
+  fromDate,
+  toDate,
+  settings.channelsEnabled,
+]);
+const benchmarkRows = useMemo(() => {
+  return processedData.validRows.filter((row) => {
+    const producto = toText(row.producto, "Sin producto");
+    const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
+    const matchDate = isWithinRange(row.fecha, fromDate, toDate);
+    const matchChannel = isRowChannelEnabled(row, settings.channelsEnabled);
+
+    return matchProducto && matchDate && matchChannel;
+  });
+}, [
+  processedData.validRows,
+  selectedProducto,
+  fromDate,
+  toDate,
+  settings.channelsEnabled,
+]);
+const topActiveChannel = useMemo(() => {
+  const totals = new Map<string, number>();
+
+  for (const row of filteredRows) {
+    const key = normalizeChannelKey(row.canal);
+    if (!key) continue;
+
+    const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
+    totals.set(key, (totals.get(key) ?? 0) + venta);
+  }
+
+  const ordered = [...totals.entries()].sort((a, b) => b[1] - a[1]);
+  return ordered.length ? ordered[0][0] : null;
+}, [filteredRows]);
+
+const topActiveChannelLabel = topActiveChannel
+  ? getChannelDisplayName(topActiveChannel)
+  : "Sin canales habilitados";
+const whatsappDigits = normalizeWhatsappNumber(settings.businessWhatsapp);
+const hasValidWhatsapp = whatsappDigits.length >= 8 && whatsappDigits.length <= 15;
+const canUseWhatsappInputs = activeChannels.length > 0 && hasValidWhatsapp;
+const canUseWhatsappActions = canUseWhatsappByPlan && canUseWhatsappInputs;
+
+const whatsappDisabledReason = !canUseWhatsappByPlan
+  ? "Disponible en plan Ultra."
+  : !hasValidWhatsapp
+  ? "Configura un WhatsApp válido en Configuración del negocio."
+  : activeChannels.length === 0
+  ? "Activa al menos un canal para usar acciones de WhatsApp."
+  : "";
+
+const pdfDisabledReason = !canExportPdf
+  ? "Disponible desde el plan Pro."
+  : !hasValidWhatsapp
+  ? "Configura un WhatsApp válido en Configuración del negocio."
+  : activeChannels.length === 0
+  ? "Activa al menos un canal para compartir."
+  : "";
+  const secondaryActiveChannels = activeChannels.filter(
+  (channel) => channel !== topActiveChannel
+);
+
+const secondaryActiveChannelsLabel = secondaryActiveChannels.length
+  ? secondaryActiveChannels.map(getChannelDisplayName).join(" · ")
+  : "";
+const variationPct = useMemo(() => {
+  const rowsWithDate = processedData.validRows.filter((row) => parseDateLike(row.fecha));
+
+  if (rowsWithDate.length === 0) {
+    return 0;
+  }
+
+  const sortedDates = rowsWithDate
+    .map((row) => parseDateLike(row.fecha) as Date)
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  const minDate = sortedDates[0];
+  const maxDate = sortedDates[sortedDates.length - 1];
+
+  const effectiveFrom = fromDate ? new Date(`${fromDate}T00:00:00`) : minDate;
+  const effectiveTo = toDate ? new Date(`${toDate}T00:00:00`) : maxDate;
+
+  const spanDays = Math.max(1, diffDays(effectiveFrom, effectiveTo) + 1);
+
+  const previousFrom = addDays(effectiveFrom, -spanDays);
+  const previousTo = addDays(effectiveTo, -spanDays);
+
+  const currentSales = processedData.validRows
+    .filter((row) => {
+      const d = parseDateLike(row.fecha);
+      if (!d) return false;
+      const key = formatDateInput(d);
+      return key >= formatDateInput(effectiveFrom) && key <= formatDateInput(effectiveTo);
+    })
+    .filter((row) => {
+      const sucursal = toText(row.sucursal, "Sin sucursal");
       const producto = toText(row.producto, "Sin producto");
+      const matchSucursal = selectedSucursal === "Todas" || sucursal === selectedSucursal;
       const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
-      const matchDate = isWithinRange(row.fecha, fromDate, toDate);
-      return matchProducto && matchDate;
-    });
-  }, [processedData.validRows, selectedProducto, fromDate, toDate]);
+      const matchChannel = isRowChannelEnabled(row, settings.channelsEnabled);
+      return matchSucursal && matchProducto && matchChannel;
+    })
+    .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
 
-  const periodMetrics = useMemo(() => {
-    const rowsWithDate = processedData.validRows.filter((row) => parseDateLike(row.fecha));
+  const previousSales = processedData.validRows
+    .filter((row) => {
+      const d = parseDateLike(row.fecha);
+      if (!d) return false;
+      const key = formatDateInput(d);
+      return key >= formatDateInput(previousFrom) && key <= formatDateInput(previousTo);
+    })
+    .filter((row) => {
+      const sucursal = toText(row.sucursal, "Sin sucursal");
+      const producto = toText(row.producto, "Sin producto");
+      const matchSucursal = selectedSucursal === "Todas" || sucursal === selectedSucursal;
+      const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
+      const matchChannel = isRowChannelEnabled(row, settings.channelsEnabled);
+      return matchSucursal && matchProducto && matchChannel;
+    })
+    .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
 
-    if (rowsWithDate.length === 0) {
-      return {
-        currentSales: 0,
-        previousSales: 0,
-        variationPct: 0,
-        variationAbs: 0,
-      };
-    }
-
-    const sortedDates = rowsWithDate
-      .map((row) => parseDateLike(row.fecha) as Date)
-      .sort((a, b) => a.getTime() - b.getTime());
-
-    const minDate = sortedDates[0];
-    const maxDate = sortedDates[sortedDates.length - 1];
-
-    const effectiveFrom = fromDate ? new Date(`${fromDate}T00:00:00`) : minDate;
-    const effectiveTo = toDate ? new Date(`${toDate}T00:00:00`) : maxDate;
-
-    const spanDays = Math.max(1, diffDays(effectiveFrom, effectiveTo) + 1);
-
-    const previousFrom = addDays(effectiveFrom, -spanDays);
-    const previousTo = addDays(effectiveTo, -spanDays);
-
-    const currentSales = processedData.validRows
-      .filter((row) => {
-        const d = parseDateLike(row.fecha);
-        if (!d) return false;
-        const key = formatDateInput(d);
-        return key >= formatDateInput(effectiveFrom) && key <= formatDateInput(effectiveTo);
-      })
-      .filter((row) => {
-        const sucursal = toText(row.sucursal, "Sin sucursal");
-        const producto = toText(row.producto, "Sin producto");
-        const matchSucursal = selectedSucursal === "Todas" || sucursal === selectedSucursal;
-        const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
-        return matchSucursal && matchProducto;
-      })
-      .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
-
-    const previousSales = processedData.validRows
-      .filter((row) => {
-        const d = parseDateLike(row.fecha);
-        if (!d) return false;
-        const key = formatDateInput(d);
-        return key >= formatDateInput(previousFrom) && key <= formatDateInput(previousTo);
-      })
-      .filter((row) => {
-        const sucursal = toText(row.sucursal, "Sin sucursal");
-        const producto = toText(row.producto, "Sin producto");
-        const matchSucursal = selectedSucursal === "Todas" || sucursal === selectedSucursal;
-        const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
-        return matchSucursal && matchProducto;
-      })
-      .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
-
-    const variationAbs = currentSales - previousSales;
-    const variationPct = previousSales > 0 ? (variationAbs / previousSales) * 100 : 0;
-
-    return {
-      currentSales,
-      previousSales,
-      variationPct,
-      variationAbs,
-    };
-  }, [processedData.validRows, fromDate, toDate, selectedSucursal, selectedProducto]);
+  const variationAbs = currentSales - previousSales;
+  return previousSales > 0 ? (variationAbs / previousSales) * 100 : 0;
+}, [
+  processedData.validRows,
+  fromDate,
+  toDate,
+  selectedSucursal,
+  selectedProducto,
+  settings.channelsEnabled,
+]);
 
   const ventasTotales = useMemo(() => {
     return filteredRows.reduce(
@@ -595,9 +757,10 @@ const filteredRows = useMemo(() => {
 
   const topProductos = useMemo(() => buildTopProducts(filteredRows), [filteredRows]);
   const tendenciaVentas = useMemo(() => buildSalesTrend(filteredRows), [filteredRows]);
-  const stockRiskRows = useMemo(() => buildStockRisk(filteredRows), [filteredRows]);
+  const stockRiskRows = useMemo(() => {
+  return buildStockRisk(filteredRows, settings.defaultStockMin);
+}, [filteredRows, settings.defaultStockMin]);
   const channelResult = useMemo(() => buildChannelData(filteredRows), [filteredRows]);
-  const detailRows = useMemo(() => buildDetails(filteredRows), [filteredRows]);
 
 const hasStockData = useMemo(() => {
   return filteredRows.some(
@@ -612,8 +775,10 @@ const stockCritico = useMemo(() => {
     (row) => row.stock !== undefined && row.stock !== null && row.stock !== ""
   );
 
-  return rowsWithStock.filter((row) => toNumber(row.stock) <= 20).length;
-}, [filteredRows, hasStockData]);
+  return rowsWithStock.filter(
+    (row) => toNumber(row.stock) <= settings.defaultStockMin
+  ).length;
+}, [filteredRows, hasStockData, settings.defaultStockMin]);
 
 
 const searchedRows = useMemo(() => {
@@ -630,8 +795,8 @@ const searchedRows = useMemo(() => {
       toText(row.producto),
       toText(row.tipo_movimiento, "-"),
       formatInt(toNumber(row.cantidad)),
-      formatMoney(toNumber(row.costo_unitario)),
-      formatMoney(toNumber(row.precio_unitario)),
+      formatMoney(toNumber(row.costo_unitario), settings.locale, settings.currencyCode),
+      formatMoney(toNumber(row.precio_unitario), settings.locale, settings.currencyCode),
       toText(row.canal, "-"),
       row.stock === undefined || row.stock === null || row.stock === ""
         ? "No Disponible"
@@ -640,7 +805,7 @@ const searchedRows = useMemo(() => {
 
     return values.some((value) => value.toLowerCase().includes(term));
   });
-}, [filteredRows, searchTerm]);
+}, [filteredRows, searchTerm, settings.locale, settings.currencyCode]);
 
 
 const totalPages = Math.max(1, Math.ceil(searchedRows.length / pageSize));
@@ -654,101 +819,371 @@ const paginatedRows = useMemo(() => {
 useEffect(() => {
   setCurrentPage(1);
 }, [selectedSucursal, selectedProducto, fromDate, toDate, pageSize, searchTerm]);
-
-function exportarExcel() {
+async function exportarExcel() {
   const filas = searchedRows;
 
   if (!filas.length) return;
 
-  const data = filas.map((row) => ({
-    Fecha: toDateKey(row.fecha),
-    Sucursal: toText(row.sucursal),
-    Bodega: toText(row.bodega, "-"),
-    SKU: toText(row.sku, "-"),
-    Producto: toText(row.producto),
-    Tipo_Movimiento: toText(row.tipo_movimiento, "-"),
-    Cantidad: toNumber(row.cantidad),
-    Costo_Unitario: toNumber(row.costo_unitario),
-    Precio_Unitario: toNumber(row.precio_unitario),
-    Canal: toText(row.canal, "-"),
-    Stock:
-      row.stock === undefined || row.stock === null || row.stock === ""
-        ? ""
-        : toNumber(row.stock),
-  }));
+  const ExcelJS = await import("exceljs");
 
-  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = new ExcelJS.Workbook();
 
-  // ancho automático de columnas
-  const colWidths = Object.keys(data[0]).map((key) => ({
-    wch: Math.max(
-      key.length,
-      ...data.map((row) => String(row[key as keyof typeof row]).length)
-    ) + 2,
-  }));
+  const businessName = settings.businessName || "JasoDatos";
+  const locale = settings.locale || "es-EC";
+  const currencyCode = settings.currencyCode || "USD";
 
-  worksheet["!cols"] = colWidths;
+  workbook.creator = "JasoDatos";
+  workbook.lastModifiedBy = "JasoDatos";
+  workbook.created = new Date();
+  workbook.modified = new Date();
+  workbook.subject = "Reporte comercial";
+  workbook.title = `Reporte Comercial - ${businessName}`;
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte Comercial");
+  const sheetNameBase = businessName.trim().slice(0, 28);
+  const sheetName = sheetNameBase || "Reporte Comercial";
 
-  const fecha = new Date().toISOString().slice(0, 10);
+  const worksheet = workbook.addWorksheet(sheetName, {
+    views: [{ state: "frozen", ySplit: 12 }],
+  });
 
-  XLSX.writeFile(workbook, `jasodatos_reporte_${fecha}.xlsx`);
+  const fechaGeneracion = new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+const metadataRows = [
+  ["Reporte comercial"],
+  ["Negocio", businessName],
+  ["Fecha de generación", fechaGeneracion],
+  ["Moneda", currencyCode],
+  ["Formato regional", locale],
+  ["Canales activos", activeChannelsLabel],
+  ["Sucursal filtrada", selectedSucursal],
+  ["Producto filtrado", selectedProducto],
+  ["Desde", fromDate || "Sin filtro"],
+  ["Hasta", toDate || "Sin filtro"],
+  ["Registros exportados", searchedRows.length],
+  [],
+];
+
+  metadataRows.forEach((row) => worksheet.addRow(row));
+
+  const headers = [
+    "Fecha",
+    "Sucursal",
+    "Bodega",
+    "SKU",
+    "Producto",
+    "Tipo_Movimiento",
+    "Cantidad",
+    "Costo_Unitario",
+    "Precio_Unitario",
+    "Canal",
+    "Stock",
+  ];
+
+  worksheet.addRow(headers);
+
+  const data = filas.map((row) => [
+    toDateKey(row.fecha),
+    toText(row.sucursal),
+    toText(row.bodega, "-"),
+    toText(row.sku, "-"),
+    toText(row.producto),
+    toText(row.tipo_movimiento, "-"),
+    toNumber(row.cantidad),
+    toNumber(row.costo_unitario),
+    toNumber(row.precio_unitario),
+    toText(row.canal, "-"),
+    row.stock === undefined || row.stock === null || row.stock === ""
+      ? ""
+      : toNumber(row.stock),
+  ]);
+
+  data.forEach((row) => worksheet.addRow(row));
+
+  worksheet.mergeCells("A1:K1");
+
+  worksheet.getRow(1).height = 28;
+
+  const titleCell = worksheet.getCell("A1");
+  titleCell.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+  titleCell.alignment = { horizontal: "center", vertical: "middle" };
+  titleCell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF202969" },
+  };
+
+  for (let row = 2; row <= 10; row++) {
+    const labelCell = worksheet.getCell(`A${row}`);
+    const valueCell = worksheet.getCell(`B${row}`);
+
+    labelCell.font = { bold: true, color: { argb: "FF1F2937" } };
+    labelCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE8EDFF" },
+    };
+    labelCell.border = {
+      top: { style: "thin", color: { argb: "FFD1D5DB" } },
+      bottom: { style: "thin", color: { argb: "FFD1D5DB" } },
+      left: { style: "thin", color: { argb: "FFD1D5DB" } },
+      right: { style: "thin", color: { argb: "FFD1D5DB" } },
+    };
+
+    valueCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF8FAFC" },
+    };
+    valueCell.border = {
+      top: { style: "thin", color: { argb: "FFE5E7EB" } },
+      bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
+      left: { style: "thin", color: { argb: "FFE5E7EB" } },
+      right: { style: "thin", color: { argb: "FFE5E7EB" } },
+    };
+  }
+
+  const tableHeaderRow = 12;
+
+  worksheet.autoFilter = {
+    from: { row: tableHeaderRow, column: 1 },
+    to: { row: tableHeaderRow, column: headers.length },
+  };
+
+  const headerRow = worksheet.getRow(tableHeaderRow);
+  headerRow.height = 22;
+
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF2B2F86" },
+    };
+    cell.border = {
+      top: { style: "thin", color: { argb: "FF1F2A6B" } },
+      bottom: { style: "thin", color: { argb: "FF1F2A6B" } },
+      left: { style: "thin", color: { argb: "FF1F2A6B" } },
+      right: { style: "thin", color: { argb: "FF1F2A6B" } },
+    };
+  });
+
+  const moneyNumFmt =
+    currencyCode === "EUR"
+      ? '€#,##0.00'
+      : currencyCode === "PEN"
+      ? '"S/"#,##0.00'
+      : currencyCode === "COP"
+      ? '"COP$"#,##0.00'
+      : currencyCode === "MXN"
+      ? '"MX$"#,##0.00'
+      : '"$"#,##0.00';
+
+  for (let rowNumber = tableHeaderRow + 1; rowNumber <= worksheet.rowCount; rowNumber++) {
+    const row = worksheet.getRow(rowNumber);
+    const isEven = (rowNumber - tableHeaderRow) % 2 === 0;
+    const fillColor = isEven ? "FFEEF2FF" : "FFF8FAFC";
+
+    row.eachCell((cell, colNumber) => {
+      cell.alignment = { vertical: "middle" };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: fillColor },
+      };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFE5E7EB" } },
+        bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
+        left: { style: "thin", color: { argb: "FFE5E7EB" } },
+        right: { style: "thin", color: { argb: "FFE5E7EB" } },
+      };
+
+      if (colNumber === 8 || colNumber === 9) {
+        cell.numFmt = moneyNumFmt;
+      }
+    });
+  }
+
+  worksheet.columns = [
+    { width: 16 },
+    { width: 20 },
+    { width: 18 },
+    { width: 16 },
+    { width: 28 },
+    { width: 20 },
+    { width: 14 },
+    { width: 18 },
+    { width: 18 },
+    { width: 16 },
+    { width: 12 },
+  ];
+
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const business = slugifyFileName(businessName);
+  const fechaArchivo = fechaGeneracion.replace(/[^\d]/g, "-");
+
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${business}_reporte_${fechaArchivo}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
-
 async function exportarPDF() {
   const elemento = document.getElementById("dashboard-export");
 
   if (!elemento) return;
 
+  const wasSettingsOpen = settingsOpen;
+
+  if (wasSettingsOpen) {
+    setSettingsOpen(false);
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+  }
+
   const canvas = await html2canvas(elemento, {
     scale: 2,
     useCORS: true,
+    backgroundColor: "#EEF2FF",
+    scrollX: 0,
+    scrollY: -window.scrollY,
   });
 
   const imgData = canvas.toDataURL("image/png");
-
   const pdf = new jsPDF("p", "mm", "a4");
 
-  const width = pdf.internal.pageSize.getWidth();
-  const height = (canvas.height * width) / canvas.width;
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
 
-  pdf.addImage(imgData, "PNG", 0, 0, width, height);
+  const imgWidth = pageWidth;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-  pdf.save("jasodatos_reporte.pdf");
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.setProperties({
+    title: `Reporte Comercial - ${settings.businessName || "JasoDatos"}`,
+    subject: "Reporte comercial",
+    author: "JasoDatos",
+  });
+
+  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+
+  const business = slugifyFileName(settings.businessName || "JasoDatos");
+  const fecha = new Intl.DateTimeFormat(settings.locale || "es-EC", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+    .format(new Date())
+    .replace(/[^\d]/g, "-");
+
+  pdf.save(`${business}_reporte_${fecha}.pdf`);
+
+  if (wasSettingsOpen) {
+    setSettingsOpen(true);
+  }
 }
 const productoTop = topProductos[0];
 const porcentajeTop =
   ventasTotales > 0 ? ((toNumber(productoTop?.ventas) / ventasTotales) * 100).toFixed(1) : "0.0";
 
-const variationPct = periodMetrics.variationPct;
+const benchmarkSummary = useMemo(() => {
+  const totals = new Map<string, number>();
 
-const jasoBot = useMemo(() => {
-  return buildJasoBotInsights(filteredRows);
-}, [filteredRows]);
+  for (const row of benchmarkRows) {
+    const sucursal = toText(row.sucursal, "Sin sucursal");
+    const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
+    totals.set(sucursal, (totals.get(sucursal) ?? 0) + venta);
+  }
 
-async function exportarPDF() {
-  const elemento = document.getElementById("dashboard-export");
+  const entries = [...totals.entries()]
+    .map(([sucursal, ventas]) => ({ sucursal, ventas }))
+    .sort((a, b) => b.ventas - a.ventas);
 
-  if (!elemento) return;
+  const total = entries.reduce((acc, item) => acc + item.ventas, 0);
 
-  const canvas = await html2canvas(elemento, {
-    scale: 2,
-    useCORS: true,
+  return entries.map((item) => ({
+    sucursal: item.sucursal,
+    ventas: item.ventas,
+    participacion: total > 0 ? (item.ventas / total) * 100 : 0,
+  }));
+}, [benchmarkRows]);
+
+const weakestBranch = benchmarkSummary.length
+  ? benchmarkSummary[benchmarkSummary.length - 1]
+  : null;
+const alerts = useMemo(() => {
+  return buildAlerts({
+    stockCriticalCount: stockCritico,
+    salesChangePct: variationPct,
+    salesDropMediumPct: settings.salesDropMediumPct,
+    salesDropHighPct: settings.salesDropHighPct,
+    weakestBranchName: weakestBranch?.sucursal ?? null,
+    weakestBranchSharePct: weakestBranch?.participacion ?? null,
+    topProductSharePct: Number(porcentajeTop),
+    topProductName: productoTop?.producto ?? null,
   });
+}, [
+  stockCritico,
+  variationPct,
+  settings.salesDropMediumPct,
+  settings.salesDropHighPct,
+  weakestBranch,
+  porcentajeTop,
+  productoTop,
+]);
+const kpiItems = [
+  {
+    title: "Ventas totales",
+    value: formatMoney(ventasTotales, settings.locale, settings.currencyCode),
+    badge: `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
+    subtitle: "vs. período anterior",
+  },
+  {
+    title: "Unidades totales",
+    value: formatInt(unidadesTotales, settings.locale),
+    badge: `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
+    subtitle: "vs. período anterior",
+  },
+  {
+    title: "Producto más vendido",
+    value: productoTop?.producto ?? "Sin datos",
+    badge: `${porcentajeTop}%`,
+    subtitle: "del total de ventas",
+  },
+  {
+    title: "Stock crítico",
+    value: stockCritico === null ? "No Disponible" : formatInt(stockCritico),
+    badge: "Reglas activas",
+    subtitle: "revisar inventario",
+    accent: "danger" as const,
+  },
+];
+const jasoBot = useMemo(() => {
+  return buildJasoBotInsights(filteredRows, settings.defaultStockMin);
+}, [filteredRows, settings.defaultStockMin]);
 
-  const imgData = canvas.toDataURL("image/png");
-
-  const pdf = new jsPDF("p", "mm", "a4");
-
-  const width = pdf.internal.pageSize.getWidth();
-  const height = (canvas.height * width) / canvas.width;
-
-  pdf.addImage(imgData, "PNG", 0, 0, width, height);
-
-  pdf.save("jasodatos_reporte.pdf");
-}
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
   setActionNotice(`Acción copiada: ${texto}`);
@@ -756,6 +1191,11 @@ function usarAccion(texto: string) {
     setActionNotice("");
   }, 3000);
 }
+
+function normalizeWhatsappNumber(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
 function enviarWhatsApp() {
   const recomendaciones = jasoBot.recomendaciones?.length
     ? jasoBot.recomendaciones.map((item) => `• ${item}`).join("\n")
@@ -764,7 +1204,7 @@ function enviarWhatsApp() {
   const mensaje = encodeURIComponent(
     `Cómo estás.
 
-Te comparto un breve resumen comercial generado en JasoDatos.
+Te comparto un breve resumen comercial generado en ${settings.businessName || "JasoDatos"}.
 
 ${jasoBot.mensajePrincipal}
 
@@ -777,227 +1217,229 @@ ${recomendaciones}
 Ya se descargó el reporte en PDF para que puedas adjuntarlo y compartirlo por este medio.`
   );
 
-  const url = `https://wa.me/?text=${mensaje}`;
+  const phone = normalizeWhatsappNumber(settings.businessWhatsapp);
+  const url = phone
+    ? `https://wa.me/${phone}?text=${mensaje}`
+    : `https://wa.me/?text=${mensaje}`;
+
   window.open(url, "_blank");
 }
+
 function enviarPromoWhatsApp() {
   const mensaje = encodeURIComponent(
     jasoBot.promoWhatsApp ??
-      "Hola, tenemos promociones especiales disponibles. Escríbenos para más información."
+      `Hola, te escribimos desde ${settings.businessName || "JasoDatos"}. Tenemos promociones especiales disponibles. Escríbenos para más información.`
   );
 
-  const url = `https://wa.me/?text=${mensaje}`;
+  const phone = normalizeWhatsappNumber(settings.businessWhatsapp);
+  const url = phone
+    ? `https://wa.me/${phone}?text=${mensaje}`
+    : `https://wa.me/?text=${mensaje}`;
+
   window.open(url, "_blank");
 }
+
 function clearFilters() {
   setSelectedSucursal("Todas");
   setSelectedProducto("Todos");
   setFromDate("");
   setToDate("");
 }
-
   return (
   <div id="dashboard-export">
     <div style={styles.page}>
-      <section style={styles.hero}>
-        <div>
-          <div style={styles.brandRow}>
-            <div style={styles.brandIcon}>JD</div>
-            <div>
-              <h1 style={styles.brandTitle}>JasoDatos</h1>
-              <p style={styles.brandSubtitle}>Inteligencia comercial que impulsa decisiones</p>
-              <p style={styles.brandMeta}>
-                Registros válidos: {filteredRows.length} · Archivo: {processedData.fileName}
-              </p>
-            </div>
+    <HeroHeader
+  businessName={settings.businessName}
+  filteredCount={filteredRows.length}
+  fileName={processedData.fileName}
+  planLabel={planLabel}
+  onSelectAnotherFile={onSelectAnotherFile}
+  onExportExcel={exportarExcel}
+  onClearFile={onClearFile}
+  onOpenPlans={() => setPlansOpen(true)}
+  onOpenSettings={() => setSettingsOpen(true)}
+/>
+<FilterBar
+  selectedSucursal={selectedSucursal}
+  selectedProducto={selectedProducto}
+  sucursalOptions={sucursalOptions}
+  productoOptions={productoOptions}
+  fromDate={fromDate}
+  toDate={toDate}
+  onChangeSucursal={setSelectedSucursal}
+  onChangeProducto={setSelectedProducto}
+  onChangeFromDate={setFromDate}
+  onChangeToDate={setToDate}
+  onClearFilters={clearFilters}
+/>
+<ProfileSettingsPanel
+  open={settingsOpen}
+  onClose={() => setSettingsOpen(false)}
+  settings={settings}
+  updateSettings={updateSettings}
+  updateThreshold={updateThreshold}
+  updateChannel={updateChannel}
+  resetSettings={resetSettings}
+/>
+<SubscriptionPlansPanel
+  open={plansOpen}
+  onClose={() => setPlansOpen(false)}
+  currentPlan={currentPlan}
+  setCurrentPlan={setCurrentPlan}
+/>
+<KpiSection items={kpiItems} />
+<AlertsSection alerts={alerts} />
+<section style={styles.mainCharts}>
+  <div id="tendencia-ventas" style={{ height: "100%" }}>
+    <Card title="Tendencia de ventas" subtitle="Ventas filtradas por fecha" fullHeight>
+      <div style={styles.chartTopBar}>
+        <div style={styles.customLegend}>
+          <div style={styles.customLegendItem}>
+            <span style={styles.legendLineSolid} />
+            <span>2024</span>
+          </div>
+          <div style={styles.customLegendItem}>
+            <span style={styles.legendLineDashed} />
+            <span>2023</span>
           </div>
         </div>
 
-        <div style={styles.heroActions}>
-          <button style={styles.primaryButton} onClick={onSelectAnotherFile}>
-  Seleccionar archivo
-</button>
-<button style={styles.secondaryButton} onClick={exportarExcel}>
-  Exportar Excel
-</button>
-          <button style={styles.secondaryButton} onClick={onClearFile}>
-  Limpiar archivo
-</button>
+        <div style={styles.totalPill}>
+          <strong>{formatMoney(ventasTotales, settings.locale, settings.currencyCode)}</strong>
+          <span>Total</span>
         </div>
-      </section>
+      </div>
 
-      <section style={styles.filterBar}>
-        <FilterSelect
-          label="Sucursal"
-          value={selectedSucursal}
-          options={sucursalOptions}
-          onChange={setSelectedSucursal}
-        />
-        <FilterSelect
-          label="Producto"
-          value={selectedProducto}
-          options={productoOptions}
-          onChange={setSelectedProducto}
-        />
-        <FilterDate label="Desde" value={fromDate} onChange={setFromDate} />
-        <FilterDate label="Hasta" value={toDate} onChange={setToDate} />
-        <button style={styles.filterButton} onClick={clearFilters}>
-          Limpiar filtros
-        </button>
-      </section>
+      <div style={{ width: "100%", height: 320 }}>
+        <ResponsiveContainer>
+          <AreaChart
+  data={tendenciaVentas}
+  margin={{ top: 8, right: 12, left: 18, bottom: 0 }}
+>
+            <defs>
+              <linearGradient id="ventasFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#7FB2FF" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#7FB2FF" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
 
-      <section style={styles.kpiGrid}>
-        <KpiCard
-          title="Ventas totales"
-          value={formatMoney(ventasTotales)}
-          badge={`${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`}
-          subtitle="vs. período anterior"
-        />
-        <KpiCard
-          title="Unidades totales"
-          value={formatInt(unidadesTotales)}
-          badge={`${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`}
-          subtitle="vs. período anterior"
-        />
-        <KpiCard
-          title="Producto más vendido"
-          value={productoTop?.producto ?? "Sin datos"}
-          badge={`${porcentajeTop}%`}
-          subtitle="del total de ventas"
-        />
-        <KpiCard
-          title="Stock crítico"
-          value={stockCritico === null ? "No Disponible" : formatInt(stockCritico)}
-          badge="Reglas activas"
-          subtitle="revisar inventario"
-          accent="danger"
-        />
-      </section>
+            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
 
-      <section style={styles.mainCharts}>
-        <Card title="Tendencia de ventas" subtitle="Ventas filtradas por fecha">
-          <div style={styles.chartTopBar}>
-            <div style={styles.customLegend}>
-              <div style={styles.customLegendItem}>
-                <span style={styles.legendLineSolid} />
-                <span>2024</span>
-              </div>
-              <div style={styles.customLegendItem}>
-                <span style={styles.legendLineDashed} />
-                <span>2023</span>
-              </div>
-            </div>
+            <XAxis
+              dataKey="fecha"
+              stroke="#B9C2FF"
+              tickLine={false}
+              axisLine={false}
+            />
 
-            <div style={styles.totalPill}>
-              <strong>{formatMoney(ventasTotales)}</strong>
-              <span>Total</span>
-            </div>
-          </div>
-
-          <div style={{ width: "100%", height: 320 }}>
-            <ResponsiveContainer>
-              <AreaChart data={tendenciaVentas}>
-                <defs>
-                  <linearGradient id="ventasFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7FB2FF" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#7FB2FF" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-                <XAxis dataKey="fecha" stroke="#B9C2FF" tickLine={false} axisLine={false} />
-<YAxis
+       <YAxis
   stroke="#B9C2FF"
   tickLine={false}
   axisLine={false}
-  tickFormatter={(v) => {
-    if (v >= 1000) return `$${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k`;
-    return `$${v}`;
-  }}
+  width={axisWidth}
+  tickMargin={10}
+  tickFormatter={(v) => formatCompactMoney(v)}
 />
-                <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => formatMoney(value)} />
-                <Area
-                  type="monotone"
+           <Tooltip
+  contentStyle={tooltipStyle}
+  formatter={(value: number) => formatMoney(value, settings.locale, settings.currencyCode)}
+/>
+            <Area
+              type="monotone"
+              dataKey="ventas"
+              stroke="#7FB2FF"
+              fill="url(#ventasFill)"
+              strokeWidth={3}
+              dot={{ r: 4, fill: "#A8CCFF", stroke: "#7FB2FF" }}
+            />
+
+            <Line
+              type="monotone"
+              dataKey="comparativo"
+              stroke="#C9D2FF"
+              strokeDasharray="4 4"
+              strokeWidth={2}
+              dot={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </Card>
+  </div>
+
+  <div id="participacion-producto" style={{ height: "100%" }}>
+    <Card
+      title="Participación por producto"
+      subtitle="Distribución de ventas por producto (top)"
+      action={<button style={styles.viewAllButton}>Ver todo</button>}
+      fullHeight
+    >
+      <div style={styles.pieLayout}>
+        <div style={styles.pieBox}>
+          <div style={{ width: "100%", height: 400 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={topProductos}
                   dataKey="ventas"
-                  stroke="#7FB2FF"
-                  fill="url(#ventasFill)"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: "#A8CCFF", stroke: "#7FB2FF" }}
+                  nameKey="producto"
+                  innerRadius={95}
+                  outerRadius={155}
+                  paddingAngle={1.5}
+                  stroke="#F3F4F6"
+                  strokeWidth={0.005}
+                >
+                  {topProductos.map((_, index) => (
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(value: number) => formatMoney(value, settings.locale, settings.currencyCode)}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="comparativo"
-                  stroke="#C9D2FF"
-                  strokeDasharray="4 4"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </AreaChart>
+              </PieChart>
             </ResponsiveContainer>
           </div>
-        </Card>
 
-        <Card
-          title="Participación por producto"
-          subtitle="Distribución de ventas por producto (top)"
-          action={<button style={styles.viewAllButton}>Ver todo</button>}
-        >
-          <div style={styles.pieLayout}>
-            <div style={styles.pieBox}>
-              <div style={{ width: "100%", height: 380 }}>
-                <ResponsiveContainer>
-                  <PieChart>
-<Pie
-  data={topProductos}
-  dataKey="ventas"
-  nameKey="producto"
-  innerRadius={95}
-  outerRadius={155}
-  paddingAngle={1.5}
-  stroke="#F3F4F6"
-  strokeWidth={0.005}
->
-                      {topProductos.map((_, index) => (
-                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => formatMoney(value)} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div style={styles.pieCenterOverlay}>
-                <span style={styles.pieCenterLabel}>Ventas</span>
-                <strong style={styles.pieCenterValue}>{formatMoney(ventasTotales)}</strong>
-                <span style={styles.pieCenterSub}>Total</span>
-              </div>
-            </div>
-
-            <div style={styles.legendColumn}>
-              {topProductos.map((item, index) => {
-                const pct = ventasTotales > 0 ? ((item.ventas / ventasTotales) * 100).toFixed(1) : "0.0";
-                return (
-                  <div key={item.producto} style={styles.legendItem}>
-                    <span
-                      style={{
-                        ...styles.legendDot,
-                        background: COLORS[index % COLORS.length],
-                      }}
-                    />
-                    <span style={styles.legendLabel}>{item.producto}</span>
-                    <span style={styles.legendPct}>{pct}%</span>
-                  </div>
-                );
-              })}
-            </div>
+          <div style={styles.pieCenterOverlay}>
+            <span style={styles.pieCenterLabel}>Ventas</span>
+            <strong style={styles.pieCenterValue}>
+  {formatMoney(ventasTotales, settings.locale, settings.currencyCode)}
+</strong>
+            <span style={styles.pieCenterSub}>Total</span>
           </div>
-        </Card>
-      </section>
+        </div>
 
-      <section style={styles.secondaryCharts}>
-<Card
-  title="Stock en riesgo • Regla: mínimo 20 unidades"
-  action={<button style={styles.viewAllButton}>Ver todo</button>}
->
+        <div style={styles.legendColumn}>
+          {topProductos.map((item, index) => {
+            const pct =
+              ventasTotales > 0 ? ((item.ventas / ventasTotales) * 100).toFixed(1) : "0.0";
+
+            return (
+              <div key={item.producto} style={styles.legendItem}>
+                <span
+                  style={{
+                    ...styles.legendDot,
+                    background: COLORS[index % COLORS.length],
+                  }}
+                />
+                <span style={styles.legendLabel}>{item.producto}</span>
+                <span style={styles.legendPct}>{pct}%</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
+<section style={styles.secondaryCharts}>
+  <Card
+    title={`Stock en riesgo • Regla: mínimo ${settings.defaultStockMin} unidades`}
+    subtitle="Productos con inventario comprometido según el umbral configurado"
+    action={<button style={styles.viewAllButton}>Ver todo</button>}
+    fullHeight
+  >
   <div style={{ overflowX: "auto" }}>
     <table style={styles.tableCompact}>
       <thead>
@@ -1014,7 +1456,7 @@ function clearFilters() {
           <tr>
             <td style={styles.tdCompact}>Sin datos</td>
             <td style={styles.tdCompact}>No Disponible</td>
-            <td style={styles.tdCompact}>20</td>
+            <td style={styles.tdCompact}>{settings.defaultStockMin}</td>
             <td style={styles.tdCompact}>
               <span
                 style={{
@@ -1086,42 +1528,55 @@ function clearFilters() {
     </table>
   </div>
 </Card>
+<Card
+  title="Ventas por canal"
+  subtitle="Distribución por fecha y canal"
+  action={<button style={styles.viewAllButton}>Ver todo</button>}
+>
+  <div style={styles.channelBadgeRow}>
+    <span style={styles.channelBadge}>
+      Canales activos: {activeChannels.length}/3
+    </span>
+    <span style={styles.channelBadgeText}>{activeChannelsLabel}</span>
+  </div>
 
-        <Card title="Ventas por canal" subtitle="Distribución por fecha y canal"action={<button style={styles.viewAllButton}>Ver todo</button>}>
-{!channelResult.hasChannelData ? (
-    <div style={{ color: "#C6CFFF", fontSize: 14 }}>
+  {activeChannels.length === 0 ? (
+    <div style={styles.channelEmptyState}>
+      No hay canales habilitados. Activa al menos uno desde Configuración del negocio.
+    </div>
+  ) : !channelResult.hasChannelData ? (
+    <div style={styles.channelEmptyState}>
       El archivo filtrado no contiene una columna de canal mapeada.
     </div>
   ) : (
     <div style={{ width: "100%", height: 340 }}>
       <ResponsiveContainer>
         <AreaChart
-  data={channelResult.data}
-  margin={{ top: 22, right: 18, left: 6, bottom: 1 }}
->
+          data={channelResult.data}
+          margin={{ top: 22, right: 18, left: 24, bottom: 1 }}
+        >
           <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-<XAxis
-  dataKey="fecha"
-  stroke="#B9C2FF"
-  tickLine={false}
-  axisLine={false}
-  tickMargin={8}
-  dy={1}
-/>
-<YAxis
-  stroke="#B9C2FF"
-  tickLine={false}
-  axisLine={false}
-  tickMargin={10}
-  width={54}
-  tickFormatter={(v) => {
-    if (v >= 1000) return `$${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k`;
-    return `$${v}`;
-  }}
-/>
+          <XAxis
+            dataKey="fecha"
+            stroke="#B9C2FF"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            dy={1}
+          />
+          <YAxis
+            stroke="#B9C2FF"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={10}
+            width={axisWidth}
+            tickFormatter={(v) => formatCompactMoney(v)}
+          />
           <Tooltip
             contentStyle={tooltipStyle}
-            formatter={(value: number) => formatMoney(value)}
+            formatter={(value: number) =>
+              formatMoney(value, settings.locale, settings.currencyCode)
+            }
           />
           <Legend verticalAlign="top" height={36} />
           {channelResult.channels.map((channel, index) => (
@@ -1141,315 +1596,235 @@ function clearFilters() {
   )}
 </Card>
 </section>
-
-<div style={styles.assistantCard}>
-  <div style={styles.assistantGrid}>
-    <div style={styles.assistantContent}>
-      <div style={styles.assistantHeader}>
-        <span style={styles.assistantTitle}>Asistente Comercial</span>
-        <span style={styles.assistantBadge}>PRO</span>
-<span
-  style={{
-    ...styles.assistantPromoBadge,
-    background:
-      jasoBot.tipoPromo === "combo"
-        ? "rgba(59,130,246,0.18)"
-        : jasoBot.tipoPromo === "liquidacion"
-        ? "rgba(239,68,68,0.18)"
-        : jasoBot.tipoPromo === "impulso_sucursal"
-        ? "rgba(245,158,11,0.18)"
-        : jasoBot.tipoPromo === "producto_estrella"
-        ? "rgba(34,197,94,0.18)"
-        : "rgba(148,163,184,0.18)",
-    color:
-      jasoBot.tipoPromo === "combo"
-        ? "#93C5FD"
-        : jasoBot.tipoPromo === "liquidacion"
-        ? "#FCA5A5"
-        : jasoBot.tipoPromo === "impulso_sucursal"
-        ? "#FCD34D"
-        : jasoBot.tipoPromo === "producto_estrella"
-        ? "#86EFAC"
-        : "#CBD5E1",
-    border:
-      jasoBot.tipoPromo === "combo"
-        ? "1px solid rgba(147,197,253,0.22)"
-        : jasoBot.tipoPromo === "liquidacion"
-        ? "1px solid rgba(252,165,165,0.22)"
-        : jasoBot.tipoPromo === "impulso_sucursal"
-        ? "1px solid rgba(252,211,77,0.22)"
-        : jasoBot.tipoPromo === "producto_estrella"
-        ? "1px solid rgba(134,239,172,0.22)"
-        : "1px solid rgba(203,213,225,0.22)",
-  }}
->
-  {jasoBot.tipoPromo === "combo"
-    ? "Combo"
-    : jasoBot.tipoPromo === "liquidacion"
-    ? "Liquidación"
-    : jasoBot.tipoPromo === "impulso_sucursal"
-    ? "Impulso sucursal"
-    : jasoBot.tipoPromo === "producto_estrella"
-    ? "Producto estrella"
-    : "Promo"}
-</span>
+{settings.showBenchmarking &&
+  (canUseBenchmarking ? (
+    <div id="benchmarking-sucursales">
+      <div style={styles.modulePlanRow}>
+        <ActivePlanBadge tone="pro">Incluido en PRO</ActivePlanBadge>
+        <span style={styles.modulePlanText}>Comparativo comercial avanzado entre sucursales</span>
       </div>
 
-     <div style={styles.assistantText}>
-  {jasoBot.mensajePrincipal}
-  <br />
-  <strong>Potencia esa promoción en tu WhatsApp</strong>
-</div>
-    </div>
-
-<div style={styles.assistantInsights}>
-  {jasoBot.insights.map((item) => (
-    <div key={item}>✦ {item}</div>
-  ))}
-
-<div style={styles.actionsGrid}>
-  {jasoBot.recomendaciones?.map((item) => (
-    <div key={item} style={styles.actionCard}>
-      <div style={styles.actionIcon}>⚡</div>
-      <div style={styles.actionText}>{item}</div>
-      <button style={styles.actionButton} onClick={() => usarAccion(item)}>
-        Usar
-      </button>
-    </div>
-  ))}
-
-  {actionNotice ? (
-    <div style={styles.actionNotice}>
-      {actionNotice}
-    </div>
-  ) : null}
-</div>
-</div>
-
-    <div style={styles.assistantActions}>
-<button style={styles.whatsappButton} onClick={enviarPromoWhatsApp}>
-  Mejora tus ventas en WhatsApp
-</button>
-
-<button
-  style={styles.shareButton}
-  onClick={() => {
-    exportarPDF();
-    setTimeout(() => {
-      enviarWhatsApp();
-    }, 900);
-  }}
->
-  Compartir PDF por WhatsApp
-</button>
-    </div>
-  </div>
-</div>
       <BenchmarkingSucursales rows={benchmarkRows} />
-<section style={styles.detailCardPro}>
-  <div style={styles.detailTopBar}>
-    <div style={styles.detailTopLeft}>
-      Detalle de registros — mostrando {Math.min(pageSize, paginatedRows.length)} de {searchedRows.length} filas
     </div>
+  ) : (
+    <LockedFeatureCard
+      title="Desempeño entre sucursales"
+      description="Compara el desempeño comercial entre sucursales y detecta rezagos. Disponible desde el plan Pro."
+      requiredPlan="pro"
+      onOpenPlans={() => setPlansOpen(true)}
+    />
+  ))}
+{settings.showAssistant &&
+  (canUseAssistant ? (
+    <div style={styles.assistantCard}>
+      <div style={styles.assistantGrid}>
+        <div style={styles.assistantContent}>
+          <div style={styles.assistantHeader}>
+            <span style={styles.assistantTitle}>Asistente Comercial</span>
+            <ActivePlanBadge tone="pro">Incluido en PRO</ActivePlanBadge>
+            {canUseWhatsappByPlan ? (
+              <ActivePlanBadge tone="ultra">WhatsApp en ULTRA</ActivePlanBadge>
+            ) : (
+              <ActivePlanBadge tone="basic">WhatsApp bloqueado</ActivePlanBadge>
+            )}
 
-   <div style={styles.detailTopRight}>
-  <input
-    style={styles.searchInput}
-    placeholder="Buscar..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-  />
+            <span
+              style={{
+                ...styles.assistantPromoBadge,
+                background:
+                  jasoBot.tipoPromo === "combo"
+                    ? "rgba(59,130,246,0.18)"
+                    : jasoBot.tipoPromo === "liquidacion"
+                    ? "rgba(239,68,68,0.18)"
+                    : jasoBot.tipoPromo === "impulso_sucursal"
+                    ? "rgba(245,158,11,0.18)"
+                    : jasoBot.tipoPromo === "producto_estrella"
+                    ? "rgba(34,197,94,0.18)"
+                    : "rgba(148,163,184,0.18)",
+                color:
+                  jasoBot.tipoPromo === "combo"
+                    ? "#93C5FD"
+                    : jasoBot.tipoPromo === "liquidacion"
+                    ? "#FCA5A5"
+                    : jasoBot.tipoPromo === "impulso_sucursal"
+                    ? "#FCD34D"
+                    : jasoBot.tipoPromo === "producto_estrella"
+                    ? "#86EFAC"
+                    : "#CBD5E1",
+                border:
+                  jasoBot.tipoPromo === "combo"
+                    ? "1px solid rgba(147,197,253,0.22)"
+                    : jasoBot.tipoPromo === "liquidacion"
+                    ? "1px solid rgba(252,165,165,0.22)"
+                    : jasoBot.tipoPromo === "impulso_sucursal"
+                    ? "1px solid rgba(252,211,77,0.22)"
+                    : jasoBot.tipoPromo === "producto_estrella"
+                    ? "1px solid rgba(134,239,172,0.22)"
+                    : "1px solid rgba(203,213,225,0.22)",
+              }}
+            >
+              {jasoBot.tipoPromo === "combo"
+                ? "Combo"
+                : jasoBot.tipoPromo === "liquidacion"
+                ? "Liquidación"
+                : jasoBot.tipoPromo === "impulso_sucursal"
+                ? "Impulso sucursal"
+                : jasoBot.tipoPromo === "producto_estrella"
+                ? "Producto estrella"
+                : "Promo"}
+            </span>
+          </div>
 
-  <span style={styles.detailTopLabel}>Filas por página</span>
+          <div style={styles.assistantText}>
+            {jasoBot.mensajePrincipal}
+            <br />
+            <strong>Potencia esa promoción en tu WhatsApp</strong>
+          </div>
 
-      <select
-        style={styles.pageSizeSelect}
-        value={pageSize}
-        onChange={(e) => setPageSize(Number(e.target.value))}
-      >
-        <option value="25">25</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-      </select>
+          <div style={styles.assistantChannelRow}>
+            <span style={styles.assistantChannelBadge}>
+              {activeChannels.length === 0
+                ? "Sin canales habilitados"
+                : `Canales activos: ${activeChannels.length}/3`}
+            </span>
 
-      <button
-        style={styles.pageGhostButton}
-        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-        disabled={currentPage === 1}
-      >
-        ◀ Anterior
-      </button>
+            <span style={styles.assistantChannelText}>
+              {!hasValidWhatsapp
+                ? "Configura un WhatsApp válido en Configuración del negocio para habilitar el envío."
+                : activeChannels.length === 0
+                ? "Activa al menos un canal desde Configuración del negocio."
+                : secondaryActiveChannelsLabel
+                ? `Canal prioritario activo: ${topActiveChannelLabel} · Otros canales activos: ${secondaryActiveChannelsLabel}`
+                : `Canal prioritario activo: ${topActiveChannelLabel}`}
+            </span>
+          </div>
+        </div>
 
-      <span style={styles.pageIndicator}>
-        Página {currentPage} de {totalPages}
-      </span>
-
-      <button
-        style={styles.pagePrimaryButton}
-        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-        disabled={currentPage === totalPages}
-      >
-        Siguiente ▶
-      </button>
-    </div>
-  </div>
-
-  <div style={styles.detailTableShell}>
-    <div style={styles.detailTableScroller}>
-      <table style={styles.dataTablePro}>
-        <thead>
-          <tr>
-            <th style={styles.dataTh}>fecha</th>
-            <th style={styles.dataTh}>sucursal</th>
-            <th style={styles.dataTh}>bodega</th>
-            <th style={styles.dataTh}>sku</th>
-            <th style={styles.dataTh}>producto</th>
-            <th style={styles.dataTh}>tipo_movimiento</th>
-            <th style={styles.dataTh}>cantidad</th>
-            <th style={styles.dataTh}>costo_unitario</th>
-            <th style={styles.dataTh}>precio_unitario</th>
-            <th style={styles.dataTh}>canal</th>
-            <th style={styles.dataTh}>stock</th>
-          </tr>
-        </thead>
-
-        <tbody>
-{paginatedRows.map((row, index) => (
-  <tr
-    key={`${toDateKey(row.fecha)}-${toText(row.producto)}-${index}`}
-    onMouseEnter={() => setHoveredRow(index)}
-    onMouseLeave={() => setHoveredRow(null)}
-    style={
-      hoveredRow === index
-        ? styles.dataRowHover
-        : index % 2 === 0
-        ? styles.dataRowEven
-        : styles.dataRowOdd
-    }
-  >
-              <td style={styles.dataTd}>{toDateKey(row.fecha)}</td>
-              <td style={styles.dataTd}>{toText(row.sucursal)}</td>
-              <td style={styles.dataTd}>{toText(row.bodega, "-")}</td>
-              <td style={styles.dataTd}>{toText(row.sku, "-")}</td>
-              <td style={styles.dataTd}>{toText(row.producto)}</td>
-              <td style={styles.dataTd}>{toText(row.tipo_movimiento, "-")}</td>
-              <td style={styles.dataTd}>{formatInt(toNumber(row.cantidad))}</td>
-              <td style={styles.dataTd}>{formatMoney(toNumber(row.costo_unitario))}</td>
-              <td style={styles.dataTd}>{formatMoney(toNumber(row.precio_unitario))}</td>
-              <td style={styles.dataTd}>{toText(row.canal, "-")}</td>
-              <td style={styles.dataTd}>
-                {row.stock === undefined || row.stock === null || row.stock === ""
-                  ? "No Disponible"
-                  : formatInt(toNumber(row.stock))}
-              </td>
-            </tr>
+        <div style={styles.assistantInsights}>
+          {jasoBot.insights.map((item) => (
+            <div key={item}>✦ {item}</div>
           ))}
-        </tbody>
-      </table>
-    </div>
 
-    <div style={styles.detailBottomBar}>
-      {(() => {
-  const start = searchedRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const end = Math.min(currentPage * pageSize, searchedRows.length);
-  return `Mostrando ${start}–${end} de ${searchedRows.length} filas.`;
-})()}
+          <div style={styles.actionsGrid}>
+            {jasoBot.recomendaciones?.map((item) => (
+              <div key={item} style={styles.actionCard}>
+                <div style={styles.actionIcon}>⚡</div>
+                <div style={styles.actionText}>{item}</div>
+                <button style={styles.actionButton} onClick={() => usarAccion(item)}>
+                  Usar
+                </button>
+              </div>
+            ))}
+
+            {actionNotice ? <div style={styles.actionNotice}>{actionNotice}</div> : null}
+          </div>
+        </div>
+
+        <div style={styles.assistantActions}>
+          <div style={styles.modulePlanRow}>
+            <ActivePlanBadge tone="pro">PDF en PRO</ActivePlanBadge>
+            <ActivePlanBadge tone="ultra">WhatsApp en ULTRA</ActivePlanBadge>
+          </div>
+
+          <button
+            style={{
+              ...styles.whatsappButton,
+              ...(!canUseWhatsappActions ? styles.disabledButton : null),
+            }}
+            onClick={enviarPromoWhatsApp}
+            disabled={!canUseWhatsappActions}
+            title={whatsappDisabledReason}
+          >
+            {!canUseWhatsappByPlan
+              ? "Disponible en plan Ultra"
+              : !hasValidWhatsapp
+              ? "Configura tu número celular para activar el envío a WhatsApp"
+              : "Mejora tus ventas en WhatsApp"}
+          </button>
+
+          <button
+            style={{
+              ...styles.shareButton,
+              ...(!(canExportPdf && canUseWhatsappInputs) ? styles.disabledButton : null),
+            }}
+            onClick={() => {
+              exportarPDF();
+              setTimeout(() => {
+                enviarWhatsApp();
+              }, 900);
+            }}
+            disabled={!(canExportPdf && canUseWhatsappInputs)}
+            title={pdfDisabledReason}
+          >
+            {!canExportPdf
+              ? "Disponible desde el plan Pro"
+              : !hasValidWhatsapp
+              ? "Configura tu número celular para activar el envío a WhatsApp"
+              : "Compartir PDF por WhatsApp"}
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+  ) : (
+    <LockedFeatureCard
+      title="Asistente Comercial"
+      description="Recibe recomendaciones accionables, promociones sugeridas y apoyo de WhatsApp. Disponible desde el plan Pro."
+      requiredPlan="pro"
+      onOpenPlans={() => setPlansOpen(true)}
+    />
+  ))}
+<DetailTableSection
+  searchedRowsCount={searchedRows.length}
+  paginatedRows={paginatedRows}
+  pageSize={pageSize}
+  currentPage={currentPage}
+  totalPages={totalPages}
+  searchTerm={searchTerm}
+  onSearchTermChange={setSearchTerm}
+  onPageSizeChange={setPageSize}
+  onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+  onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+  toDateKey={toDateKey}
+  toText={toText}
+  toNumber={toNumber}
+  formatInt={(value) => formatInt(value, settings.locale)}
+  formatMoney={(value) => formatMoney(value, settings.locale, settings.currencyCode)}
+/>
+<style jsx global>{`
+  input::placeholder {
+    color: rgba(255, 255, 255, 0.88);
+    opacity: 1;
+  }
+
+  select option {
+    background: #1e2670;
+    color: #ffffff;
+  }
+`}</style>
     </div>
   </div>
 );
 }
-
-function FilterSelect({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div style={styles.filterBox}>
-      <span style={styles.filterLabel}>{label}</span>
-      <select style={styles.filterSelect} value={value} onChange={(e) => onChange(e.target.value)}>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-function FilterDate({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div style={styles.filterBox}>
-      <span style={styles.filterLabel}>{label}</span>
-      <input type="date" style={styles.filterDateInput} value={value} onChange={(e) => onChange(e.target.value)} />
-    </div>
-  );
-}
-
-function KpiCard({
-  title,
-  value,
-  badge,
-  subtitle,
-  accent = "default",
-}: {
-  title: string;
-  value: string;
-  badge: string;
-  subtitle: string;
-  accent?: "default" | "danger";
-}) {
-  return (
-    <div style={styles.kpiCard}>
-      <div style={styles.kpiTitle}>{title}</div>
-      <div style={styles.kpiValue}>{value}</div>
-      <div style={styles.kpiFooter}>
-        <span
-          style={{
-            ...styles.kpiBadge,
-            background: accent === "danger" ? "rgba(239,68,68,0.18)" : "rgba(34,197,94,0.18)",
-            color: accent === "danger" ? "#FCA5A5" : "#86EFAC",
-          }}
-        >
-          {badge}
-        </span>
-        <span style={styles.kpiSubtitle}>{subtitle}</span>
-      </div>
-    </div>
-  );
-}
-
 function Card({
   title,
   subtitle,
   action,
   children,
+  fullHeight = false,
 }: {
   title: string;
   subtitle?: string;
   action?: ReactNode;
   children: ReactNode;
+  fullHeight?: boolean;
 }) {
   return (
-    <div style={styles.card}>
+    <div
+      style={{
+        ...styles.card,
+        height: fullHeight ? "100%" : undefined,
+      }}
+    >
       <div style={styles.cardHeader}>
         <div>
           <h3 style={styles.sectionTitle}>{title}</h3>
@@ -1461,7 +1836,61 @@ function Card({
     </div>
   );
 }
+function LockedFeatureCard({
+  title,
+  description,
+  requiredPlan,
+  onOpenPlans,
+}: {
+  title: string;
+  description: string;
+  requiredPlan: SubscriptionPlan;
+  onOpenPlans: () => void;
+}) {
+  return (
+    <div style={styles.lockedFeatureCard}>
+      <div style={styles.lockedFeatureTop}>
+        <span style={styles.lockedFeatureBadge}>Disponible en {requiredPlan.toUpperCase()}</span>
+        <span style={styles.lockedFeatureMiniBadge}>Upgrade</span>
+      </div>
 
+      <h3 style={styles.lockedFeatureTitle}>{title}</h3>
+      <p style={styles.lockedFeatureText}>{description}</p>
+
+      <div style={styles.lockedFeatureFooter}>
+        <span style={styles.lockedFeatureHint}>
+          Mejora tu plan para desbloquear esta funcionalidad.
+        </span>
+
+        <button style={styles.lockedFeatureButton} onClick={onOpenPlans}>
+          Mejorar plan
+        </button>
+      </div>
+    </div>
+  );
+}
+function ActivePlanBadge({
+  children,
+  tone = "pro",
+}: {
+  children: ReactNode;
+  tone?: "basic" | "pro" | "ultra";
+}) {
+  return (
+    <span
+      style={{
+        ...styles.activePlanBadge,
+        ...(tone === "basic"
+          ? styles.activePlanBadgeBasic
+          : tone === "ultra"
+          ? styles.activePlanBadgeUltra
+          : styles.activePlanBadgePro),
+      }}
+    >
+      {children}
+    </span>
+  );
+}
 const tooltipStyle = {
   background: "#1C2468",
   border: "1px solid rgba(255,255,255,0.12)",
@@ -1476,54 +1905,10 @@ const styles: Record<string, CSSProperties> = {
     padding: 16,
     background: "linear-gradient(180deg, #EEF2FF 0%, #E8EDFF 100%)",
   },
-hero: {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 18,
-  background: "linear-gradient(135deg, #1E2670 0%, #2D2D92 100%)",
-  color: "#FFFFFF",
-  borderRadius: 22,
-  padding: "22px 24px",
-  border: "1px solid rgba(255,255,255,0.12)",
-  boxShadow: "0 14px 28px rgba(17,24,39,0.12)",
-  flexWrap: "wrap",
-},
-  brandRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 14,
-  },
-  brandIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    display: "grid",
-    placeItems: "center",
-    fontWeight: 800,
-    background: "linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)",
-    color: "#FFFFFF",
-  },
-  brandTitle: {
-    margin: 0,
-    fontSize: 36,
-    lineHeight: 1,
-    fontWeight: 800,
-  },
-  dataRowEven: {
-  background: "rgba(255,255,255,0.04)",
-},
-
-dataRowOdd: {
-  background: "rgba(255,255,255,0.08)",
-},
-dataRowHover: {
-  background: "rgba(255,255,255,0.14)",
-},
 assistantCard: {
   background: "linear-gradient(180deg, #2f347f 0%, #2b3170 100%)",
   borderRadius: 20,
-  padding: "18px 20px",
+  padding: "20px 22px",
   border: "1px solid rgba(255,255,255,0.08)",
   boxShadow: "0 12px 24px rgba(17,24,39,0.10)",
 },
@@ -1537,14 +1922,16 @@ assistantGrid: {
 
 actionButton: {
   marginLeft: "auto",
-  background: "rgba(255,255,255,0.10)",
+  background: "rgba(127,178,255,0.10)",
   color: "#FFFFFF",
-  border: "1px solid rgba(255,255,255,0.18)",
-  borderRadius: 10,
-  padding: "8px 12px",
-  fontSize: 12,
+  border: "1px solid rgba(127,178,255,0.20)",
+  borderRadius: 12,
+  minHeight: 38,
+  padding: "0 14px",
+  fontSize: 13,
   fontWeight: 800,
   cursor: "pointer",
+  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.03)",
 },
 
 actionNotice: {
@@ -1594,7 +1981,7 @@ actionText: {
   color: "#86EFAC",
   fontSize: 14,
   fontWeight: 700,
-  lineHeight: 1.3,
+  lineHeight: 1.35,
 },
 assistantHeader: {
   display: "flex",
@@ -1603,33 +1990,20 @@ assistantHeader: {
   marginBottom: 10,
 },
 assistantTitle: {
-  fontSize: 22,
+  fontSize: 18,
   fontWeight: 800,
   color: "#FFFFFF",
-  lineHeight: 1.1,
+  lineHeight: 1.15,
+  letterSpacing: "-0.01em",
 },
-assistantBadge: {
-  background: "rgba(255,255,255,0.14)",
-  color: "#E9E7FF",
-  padding: "4px 10px",
-  borderRadius: 999,
-  fontSize: 11,
-  fontWeight: 800,
-  border: "1px solid rgba(255,255,255,0.10)",
-},
+
 assistantText: {
-  color: "#E1E6FF",
-  fontSize: 17,
-  lineHeight: 1.7,
+  color: "rgba(236,242,255,0.94)",
+  fontSize: 14,
+  lineHeight: 1.58,
   margin: 0,
   maxWidth: 720,
   fontWeight: 500,
-},
-assistantButtons: {
-  display: "flex",
-  gap: 10,
-  marginTop: 4,
-  flexWrap: "wrap",
 },
 
 whatsappButton: {
@@ -1679,144 +2053,12 @@ assistantActions: {
   width: "100%",
   minWidth: 0,
 },
-  brandSubtitle: {
-    margin: "6px 0 4px",
-    color: "#D6DCFF",
-    fontSize: 15,
-  },
-  brandMeta: {
-    margin: 0,
-    color: "#B7C2FF",
-    fontSize: 13,
-  },
-heroActions: {
-  display: "flex",
+ mainCharts: {
+  display: "grid",
+  gridTemplateColumns: "1.25fr 1fr",
   gap: 12,
-  flexWrap: "wrap",
-  alignItems: "center",
+  alignItems: "stretch",
 },
-primaryButton: {
-  background: "#4460FF",
-  color: "#FFFFFF",
-  border: "1px solid rgba(255,255,255,0.16)",
-  borderRadius: 14,
-  minHeight: 48,
-  padding: "0 20px",
-  fontWeight: 800,
-  fontSize: 15,
-  cursor: "pointer",
-  boxShadow: "0 10px 22px rgba(68,96,255,0.22)",
-},
-secondaryButton: {
-  background: "transparent",
-  color: "#FFFFFF",
-  border: "1px solid rgba(255,255,255,0.24)",
-  borderRadius: 14,
-  minHeight: 48,
-  padding: "0 20px",
-  fontWeight: 700,
-  fontSize: 15,
-  cursor: "pointer",
-},
-  filterBar: {
-    display: "grid",
-    gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-    gap: 12,
-    background: "linear-gradient(135deg, #232D82 0%, #2C318E 100%)",
-    borderRadius: 18,
-    padding: 16,
-    border: "1px solid rgba(255,255,255,0.12)",
-  },
-  filterBox: {
-    display: "grid",
-    gap: 8,
-  },
-  filterLabel: {
-    color: "#D9E0FF",
-    fontSize: 13,
-    fontWeight: 600,
-  },
-  filterSelect: {
-    background: "rgba(255,255,255,0.96)",
-    color: "#111827",
-    borderRadius: 12,
-    minHeight: 44,
-    padding: "0 14px",
-    fontWeight: 600,
-    border: "none",
-    outline: "none",
-  },
-  filterDateInput: {
-    background: "rgba(255,255,255,0.96)",
-    color: "#111827",
-    borderRadius: 12,
-    minHeight: 44,
-    padding: "0 14px",
-    fontWeight: 600,
-    border: "none",
-    outline: "none",
-  },
-  filterButton: {
-    alignSelf: "end",
-    minHeight: 44,
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.16)",
-    background: "#365BFF",
-    color: "#FFFFFF",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  kpiGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 12,
-  },
-  kpiCard: {
-    background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
-    color: "#FFFFFF",
-    borderRadius: 18,
-    padding: 20,
-    border: "1px solid rgba(255,255,255,0.12)",
-    boxShadow: "0 10px 20px rgba(17,24,39,0.10)",
-  },
-  kpiTitle: {
-    color: "#D3DAFF",
-    fontSize: 15,
-    fontWeight: 700,
-    marginBottom: 10,
-  },
-  kpiValue: {
-    fontSize: 30,
-    fontWeight: 800,
-    marginBottom: 12,
-    lineHeight: 1.1,
-  },
-  kpiFooter: {
-    display: "flex",
-    gap: 8,
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  kpiBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 28,
-    borderRadius: 999,
-    padding: "0 10px",
-    fontSize: 12,
-    fontWeight: 800,
-  },
-  kpiSubtitle: {
-    color: "#C0C9FF",
-    fontSize: 13,
-    fontWeight: 600,
-  },
-  mainCharts: {
-    display: "grid",
-    gridTemplateColumns: "1.55fr 1fr",
-    gap: 12,
-  },
   secondaryCharts: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -1826,17 +2068,17 @@ card: {
   background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
   color: "#FFFFFF",
   borderRadius: 20,
-  padding: 20,
+  padding: 22,
   border: "1px solid rgba(255,255,255,0.12)",
   boxShadow: "0 12px 24px rgba(17,24,39,0.10)",
 },
-  cardHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
-    gap: 12,
-  },
+cardHeader: {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  marginBottom: 14,
+  gap: 12,
+},
 sectionTitle: {
   margin: 0,
   fontSize: 20,
@@ -1900,12 +2142,13 @@ pieLayout: {
   display: "grid",
   gridTemplateColumns: "380px 1fr",
   gap: 14,
-  alignItems: "center",
+  alignItems: "stretch",
+  minHeight: 100,
 },
 pieBox: {
   position: "relative",
   width: 340,
-  height: 360,
+  height: 400,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -1938,6 +2181,7 @@ legendColumn: {
   display: "grid",
   gap: 12,
   alignContent: "center",
+  alignSelf: "stretch",
   paddingLeft: 0,
 },
 legendItem: {
@@ -1968,183 +2212,17 @@ legendPct: {
   justifySelf: "end",
 },
 viewAllButton: {
-  background: "rgba(255,255,255,0.08)",
-  color: "#FFFFFF",
-  border: "1px solid rgba(255,255,255,0.14)",
-  borderRadius: 999,
-  minHeight: 36,
+  minHeight: 40,
   padding: "0 14px",
-  fontWeight: 700,
-  fontSize: 12,
-  cursor: "pointer",
-},
-  
-  detailCard: {
-    background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
-    color: "#FFFFFF",
-    borderRadius: 18,
-    padding: 18,
-    border: "1px solid rgba(255,255,255,0.12)",
-    boxShadow: "0 10px 20px rgba(17,24,39,0.10)",
-  },
-detailCardPro: {
-  background: "linear-gradient(180deg, #4F56E8 0%, #1BC3D9 100%)",
-  borderRadius: 22,
-  padding: 14,
-  border: "1px solid rgba(255,255,255,0.10)",
-  boxShadow: "0 14px 28px rgba(17,24,39,0.16)",
-},
-
-detailTopBar: {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  marginBottom: 10,
-  flexWrap: "wrap",
-},
-
-detailTopLeft: {
-  color: "#FFFFFF",
-  fontSize: 14,
-  fontWeight: 700,
-},
-
-detailTopRight: {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  flexWrap: "wrap",
-},
-
-detailTopLabel: {
-  color: "#EAF0FF",
-  fontSize: 12,
-  fontWeight: 600,
-},
-
-pageSizeSelect: {
-  background: "rgba(255,255,255,0.12)",
-  color: "#FFFFFF",
-  border: "1px solid rgba(255,255,255,0.24)",
   borderRadius: 999,
-  padding: "6px 12px",
-  fontWeight: 700,
-  outline: "none",
-},
-
-pageGhostButton: {
-  background: "rgba(255,255,255,0.10)",
-  color: "#D8DEFF",
-  border: "1px solid rgba(255,255,255,0.18)",
-  borderRadius: 999,
-  padding: "6px 12px",
-  fontWeight: 700,
-  cursor: "pointer",
-  opacity: 1,
-},
-
-pagePrimaryButton: {
-  background: "rgba(99,102,241,0.85)",
-  color: "#FFFFFF",
-  border: "1px solid rgba(255,255,255,0.24)",
-  borderRadius: 999,
-  padding: "6px 12px",
-  fontWeight: 700,
-  cursor: "pointer",
-  opacity: 1,
-},
-
-pageIndicator: {
-  color: "#FFFFFF",
-  fontSize: 12,
-  fontWeight: 700,
-},
-
-detailTableShell: {
-  background: "linear-gradient(180deg, rgba(8,17,65,0.88) 0%, rgba(7,89,133,0.88) 100%)",
-  borderRadius: 18,
-  overflow: "hidden",
-  border: "1px solid rgba(255,255,255,0.12)",
-},
-
-detailTableScroller: {
-  overflowX: "auto",
-  maxHeight: 720,
-  overflowY: "auto",
-},
-
-dataTablePro: {
-  width: "100%",
-  minWidth: 1200,
-  borderCollapse: "collapse",
+  border: "1px solid rgba(127,178,255,0.22)",
+  background: "rgba(127,178,255,0.10)",
   color: "#FFFFFF",
   fontSize: 13,
-},
-
-dataTh: {
-  textAlign: "left",
-  padding: "12px 10px",
-  background: "rgba(7,16,54,0.96)",
-  color: "#EAF0FF",
-  borderRight: "1px solid rgba(255,255,255,0.16)",
-  borderBottom: "1px solid rgba(255,255,255,0.18)",
   fontWeight: 800,
-  fontSize: 12,
-  textTransform: "none",
-  whiteSpace: "nowrap",
-  position: "sticky",
-  top: 0,
-  zIndex: 2,
+  cursor: "pointer",
+  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.03)",
 },
-
-dataTd: {
-  padding: "10px 10px",
-  color: "#F8FAFF",
-  borderRight: "1px solid rgba(255,255,255,0.10)",
-  borderBottom: "1px solid rgba(255,255,255,0.10)",
-  whiteSpace: "nowrap",
-  fontWeight: 600,
-  background: "transparent",
-  letterSpacing: 0.2,
-},
-
-detailBottomBar: {
-  padding: "10px 12px",
-  color: "#EAF0FF",
-  fontSize: 12,
-  fontWeight: 700,
-  background: "rgba(0,0,0,0.12)",
-},
-  detailHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 14,
-    flexWrap: "wrap",
-  },
-  detailActions: {
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  searchInput: {
-    minWidth: 220,
-    minHeight: 42,
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.06)",
-    color: "#FFFFFF",
-    padding: "0 12px",
-    outline: "none",
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    color: "#FFFFFF",
-    fontSize: 14,
-  },
   tableCompact: {
   width: "100%",
   borderCollapse: "collapse",
@@ -2216,14 +2294,200 @@ stockStatusText: {
     fontWeight: 800,
     fontSize: 12,
   },
-  footerRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 14,
-    color: "#C7D0FF",
-    fontSize: 13,
-    flexWrap: "wrap",
-  },
+  channelBadgeRow: {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  flexWrap: "wrap",
+  marginBottom: 12,
+},
+
+channelBadge: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 28,
+  padding: "0 12px",
+  borderRadius: 999,
+  background: "rgba(127,178,255,0.12)",
+  border: "1px solid rgba(127,178,255,0.22)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 800,
+},
+
+channelBadgeText: {
+  color: "#C6CFFF",
+  fontSize: 13,
+  fontWeight: 600,
+},
+
+channelEmptyState: {
+  color: "#C6CFFF",
+  fontSize: 14,
+  lineHeight: 1.5,
+  padding: "10px 0 6px",
+},
+assistantChannelRow: {
+  display: "grid",
+  gap: 8,
+  marginTop: 12,
+},
+
+assistantChannelBadge: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 28,
+  padding: "0 12px",
+  borderRadius: 999,
+  background: "rgba(127,178,255,0.12)",
+  border: "1px solid rgba(127,178,255,0.22)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 800,
+  width: "fit-content",
+},
+
+assistantChannelText: {
+  color: "#DDE6FF",
+  fontSize: 13,
+  lineHeight: 1.45,
+  fontWeight: 600,
+},
+
+disabledButton: {
+  opacity: 0.55,
+  cursor: "not-allowed",
+  boxShadow: "none",
+},
+lockedFeatureCard: {
+  background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
+  color: "#FFFFFF",
+  borderRadius: 20,
+  padding: 22,
+  border: "1px solid rgba(255,255,255,0.12)",
+  boxShadow: "0 12px 24px rgba(17,24,39,0.10)",
+  display: "grid",
+  gap: 12,
+},
+
+lockedFeatureBadge: {
+  width: "fit-content",
+  padding: "4px 10px",
+  borderRadius: 999,
+  background: "rgba(245,158,11,0.16)",
+  border: "1px solid rgba(245,158,11,0.28)",
+  color: "#FCD34D",
+  fontSize: 11,
+  fontWeight: 800,
+},
+
+lockedFeatureTitle: {
+  margin: 0,
+  fontSize: 20,
+  fontWeight: 800,
+  color: "#FFFFFF",
+},
+
+lockedFeatureText: {
+  margin: 0,
+  color: "#DDE6FF",
+  fontSize: 14,
+  lineHeight: 1.5,
+  fontWeight: 500,
+},
+lockedFeatureTop: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 10,
+  flexWrap: "wrap",
+},
+
+lockedFeatureMiniBadge: {
+  padding: "4px 10px",
+  borderRadius: 999,
+  background: "rgba(127,178,255,0.12)",
+  border: "1px solid rgba(127,178,255,0.22)",
+  color: "#DDE6FF",
+  fontSize: 11,
+  fontWeight: 800,
+},
+
+lockedFeatureFooter: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  flexWrap: "wrap",
+},
+
+lockedFeatureHint: {
+  color: "#C6CFFF",
+  fontSize: 13,
+  lineHeight: 1.45,
+  fontWeight: 600,
+},
+
+lockedFeatureButton: {
+  minHeight: 42,
+  width: "fit-content",
+  padding: "0 16px",
+  borderRadius: 12,
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "linear-gradient(135deg, #4460FF 0%, #5B6CFF 100%)",
+  color: "#FFFFFF",
+  fontSize: 13,
+  fontWeight: 800,
+  cursor: "pointer",
+  boxShadow: "0 10px 20px rgba(68,96,255,0.18)",
+},
+modulePlanRow: {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
+  margin: "0 0 12px 4px",
+  padding: 0,
+  width: "fit-content",
+  background: "transparent",
+  border: "none",
+},
+modulePlanText: {
+  color: "#1E2670",
+  fontSize: 14,
+  fontWeight: 800,
+  letterSpacing: "-0.01em",
+},
+activePlanBadge: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 30,
+  padding: "0 14px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 800,
+  border: "1px solid transparent",
+  boxShadow: "0 6px 14px rgba(15, 23, 42, 0.10)",
+},
+
+activePlanBadgeBasic: {
+  background: "linear-gradient(135deg, #475569 0%, #64748B 100%)",
+  border: "1px solid rgba(71, 85, 105, 0.30)",
+  color: "#FFFFFF",
+},
+
+activePlanBadgePro: {
+  background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)",
+  border: "1px solid rgba(67, 56, 202, 0.28)",
+  color: "#FFFFFF",
+},
+
+activePlanBadgeUltra: {
+  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
+  border: "1px solid rgba(22, 163, 74, 0.30)",
+  color: "#FFFFFF",
+},
 };

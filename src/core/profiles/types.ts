@@ -1,4 +1,4 @@
-export type ProfileId = "comercial" | "camaronera";
+export type ProfileId = "comercial";
 
 export type CanonicalFieldType =
   | "string"

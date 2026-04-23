@@ -108,8 +108,8 @@ export default function BenchmarkingSucursales({ rows }: Props) {
     <section style={styles.wrapper}>
       <div style={styles.header}>
         <div>
-          <h3 style={styles.title}>Benchmarking entre sucursales</h3>
-          <p style={styles.subtitle}>Comparativo interno del período filtrado</p>
+          <h3 style={styles.title}>Desempeño entre sucursales</h3>
+          <p style={styles.subtitle}>Comparativo comercial interno del período filtrado</p>
         </div>
 
         <div style={styles.headerBadges}>

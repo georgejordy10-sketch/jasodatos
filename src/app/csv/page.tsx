@@ -1,5 +1,0 @@
-import { redirect } from "next/navigation";
-
-export default function CsvPage() {
-  redirect("/cargas");
-}

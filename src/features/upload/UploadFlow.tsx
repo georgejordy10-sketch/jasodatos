@@ -13,8 +13,9 @@ import {
 import type { ConfirmedMapping } from "@/core/mapping/types";
 
 export default function UploadFlow() {
+
   const profiles = useMemo(() => listProfiles(), []);
-  const [profileId, setProfileId] = useState<ProfileId>("comercial");
+const profileId: ProfileId = "comercial";
   const [file, setFile] = useState<File | null>(null);
 
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export default function UploadFlow() {
   const [confirmedMappings, setConfirmedMappings] = useState<ConfirmedMapping[]>([]);
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
 
-  const selectedProfile = profiles.find((p) => p.id === profileId) ?? profiles[0];
+const selectedProfile = profiles[0];
 
   async function handleReadFile() {
     if (!file) {
@@ -107,23 +108,6 @@ export default function UploadFlow() {
         }}
       >
         <h2 style={{ margin: 0 }}>Carga inteligente de archivos</h2>
-
-        <div style={{ display: "grid", gap: 8 }}>
-          <label htmlFor="profile">Perfil de negocio</label>
-          <select
-            id="profile"
-            value={profileId}
-            onChange={(e) => setProfileId(e.target.value as ProfileId)}
-            style={{ padding: 10, borderRadius: 8, border: "1px solid #d1d5db" }}
-          >
-            {profiles.map((profile) => (
-              <option key={profile.id} value={profile.id}>
-                {profile.label}
-              </option>
-            ))}
-          </select>
-          <small style={{ color: "#6b7280" }}>{selectedProfile?.description}</small>
-        </div>
 
         <div style={{ display: "grid", gap: 8 }}>
           <label htmlFor="file">Archivo</label>
