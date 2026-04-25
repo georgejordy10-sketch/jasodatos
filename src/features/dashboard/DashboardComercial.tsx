@@ -780,14 +780,10 @@ const hasStockData = useMemo(() => {
 const stockCritico = useMemo(() => {
   if (!hasStockData) return null;
 
-  const rowsWithStock = filteredRows.filter(
-    (row) => row.stock !== undefined && row.stock !== null && row.stock !== ""
-  );
-
-  return rowsWithStock.filter(
-    (row) => toNumber(row.stock) <= settings.defaultStockMin
+  return stockRiskRows.filter(
+    (row) => row.estado === "Crítico" || row.estado === "Sin stock"
   ).length;
-}, [filteredRows, hasStockData, settings.defaultStockMin]);
+}, [hasStockData, stockRiskRows]);
 
 
 const searchedRows = useMemo(() => {
