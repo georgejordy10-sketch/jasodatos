@@ -85,6 +85,7 @@ export default function SecondaryChartsSection({
 }: Props) {
   return (
     <section style={styles.secondaryCharts}>
+      <div id="stock-en-riesgo" style={{ scrollMarginTop: 120 }}>
       <Card
         title={`Stock en riesgo • Regla: mínimo ${defaultStockMin} unidades`}
         subtitle="Productos con inventario comprometido según el umbral configurado"
@@ -179,6 +180,7 @@ export default function SecondaryChartsSection({
           </table>
         </div>
       </Card>
+    </div>
 
       <Card
         title="Ventas por canal"

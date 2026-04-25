@@ -36,12 +36,50 @@ function severityStyles(severity: AlertSeverity): CSSProperties {
     border: "1px solid rgba(34, 197, 94, 0.30)",
   };
 }
+function findScrollableParent(element: HTMLElement): HTMLElement | Window {
+  let parent = element.parentElement;
 
+  while (parent) {
+    const style = window.getComputedStyle(parent);
+    const overflowY = style.overflowY;
+
+    const canScroll =
+      (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+      parent.scrollHeight > parent.clientHeight;
+
+    if (canScroll) {
+      return parent;
+    }
+
+    parent = parent.parentElement;
+  }
+
+  return window;
+}
 function goToAnchor(anchorId?: string) {
   if (!anchorId) return;
+
   const target = document.getElementById(anchorId);
-  if (!target) return;
-  target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  if (!target) {
+    console.warn(`No se encontró el destino: ${anchorId}`);
+    return;
+  }
+
+  target.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "nearest",
+  });
+
+  target.style.transition = "box-shadow 0.25s ease, outline 0.25s ease";
+  target.style.outline = "2px solid rgba(34, 197, 94, 0.95)";
+  target.style.boxShadow = "0 0 0 6px rgba(34, 197, 94, 0.18)";
+
+  window.setTimeout(() => {
+    target.style.outline = "";
+    target.style.boxShadow = "";
+  }, 1600);
 }
 
 export default function AlertPanel({ alerts }: AlertPanelProps) {
@@ -97,19 +135,22 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
               </div>
 
               <div style={styles.actionsRow}>
-                {alert.actionLabel ? (
-                  <button
-                    type="button"
-                    onClick={() => goToAnchor(alert.anchorId)}
-                    style={styles.actionButton}
-                  >
-                    {alert.actionLabel}
-                  </button>
-                ) : (
-                  <span />
-                )}
+              {alert.actionLabel && alert.anchorId ? (
+  <a
+    href={`#${alert.anchorId}`}
+    style={styles.actionButton}
+    onClick={() => {
+      window.setTimeout(() => goToAnchor(alert.anchorId), 80);
+    }}
+  >
+    {alert.actionLabel}
+  </a>
+) : (
+  <span />
+)}
+
               </div>
-            </article>
+            </article>s
           ))}
         </div>
       )}
@@ -249,18 +290,18 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: "flex-end",
     marginTop: "auto",
   },
-  actionButton: {
-    minWidth: 168,
-    height: 40,
-    border: "1px solid rgba(127, 178, 255, 0.22)",
-    background: "rgba(127, 178, 255, 0.12)",
-    color: "#FFFFFF",
-    borderRadius: 12,
-    padding: "0 14px",
-    fontSize: 14,
-    fontWeight: 800,
-    cursor: "pointer",
-    transition: "all 0.18s ease",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.03)",
-  },
+actionButton: {
+  border: "1px solid rgba(255,255,255,0.18)",
+  background: "rgba(255,255,255,0.10)",
+  color: "#FFFFFF",
+  borderRadius: 999,
+  padding: "8px 12px",
+  fontSize: 12,
+  fontWeight: 800,
+  cursor: "pointer",
+  textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+},
 };
