@@ -37,6 +37,8 @@ type Props = {
   colors: string[];
   formatCompactMoney: (value: number) => string;
   formatMoney: (value: number) => string;
+  onOpenStockDetails?: () => void;
+  onOpenChannelDetails?: () => void;
 };
 
 function Card({
@@ -82,6 +84,8 @@ export default function SecondaryChartsSection({
   colors,
   formatCompactMoney,
   formatMoney,
+onOpenStockDetails,
+onOpenChannelDetails,
 }: Props) {
   return (
     <section style={styles.secondaryCharts}>
@@ -89,7 +93,15 @@ export default function SecondaryChartsSection({
       <Card
         title={`Stock en riesgo • Regla: mínimo ${defaultStockMin} unidades`}
         subtitle="Productos con inventario comprometido según el umbral configurado"
-        action={<button style={styles.viewAllButton}>Ver todo</button>}
+        action={
+  <button
+    type="button"
+    style={styles.viewAllButton}
+    onClick={onOpenStockDetails}
+  >
+    Ver todo
+  </button>
+}
         fullHeight
       >
         <div style={{ overflowX: "auto" }}>
@@ -185,7 +197,15 @@ export default function SecondaryChartsSection({
       <Card
         title="Ventas por canal"
         subtitle="Distribución por fecha y canal"
-        action={<button style={styles.viewAllButton}>Ver todo</button>}
+        action={
+  <button
+    type="button"
+    style={styles.viewAllButton}
+    onClick={onOpenChannelDetails}
+  >
+    Ver todo
+  </button>
+}
       >
         <div style={styles.channelBadgeRow}>
           <span style={styles.channelBadge}>Canales activos: {activeChannelsCount}/3</span>

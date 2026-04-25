@@ -493,28 +493,31 @@ if (topCanal && topCanal[0]) {
     tipoPromo,
   };
 }
+type DetailModalType = "products" | "stock" | "channels" | null;
 export default function DashboardComercial({
   processedData,
   onClearFile,
   onSelectAnotherFile,
 }: Props) {
-const [selectedSucursal, setSelectedSucursal] = useState("Todas");
-const [selectedProducto, setSelectedProducto] = useState("Todos");
-const [fromDate, setFromDate] = useState("");
-const [toDate, setToDate] = useState("");
-const [pageSize, setPageSize] = useState(25);
-const [currentPage, setCurrentPage] = useState(1);
-const [searchTerm, setSearchTerm] = useState("");
-const [actionNotice, setActionNotice] = useState("");
-const [settingsOpen, setSettingsOpen] = useState(false);
-const {
-  settings,
-  updateSettings,
-  updateThreshold,
-  updateChannel,
-  resetSettings,
-} = useProfileSettings();
-const [plansOpen, setPlansOpen] = useState(false);
+  const [selectedSucursal, setSelectedSucursal] = useState("Todas");
+  const [selectedProducto, setSelectedProducto] = useState("Todos");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [pageSize, setPageSize] = useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [actionNotice, setActionNotice] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [plansOpen, setPlansOpen] = useState(false);
+  const [detailModal, setDetailModal] = useState<DetailModalType>(null);
+
+  const {
+    settings,
+    updateSettings,
+    updateThreshold,
+    updateChannel,
+    resetSettings,
+  } = useProfileSettings();
 const currentBusinessSlug = "bodega-central";
 const {
   data: businessPlanData,
@@ -1307,8 +1310,24 @@ function openSalesWhatsapp() {
   currentPlan={currentPlan}
   setCurrentPlan={setCurrentPlan}
 />
+
+{detailModal ? (
+  <DetailModal
+    type={detailModal}
+    onClose={() => setDetailModal(null)}
+    topProductos={topProductos}
+    ventasTotales={ventasTotales}
+    stockRiskRows={stockRiskRows}
+    channelResult={channelResult}
+    formatMoney={(value) =>
+      formatMoney(value, settings.locale, settings.currencyCode)
+    }
+  />
+) : null}
+
 <KpiSection items={kpiItems} />
 <AlertsSection alerts={alerts} />
+
 <SalesChartsSection
   tendenciaVentas={tendenciaVentas}
   topProductos={topProductos}
@@ -1318,6 +1337,10 @@ function openSalesWhatsapp() {
   colors={COLORS}
   formatCompactMoney={formatCompactMoney}
   formatMoney={(value) => formatMoney(value, settings.locale, settings.currencyCode)}
+  onOpenProductDetails={() => {
+  console.log("ABRIR MODAL PRODUCTS");
+  setDetailModal("products");
+}}
 />
 <SecondaryChartsSection
   defaultStockMin={settings.defaultStockMin}
@@ -1330,6 +1353,14 @@ function openSalesWhatsapp() {
   colors={COLORS}
   formatCompactMoney={formatCompactMoney}
   formatMoney={(value) => formatMoney(value, settings.locale, settings.currencyCode)}
+  onOpenStockDetails={() => {
+  console.log("ABRIR MODAL STOCK");
+  setDetailModal("stock");
+}}
+  onOpenChannelDetails={() => {
+  console.log("ABRIR MODAL CHANNELS");
+  setDetailModal("channels");
+}}
 />
 {settings.showBenchmarking &&
   (canUseBenchmarking ? (
@@ -1588,6 +1619,246 @@ function LockedFeatureCard({
     </div>
   );
 }
+type DetailModalProps = {
+  type: "products" | "stock" | "channels";
+  onClose: () => void;
+  topProductos: { producto: string; ventas: number }[];
+  ventasTotales: number;
+  stockRiskRows: StockRiskRow[];
+  channelResult: {
+    data: Record<string, number | string>[];
+    channels: string[];
+    hasChannelData: boolean;
+  };
+  formatMoney: (value: number) => string;
+};
+
+function DetailModal({
+  type,
+  onClose,
+  topProductos,
+  ventasTotales,
+  stockRiskRows,
+  channelResult,
+  formatMoney,
+}: DetailModalProps) {
+  const title =
+    type === "products"
+      ? "Ranking completo de productos"
+      : type === "stock"
+      ? "Detalle completo de stock en riesgo"
+      : "Detalle de ventas por canal";
+
+  const channelTotals = channelResult.channels.map((channel) => {
+    const ventas = channelResult.data.reduce((acc, row) => {
+      const value = row[channel];
+      return acc + (typeof value === "number" ? value : 0);
+    }, 0);
+
+    return {
+      canal: channel,
+      ventas,
+      participacion: ventasTotales > 0 ? (ventas / ventasTotales) * 100 : 0,
+      registros: channelResult.data.filter((row) => {
+        const value = row[channel];
+        return typeof value === "number" && value > 0;
+      }).length,
+    };
+  });
+
+  const dominantChannel = [...channelTotals].sort(
+    (a, b) => b.ventas - a.ventas
+  )[0];
+
+  return (
+    <div style={detailStyles.overlay} role="dialog" aria-modal="true">
+      <div style={detailStyles.modal}>
+        <div style={detailStyles.header}>
+          <div>
+            <p style={detailStyles.eyebrow}>Vista ampliada</p>
+            <h2 style={detailStyles.title}>{title}</h2>
+          </div>
+
+          <button type="button" style={detailStyles.closeButton} onClick={onClose}>
+            Cerrar
+          </button>
+        </div>
+
+        <div style={detailStyles.tableWrap}>
+          {type === "products" ? (
+            <table style={detailStyles.table}>
+              <thead>
+                <tr>
+                  <th style={detailStyles.th}>Producto</th>
+                  <th style={detailStyles.th}>Ventas</th>
+                  <th style={detailStyles.th}>Participación</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topProductos.map((item) => {
+                  const pct =
+                    ventasTotales > 0 ? (item.ventas / ventasTotales) * 100 : 0;
+
+                  return (
+                    <tr key={item.producto}>
+                      <td style={detailStyles.td}>{item.producto}</td>
+                      <td style={detailStyles.td}>{formatMoney(item.ventas)}</td>
+                      <td style={detailStyles.td}>{pct.toFixed(1)}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : null}
+
+          {type === "stock" ? (
+            <table style={detailStyles.table}>
+              <thead>
+                <tr>
+                  <th style={detailStyles.th}>Producto</th>
+                  <th style={detailStyles.th}>Stock actual</th>
+                  <th style={detailStyles.th}>Mínimo</th>
+                  <th style={detailStyles.th}>Estado</th>
+                  <th style={detailStyles.th}>Días cobertura</th>
+                  <th style={detailStyles.th}>Recomendación</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stockRiskRows.map((row) => (
+                  <tr key={row.producto}>
+                    <td style={detailStyles.td}>{row.producto}</td>
+                    <td style={detailStyles.td}>{row.stock}</td>
+                    <td style={detailStyles.td}>{row.minimo}</td>
+                    <td style={detailStyles.td}>{row.estado}</td>
+                    <td style={detailStyles.td}>{row.diasCobertura} días</td>
+                    <td style={detailStyles.td}>
+                      {row.estado === "Crítico"
+                        ? "Priorizar revisión y salida comercial."
+                        : row.estado === "En riesgo"
+                        ? "Monitorear reposición y rotación."
+                        : "Mantener seguimiento operativo."}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : null}
+
+          {type === "channels" ? (
+            <table style={detailStyles.table}>
+              <thead>
+                <tr>
+                  <th style={detailStyles.th}>Canal</th>
+                  <th style={detailStyles.th}>Ventas</th>
+                  <th style={detailStyles.th}>Participación</th>
+                  <th style={detailStyles.th}>Registros</th>
+                  <th style={detailStyles.th}>Canal dominante</th>
+                </tr>
+              </thead>
+              <tbody>
+                {channelTotals.map((item) => (
+                  <tr key={item.canal}>
+                    <td style={detailStyles.td}>{item.canal}</td>
+                    <td style={detailStyles.td}>{formatMoney(item.ventas)}</td>
+                    <td style={detailStyles.td}>
+                      {item.participacion.toFixed(1)}%
+                    </td>
+                    <td style={detailStyles.td}>{item.registros}</td>
+                    <td style={detailStyles.td}>
+                      {dominantChannel?.canal === item.canal ? "Sí" : "No"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const detailStyles: Record<string, CSSProperties> = {
+  overlay: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 80,
+    background: "rgba(15,23,42,0.62)",
+    backdropFilter: "blur(8px)",
+    display: "grid",
+    placeItems: "center",
+    padding: 24,
+  },
+  modal: {
+    width: "min(1100px, 96vw)",
+    maxHeight: "86vh",
+    overflow: "hidden",
+    borderRadius: 24,
+    background: "#252B82",
+    border: "1px solid rgba(255,255,255,0.18)",
+    boxShadow: "0 30px 90px rgba(15,23,42,0.45)",
+    color: "#FFFFFF",
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+    padding: 24,
+    borderBottom: "1px solid rgba(255,255,255,0.12)",
+  },
+  eyebrow: {
+    margin: 0,
+    color: "#A7F3D0",
+    fontSize: 12,
+    fontWeight: 800,
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+  },
+  title: {
+    margin: "6px 0 0 0",
+    fontSize: 24,
+    fontWeight: 900,
+  },
+  closeButton: {
+    border: "1px solid rgba(255,255,255,0.22)",
+    background: "rgba(255,255,255,0.10)",
+    color: "#FFFFFF",
+    borderRadius: 14,
+    padding: "10px 14px",
+    fontSize: 13,
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+  tableWrap: {
+    overflow: "auto",
+    maxHeight: "68vh",
+    padding: 24,
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    minWidth: 720,
+  },
+  th: {
+    textAlign: "left",
+    padding: "12px 14px",
+    fontSize: 12,
+    fontWeight: 900,
+    color: "#C7D2FE",
+    background: "rgba(255,255,255,0.08)",
+    borderBottom: "1px solid rgba(255,255,255,0.12)",
+    whiteSpace: "nowrap",
+  },
+  td: {
+    padding: "12px 14px",
+    fontSize: 13,
+    fontWeight: 700,
+    color: "#FFFFFF",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
+    verticalAlign: "top",
+  },
+};
 function ActivePlanBadge({
   children,
   tone = "pro",

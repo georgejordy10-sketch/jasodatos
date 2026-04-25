@@ -35,8 +35,8 @@ type Props = {
   colors: string[];
   formatCompactMoney: (value: number) => string;
   formatMoney: (value: number) => string;
+  onOpenProductDetails?: () => void;
 };
-
 function Card({
   title,
   subtitle,
@@ -78,6 +78,7 @@ export default function SalesChartsSection({
   colors,
   formatCompactMoney,
   formatMoney,
+  onOpenProductDetails,
 }: Props) {
   return (
     <section style={styles.mainCharts}>
@@ -164,7 +165,15 @@ export default function SalesChartsSection({
         <Card
           title="Participación por producto"
           subtitle="Distribución de ventas por producto (top)"
-          action={<button style={styles.viewAllButton}>Ver todo</button>}
+          action={
+  <button
+    type="button"
+    style={styles.viewAllButton}
+    onClick={onOpenProductDetails}
+  >
+    Ver todo
+  </button>
+}
           fullHeight
         >
           <div style={styles.pieLayout}>
