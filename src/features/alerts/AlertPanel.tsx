@@ -150,7 +150,7 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
 )}
 
               </div>
-            </article>s
+            </article>
           ))}
         </div>
       )}
