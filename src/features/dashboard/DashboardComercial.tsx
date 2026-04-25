@@ -1654,12 +1654,14 @@ lockedFeatureSalesButton: {
   width: "fit-content",
   padding: "0 16px",
   borderRadius: 12,
-  border: "1px solid rgba(34,197,94,0.24)",
-  background: "rgba(34,197,94,0.14)",
-  color: "#14532D",
+  border: "1px solid rgba(110,231,183,0.65)",
+  background:
+    "linear-gradient(135deg, rgba(34,197,94,0.38) 0%, rgba(16,185,129,0.32) 100%)",
+  color: "#FFFFFF",
   fontSize: 13,
   fontWeight: 800,
   cursor: "pointer",
+  boxShadow: "0 10px 20px rgba(16,185,129,0.18)",
 },
 actionButton: {
   marginLeft: "auto",
