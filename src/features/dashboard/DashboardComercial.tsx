@@ -1199,10 +1199,38 @@ function usarAccion(texto: string) {
   }, 3000);
 }
 
-function normalizeWhatsappNumber(value: string): string {
-  return value.replace(/\D/g, "");
-}
+function normalizeWhatsappNumber(value: string, locale: string): string {
+  const rawValue = value.trim();
+  const digits = rawValue.replace(/\D/g, "");
 
+  if (!digits) return "";
+
+  const dialCodes: Record<string, string> = {
+    "es-EC": "593",
+    "es-CO": "57",
+    "es-MX": "52",
+    "es-PE": "51",
+    "es-ES": "34",
+    "en-US": "1",
+  };
+
+  const dialCode = dialCodes[locale] ?? "593";
+
+  if (rawValue.startsWith("+")) return digits;
+  if (digits.startsWith(dialCode)) return digits;
+
+  if (locale === "es-EC" && digits.startsWith("0") && digits.length === 10) {
+    return `593${digits.slice(1)}`;
+  }
+
+  if (locale === "es-CO" && digits.length === 10) return `57${digits}`;
+  if (locale === "es-MX" && digits.length === 10) return `52${digits}`;
+  if (locale === "es-PE" && digits.length === 9) return `51${digits}`;
+  if (locale === "es-ES" && digits.length === 9) return `34${digits}`;
+  if (locale === "en-US" && digits.length === 10) return `1${digits}`;
+
+  return digits;
+}
 function enviarWhatsApp() {
   const recomendaciones = jasoBot.recomendaciones?.length
     ? jasoBot.recomendaciones.map((item) => `• ${item}`).join("\n")
@@ -1224,7 +1252,7 @@ ${recomendaciones}
 Ya se descargó el reporte en PDF para que puedas adjuntarlo y compartirlo por este medio.`
   );
 
-  const phone = normalizeWhatsappNumber(settings.businessWhatsapp);
+const phone = normalizeWhatsappNumber(settings.businessWhatsapp, settings.locale);
   const url = phone
     ? `https://wa.me/${phone}?text=${mensaje}`
     : `https://wa.me/?text=${mensaje}`;
@@ -1238,7 +1266,7 @@ function enviarPromoWhatsApp() {
       `Hola, te escribimos desde ${settings.businessName || "JasoDatos"}. Tenemos promociones especiales disponibles. Escríbenos para más información.`
   );
 
-  const phone = normalizeWhatsappNumber(settings.businessWhatsapp);
+  const phone = normalizeWhatsappNumber(settings.businessWhatsapp, settings.locale);
   const url = phone
     ? `https://wa.me/${phone}?text=${mensaje}`
     : `https://wa.me/?text=${mensaje}`;

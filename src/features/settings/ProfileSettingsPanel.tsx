@@ -28,15 +28,51 @@ export default function ProfileSettingsPanel({
   resetSettings,
 }: ProfileSettingsPanelProps) {
 if (!open) return null;
+const COUNTRY_DIAL_CODES: Record<string, string> = {
+  "es-EC": "593",
+  "es-CO": "57",
+  "es-MX": "52",
+  "es-PE": "51",
+  "es-ES": "34",
+  "en-US": "1",
+};
 
-const whatsappDigits = settings.businessWhatsapp.replace(/\D/g, "");
+function normalizeWhatsappPhone(value: string, locale: string) {
+  const rawValue = value.trim();
+  const digits = rawValue.replace(/\D/g, "");
+
+  if (!digits) return "";
+
+  const dialCode = COUNTRY_DIAL_CODES[locale] ?? "593";
+
+  if (rawValue.startsWith("+")) return digits;
+
+  if (digits.startsWith(dialCode)) return digits;
+
+  if (locale === "es-EC" && digits.startsWith("0") && digits.length === 10) {
+    return `593${digits.slice(1)}`;
+  }
+
+  if (locale === "es-CO" && digits.length === 10) return `57${digits}`;
+  if (locale === "es-MX" && digits.length === 10) return `52${digits}`;
+  if (locale === "es-PE" && digits.length === 9) return `51${digits}`;
+  if (locale === "es-ES" && digits.length === 9) return `34${digits}`;
+  if (locale === "en-US" && digits.length === 10) return `1${digits}`;
+
+  return digits;
+}
+
+const whatsappDigits = normalizeWhatsappPhone(
+  settings.businessWhatsapp,
+  settings.locale
+);
+
 const whatsappLooksValid =
   whatsappDigits.length === 0 ||
   (whatsappDigits.length >= 8 && whatsappDigits.length <= 15);
 
-const whatsappPreview = whatsappDigits
-  ? `https://wa.me/${whatsappDigits}`
-  : "";
+const whatsappPreview = whatsappDigits ? `https://wa.me/${whatsappDigits}` : "";
+
   return (
     <div style={styles.overlay}>
       <div style={styles.panel}>
@@ -77,6 +113,11 @@ const whatsappPreview = whatsappDigits
     }}
     value={settings.businessWhatsapp}
     onChange={(e) => updateSettings({ businessWhatsapp: e.target.value })}
+onBlur={(e) =>
+  updateSettings({
+    businessWhatsapp: normalizeWhatsappPhone(e.target.value, settings.locale),
+  })
+}
   />
 
   <small
@@ -84,11 +125,11 @@ const whatsappPreview = whatsappDigits
       whatsappLooksValid ? styles.helperText : { ...styles.helperText, ...styles.helperTextError }
     }
   >
-    {whatsappDigits.length === 0
-      ? "Ingresa el número en formato internacional. Ejemplo: +593997945350"
-      : whatsappLooksValid
-      ? `Vista previa: ${whatsappPreview}`
-      : "Número inválido. Usa entre 8 y 15 dígitos, con prefijo internacional si aplica."}
+{whatsappDigits.length === 0
+  ? "Puedes escribir tu número local o con código internacional. Ejemplo Ecuador: 0997945350 o +593997945350."
+  : whatsappLooksValid
+  ? `Vista previa: ${whatsappPreview}`
+  : "Número inválido. Usa un celular válido para el formato regional seleccionado."}
   </small>
 </label>
 <label style={styles.label}>
