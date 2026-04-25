@@ -785,7 +785,6 @@ const stockCritico = useMemo(() => {
   ).length;
 }, [hasStockData, stockRiskRows]);
 
-
 const searchedRows = useMemo(() => {
   const term = searchTerm.trim().toLowerCase();
 
