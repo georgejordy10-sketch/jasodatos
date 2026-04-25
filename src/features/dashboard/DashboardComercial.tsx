@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import type { ProcessDatasetResult } from "@/core/ingestion/readDataset";
@@ -10,8 +10,13 @@ import ProfileSettingsPanel from "@/features/settings/ProfileSettingsPanel";
 import { useProfileSettings } from "@/features/settings/useProfileSettings";
 import type { ChannelKey } from "@/features/settings/types";
 import SubscriptionPlansPanel from "@/features/subscription/SubscriptionPlansPanel";
-import { useSubscriptionPlan } from "@/features/subscription/useSubscriptionPlan";
-import type { SubscriptionPlan } from "@/features/subscription/types";
+import { useBusinessPlan } from "@/features/subscription/useBusinessPlan";
+import {
+  PLAN_FEATURES,
+  PLAN_LABELS,
+  type PlanFeature,
+  type SubscriptionPlan,
+} from "@/features/subscription/types";
 import HeroHeader from "@/features/dashboard/HeroHeader";
 import KpiSection from "@/features/dashboard/KpiSection";
 import AlertsSection from "@/features/dashboard/AlertsSection";
@@ -19,6 +24,7 @@ import FilterBar from "@/features/dashboard/FilterBar";
 import DetailTableSection from "@/features/dashboard/DetailTableSection";
 import SalesChartsSection from "@/features/dashboard/SalesChartsSection";
 import SecondaryChartsSection from "@/features/dashboard/SecondaryChartsSection";
+import UpgradeBanner from "@/features/subscription/UpgradeBanner";
 type Props = {
   processedData: ProcessDatasetResult;
   onClearFile?: () => void;
@@ -99,7 +105,7 @@ function resolveAxisCurrencySymbol(code: string): string {
   if (code === "COP") return "COP";
   if (code === "MXN") return "MXN";
   if (code === "PEN") return "S/";
-  if (code === "EUR") return "€";
+  if (code === "EUR") return "â‚¬";
   return "$";
 }
 
@@ -196,7 +202,7 @@ function isWithinRange(value: unknown, fromDate: string, toDate: string): boolea
 function getChannelDisplayName(key: ChannelKey): string {
   if (key === "ecommerce") return "e-commerce";
   if (key === "mayorista") return "mayorista";
-  return "tienda física";
+  return "tienda fÃ­sica";
 }
 function normalizeChannelKey(value: unknown): ChannelKey | null {
   const raw = toText(value, "").trim().toLowerCase();
@@ -293,9 +299,9 @@ function buildStockRisk(
       const producto = toText(row.producto, "Sin producto");
       const diasCobertura = stock <= 0 ? 0 : Math.max(1, Math.round(stock / 5));
 
-      let estado = "Óptimo";
+      let estado = "Ã“ptimo";
       if (stock <= 0) estado = "Sin stock";
-      else if (stock <= criticalThreshold) estado = "Crítico";
+      else if (stock <= criticalThreshold) estado = "CrÃ­tico";
       else if (stock <= minimo) estado = "En riesgo";
 
       return {
@@ -349,16 +355,16 @@ function buildJasoBotInsights(
 ) {
   if (!rows.length) {
     return {
-      mensajePrincipal: "No hay suficiente información para generar recomendaciones comerciales.",
+      mensajePrincipal: "No hay suficiente informaciÃ³n para generar recomendaciones comerciales.",
       insights: [
         "Carga un archivo para activar recomendaciones.",
-        "JasoBot analizará ventas, canales y stock.",
-        "Podrás detectar productos líderes y riesgos.",
-        "También sugerirá acciones comerciales.",
+        "JasoBot analizarÃ¡ ventas, canales y stock.",
+        "PodrÃ¡s detectar productos lÃ­deres y riesgos.",
+        "TambiÃ©n sugerirÃ¡ acciones comerciales.",
       ],
       recomendaciones: [],
       promoWhatsApp:
-        "Buen día. Tenemos promociones especiales disponibles. Escríbenos para conocer las mejores opciones para ti.",
+        "Buen dÃ­a. Tenemos promociones especiales disponibles. EscrÃ­benos para conocer las mejores opciones para ti.",
       tipoPromo: "general",
     };
   }
@@ -406,26 +412,26 @@ function buildJasoBotInsights(
     const critico = productosCriticos[0].producto;
     tipoPromo = "liquidacion";
 
-    promoWhatsApp = `Buen día. Tenemos una oportunidad especial en ${critico}. Disponible por tiempo limitado, ideal para activar una compra rápida. Escríbenos y te compartimos el detalle de la promoción.`;
+    promoWhatsApp = `Buen dÃ­a. Tenemos una oportunidad especial en ${critico}. Disponible por tiempo limitado, ideal para activar una compra rÃ¡pida. EscrÃ­benos y te compartimos el detalle de la promociÃ³n.`;
   } else if (lowSucursal && topProducto) {
     const top = topProducto[0];
     tipoPromo = "impulso_sucursal";
 
-    promoWhatsApp = `Buen día. Estamos impulsando ${top} con una propuesta especial en ${lowSucursal[0]}. Si deseas conocer disponibilidad y condiciones, escríbenos por este medio.`;
+    promoWhatsApp = `Buen dÃ­a. Estamos impulsando ${top} con una propuesta especial en ${lowSucursal[0]}. Si deseas conocer disponibilidad y condiciones, escrÃ­benos por este medio.`;
   } else if (productosOrdenados.length > 1) {
     const top = productosOrdenados[0][0];
     const bajo = productosOrdenados[productosOrdenados.length - 1][0];
     tipoPromo = "combo";
 
-    promoWhatsApp = `Buen día. Te compartimos una promoción especial: lleva ${top} y combínalo con ${bajo}. Es una excelente oportunidad para aprovechar una compra más completa. Escríbenos para enviarte la propuesta.`;
+    promoWhatsApp = `Buen dÃ­a. Te compartimos una promociÃ³n especial: lleva ${top} y combÃ­nalo con ${bajo}. Es una excelente oportunidad para aprovechar una compra mÃ¡s completa. EscrÃ­benos para enviarte la propuesta.`;
   } else if (topProducto) {
     const top = topProducto[0];
     tipoPromo = "producto_estrella";
 
-    promoWhatsApp = `Buen día. Hoy queremos recomendarte ${top}, uno de nuestros productos destacados. Si deseas conocer la promoción vigente, escríbenos y te compartimos la información.`;
+    promoWhatsApp = `Buen dÃ­a. Hoy queremos recomendarte ${top}, uno de nuestros productos destacados. Si deseas conocer la promociÃ³n vigente, escrÃ­benos y te compartimos la informaciÃ³n.`;
   } else {
     promoWhatsApp =
-      "Buen día. Tenemos promociones especiales disponibles. Escríbenos para conocer las mejores opciones para ti.";
+      "Buen dÃ­a. Tenemos promociones especiales disponibles. EscrÃ­benos para conocer las mejores opciones para ti.";
   }
 
   if (productosOrdenados.length > 1) {
@@ -439,36 +445,36 @@ function buildJasoBotInsights(
   }
 
   if (lowSucursal) {
-    recomendaciones.push(`Activa promoción en ${lowSucursal[0]}`);
+    recomendaciones.push(`Activa promociÃ³n en ${lowSucursal[0]}`);
   }
 
 if (topCanal && topCanal[0]) {
   recomendaciones.push(`Potencia ventas en canal ${topCanal[0]}`);
 }
 
-  const nombreProductoTop = topProducto?.[0] ?? "tu producto líder";
+  const nombreProductoTop = topProducto?.[0] ?? "tu producto lÃ­der";
   const nombreSucursalTop = topSucursal?.[0] ?? "tu mejor sucursal";
-  const nombreSucursalBaja = lowSucursal?.[0] ?? "tu sucursal con menor participación";
+  const nombreSucursalBaja = lowSucursal?.[0] ?? "tu sucursal con menor participaciÃ³n";
   const nombreCanalTop = topCanal?.[0] ?? "tu canal principal";
 
-  let mensajePrincipal = `Prioriza ${nombreProductoTop} como producto ancla y ejecútalo primero en ${nombreSucursalTop} para acelerar ventas en ${nombreCanalTop}.`;
+  let mensajePrincipal = `Prioriza ${nombreProductoTop} como producto ancla y ejecÃºtalo primero en ${nombreSucursalTop} para acelerar ventas en ${nombreCanalTop}.`;
 
   if (tipoPromo === "liquidacion" && productosCriticos.length > 0) {
-    mensajePrincipal = `Detectamos presión de inventario en ${productosCriticos[0].producto}. La mejor jugada ahora es activar una salida comercial rápida antes de que el stock siga perdiendo tracción.`;
+    mensajePrincipal = `Detectamos presiÃ³n de inventario en ${productosCriticos[0].producto}. La mejor jugada ahora es activar una salida comercial rÃ¡pida antes de que el stock siga perdiendo tracciÃ³n.`;
   } else if (tipoPromo === "impulso_sucursal") {
-    mensajePrincipal = `Existe una oportunidad clara para recuperar desempeño en ${nombreSucursalBaja}. Activa una promoción enfocada con ${nombreProductoTop} para levantar conversión en esa sucursal.`;
+    mensajePrincipal = `Existe una oportunidad clara para recuperar desempeÃ±o en ${nombreSucursalBaja}. Activa una promociÃ³n enfocada con ${nombreProductoTop} para levantar conversiÃ³n en esa sucursal.`;
   } else if (tipoPromo === "combo" && productosOrdenados.length > 1) {
     const top = productosOrdenados[0][0];
     const bajo = productosOrdenados[productosOrdenados.length - 1][0];
-    mensajePrincipal = `La mejor acción inmediata es empaquetar ${top} con ${bajo}. Ese combo puede aumentar ticket promedio y mover productos con menor tracción.`;
+    mensajePrincipal = `La mejor acciÃ³n inmediata es empaquetar ${top} con ${bajo}. Ese combo puede aumentar ticket promedio y mover productos con menor tracciÃ³n.`;
   } else if (tipoPromo === "producto_estrella") {
-    mensajePrincipal = `Tu mejor palanca comercial hoy es ${nombreProductoTop}. Conviene destacarlo como producto ancla y usarlo para empujar más ventas en ${nombreCanalTop}.`;
+    mensajePrincipal = `Tu mejor palanca comercial hoy es ${nombreProductoTop}. Conviene destacarlo como producto ancla y usarlo para empujar mÃ¡s ventas en ${nombreCanalTop}.`;
   }
 
   const insights: string[] = [];
 
-  insights.push(`Enfócate en: ${nombreProductoTop}`);
-  insights.push(`Sucursal líder: ${nombreSucursalTop}`);
+  insights.push(`EnfÃ³cate en: ${nombreProductoTop}`);
+  insights.push(`Sucursal lÃ­der: ${nombreSucursalTop}`);
   insights.push(`Sucursal a reforzar: ${nombreSucursalBaja}`);
   if (nombreCanalTop && nombreCanalTop !== "tu canal principal") {
   insights.push(`Canal con mayor aporte: ${nombreCanalTop}`);
@@ -476,7 +482,7 @@ if (topCanal && topCanal[0]) {
 
   if (productosCriticos.length > 0) {
     const nombresCriticos = productosCriticos.map((p) => p.producto).join(", ");
-    insights[1] = `Productos críticos: ${nombresCriticos}`;
+    insights[1] = `Productos crÃ­ticos: ${nombresCriticos}`;
   }
 
   return {
@@ -509,18 +515,34 @@ const {
   resetSettings,
 } = useProfileSettings();
 const [plansOpen, setPlansOpen] = useState(false);
-
+const currentBusinessSlug = "bodega-central";
 const {
-  currentPlan,
-  setCurrentPlan,
-  hasFeature,
-  planLabel,
-} = useSubscriptionPlan();
+  data: businessPlanData,
+  loading: businessPlanLoading,
+  error: businessPlanError,
+} = useBusinessPlan(currentBusinessSlug);
+
+const currentPlan = businessPlanData?.currentPlan ?? "basic";
+const debugPlanMessage = businessPlanLoading
+  ? "Cargando plan..."
+  : businessPlanError
+  ? `Error plan: ${businessPlanError}`
+  : `Plan real: ${currentPlan}`;
+const planLabel = PLAN_LABELS[currentPlan];
+
+function hasFeature(feature: PlanFeature): boolean {
+  return PLAN_FEATURES[currentPlan].includes(feature);
+}
 
 const canUseBenchmarking = hasFeature("benchmarking");
 const canUseAssistant = hasFeature("assistant");
 const canExportPdf = hasFeature("pdf_export");
 const canUseWhatsappByPlan = hasFeature("whatsapp_actions");
+
+function setCurrentPlan(_plan: SubscriptionPlan) {
+  setPlansOpen(true);
+}
+
 const activeChannels = useMemo(() => {
   return (Object.entries(settings.channelsEnabled) as [ChannelKey, boolean][])
     .filter(([, enabled]) => enabled)
@@ -528,7 +550,7 @@ const activeChannels = useMemo(() => {
 }, [settings.channelsEnabled]);
 
 const activeChannelsLabel = activeChannels.length
-  ? activeChannels.map(getChannelDisplayName).join(" · ")
+  ? activeChannels.map(getChannelDisplayName).join(" Â· ")
   : "Ninguno";
 const safeLocale = (() => {
   const candidate = (settings.locale || "").trim();
@@ -646,7 +668,7 @@ const canUseWhatsappActions = canUseWhatsappByPlan && canUseWhatsappInputs;
 const whatsappDisabledReason = !canUseWhatsappByPlan
   ? "Disponible en plan Ultra."
   : !hasValidWhatsapp
-  ? "Configura un WhatsApp válido en Configuración del negocio."
+  ? "Configura un WhatsApp vÃ¡lido en ConfiguraciÃ³n del negocio."
   : activeChannels.length === 0
   ? "Activa al menos un canal para usar acciones de WhatsApp."
   : "";
@@ -654,16 +676,15 @@ const whatsappDisabledReason = !canUseWhatsappByPlan
 const pdfDisabledReason = !canExportPdf
   ? "Disponible desde el plan Pro."
   : !hasValidWhatsapp
-  ? "Configura un WhatsApp válido en Configuración del negocio."
+  ? "Configura un WhatsApp vÃ¡lido en ConfiguraciÃ³n del negocio."
   : activeChannels.length === 0
   ? "Activa al menos un canal para compartir."
   : "";
   const secondaryActiveChannels = activeChannels.filter(
   (channel) => channel !== topActiveChannel
 );
-
 const secondaryActiveChannelsLabel = secondaryActiveChannels.length
-  ? secondaryActiveChannels.map(getChannelDisplayName).join(" · ")
+  ? secondaryActiveChannels.map(getChannelDisplayName).join(" Â· ")
   : "";
 const variationPct = useMemo(() => {
   const rowsWithDate = processedData.validRows.filter((row) => parseDateLike(row.fecha));
@@ -843,7 +864,7 @@ async function exportarExcel() {
 const metadataRows = [
   ["Reporte comercial"],
   ["Negocio", businessName],
-  ["Fecha de generación", fechaGeneracion],
+  ["Fecha de generaciÃ³n", fechaGeneracion],
   ["Moneda", currencyCode],
   ["Formato regional", locale],
   ["Canales activos", activeChannelsLabel],
@@ -962,7 +983,7 @@ const metadataRows = [
 
   const moneyNumFmt =
     currencyCode === "EUR"
-      ? '€#,##0.00'
+      ? 'â‚¬#,##0.00'
       : currencyCode === "PEN"
       ? '"S/"#,##0.00'
       : currencyCode === "COP"
@@ -1146,22 +1167,22 @@ const kpiItems = [
     title: "Ventas totales",
     value: formatMoney(ventasTotales, settings.locale, settings.currencyCode),
     badge: `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
-    subtitle: "vs. período anterior",
+    subtitle: "vs. perÃ­odo anterior",
   },
   {
     title: "Unidades totales",
     value: formatInt(unidadesTotales, settings.locale),
     badge: `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
-    subtitle: "vs. período anterior",
+    subtitle: "vs. perÃ­odo anterior",
   },
   {
-    title: "Producto más vendido",
+    title: "Producto mÃ¡s vendido",
     value: productoTop?.producto ?? "Sin datos",
     badge: `${porcentajeTop}%`,
     subtitle: "del total de ventas",
   },
   {
-    title: "Stock crítico",
+    title: "Stock crÃ­tico",
     value: stockCritico === null ? "No Disponible" : formatInt(stockCritico),
     badge: "Reglas activas",
     subtitle: "revisar inventario",
@@ -1174,7 +1195,7 @@ const jasoBot = useMemo(() => {
 
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
-  setActionNotice(`Acción copiada: ${texto}`);
+  setActionNotice(`AcciÃ³n copiada: ${texto}`);
   setTimeout(() => {
     setActionNotice("");
   }, 3000);
@@ -1202,7 +1223,7 @@ ${jasoBot.insights.map((item) => `• ${item}`).join("\n")}
 Acciones sugeridas:
 ${recomendaciones}
 
-Ya se descargó el reporte en PDF para que puedas adjuntarlo y compartirlo por este medio.`
+Ya se descargÃ³ el reporte en PDF para que puedas adjuntarlo y compartirlo por este medio.`
   );
 
   const phone = normalizeWhatsappNumber(settings.businessWhatsapp);
@@ -1216,7 +1237,7 @@ Ya se descargó el reporte en PDF para que puedas adjuntarlo y compartirlo por e
 function enviarPromoWhatsApp() {
   const mensaje = encodeURIComponent(
     jasoBot.promoWhatsApp ??
-      `Hola, te escribimos desde ${settings.businessName || "JasoDatos"}. Tenemos promociones especiales disponibles. Escríbenos para más información.`
+      `Hola, te escribimos desde ${settings.businessName || "JasoDatos"}. Tenemos promociones especiales disponibles. EscrÃ­benos para mÃ¡s informaciÃ³n.`
   );
 
   const phone = normalizeWhatsappNumber(settings.businessWhatsapp);
@@ -1233,6 +1254,14 @@ function clearFilters() {
   setFromDate("");
   setToDate("");
 }
+function openSalesWhatsapp() {
+  const phone = "593997945350";
+  const message = encodeURIComponent(
+    "Hola, quiero mejorar mi plan de JasoDatos y conocer las opciones disponibles."
+  );
+
+  window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+}
   return (
   <div id="dashboard-export">
     <div style={styles.page}>
@@ -1247,6 +1276,14 @@ function clearFilters() {
   onOpenPlans={() => setPlansOpen(true)}
   onOpenSettings={() => setSettingsOpen(true)}
 />
+<UpgradeBanner
+  currentPlan={currentPlan}
+  planLabel={planLabel}
+  onOpenPlans={() => setPlansOpen(true)}
+/>
+<div style={{ padding: "8px 12px", fontSize: 12, color: "#1E2670" }}>
+  {debugPlanMessage}
+</div>
 <FilterBar
   selectedSucursal={selectedSucursal}
   selectedProducto={selectedProducto}
@@ -1311,10 +1348,11 @@ function clearFilters() {
     </div>
   ) : (
     <LockedFeatureCard
-      title="Desempeño entre sucursales"
-      description="Compara el desempeño comercial entre sucursales y detecta rezagos. Disponible desde el plan Pro."
+      title="DesempeÃ±o entre sucursales"
+      description="Compara el desempeÃ±o comercial entre sucursales y detecta rezagos. Disponible desde el plan Pro."
       requiredPlan="pro"
       onOpenPlans={() => setPlansOpen(true)}
+      onContactSales={openSalesWhatsapp}
     />
   ))}
 {settings.showAssistant &&
@@ -1369,7 +1407,7 @@ function clearFilters() {
               {jasoBot.tipoPromo === "combo"
                 ? "Combo"
                 : jasoBot.tipoPromo === "liquidacion"
-                ? "Liquidación"
+                ? "LiquidaciÃ³n"
                 : jasoBot.tipoPromo === "impulso_sucursal"
                 ? "Impulso sucursal"
                 : jasoBot.tipoPromo === "producto_estrella"
@@ -1381,7 +1419,7 @@ function clearFilters() {
           <div style={styles.assistantText}>
             {jasoBot.mensajePrincipal}
             <br />
-            <strong>Potencia esa promoción en tu WhatsApp</strong>
+            <strong>Potencia esa promociÃ³n en tu WhatsApp</strong>
           </div>
 
           <div style={styles.assistantChannelRow}>
@@ -1393,11 +1431,11 @@ function clearFilters() {
 
             <span style={styles.assistantChannelText}>
               {!hasValidWhatsapp
-                ? "Configura un WhatsApp válido en Configuración del negocio para habilitar el envío."
+                ? "Configura un WhatsApp vÃ¡lido en ConfiguraciÃ³n del negocio para habilitar el envÃ­o."
                 : activeChannels.length === 0
-                ? "Activa al menos un canal desde Configuración del negocio."
+                ? "Activa al menos un canal desde ConfiguraciÃ³n del negocio."
                 : secondaryActiveChannelsLabel
-                ? `Canal prioritario activo: ${topActiveChannelLabel} · Otros canales activos: ${secondaryActiveChannelsLabel}`
+                ? `Canal prioritario activo: ${topActiveChannelLabel} Â· Otros canales activos: ${secondaryActiveChannelsLabel}`
                 : `Canal prioritario activo: ${topActiveChannelLabel}`}
             </span>
           </div>
@@ -1405,13 +1443,13 @@ function clearFilters() {
 
         <div style={styles.assistantInsights}>
           {jasoBot.insights.map((item) => (
-            <div key={item}>✦ {item}</div>
+            <div key={item}>âœ¦ {item}</div>
           ))}
 
           <div style={styles.actionsGrid}>
             {jasoBot.recomendaciones?.map((item) => (
               <div key={item} style={styles.actionCard}>
-                <div style={styles.actionIcon}>⚡</div>
+                <div style={styles.actionIcon}>âš¡</div>
                 <div style={styles.actionText}>{item}</div>
                 <button style={styles.actionButton} onClick={() => usarAccion(item)}>
                   Usar
@@ -1441,7 +1479,7 @@ function clearFilters() {
             {!canUseWhatsappByPlan
               ? "Disponible en plan Ultra"
               : !hasValidWhatsapp
-              ? "Configura tu número celular para activar el envío a WhatsApp"
+              ? "Configura tu nÃºmero celular para activar el envÃ­o a WhatsApp"
               : "Mejora tus ventas en WhatsApp"}
           </button>
 
@@ -1462,7 +1500,7 @@ function clearFilters() {
             {!canExportPdf
               ? "Disponible desde el plan Pro"
               : !hasValidWhatsapp
-              ? "Configura tu número celular para activar el envío a WhatsApp"
+              ? "Configura tu nÃºmero celular para activar el envÃ­o a WhatsApp"
               : "Compartir PDF por WhatsApp"}
           </button>
         </div>
@@ -1474,6 +1512,7 @@ function clearFilters() {
       description="Recibe recomendaciones accionables, promociones sugeridas y apoyo de WhatsApp. Disponible desde el plan Pro."
       requiredPlan="pro"
       onOpenPlans={() => setPlansOpen(true)}
+      onContactSales={openSalesWhatsapp}
     />
   ))}
 <DetailTableSection
@@ -1513,16 +1552,20 @@ function LockedFeatureCard({
   description,
   requiredPlan,
   onOpenPlans,
+  onContactSales,
 }: {
   title: string;
   description: string;
   requiredPlan: SubscriptionPlan;
   onOpenPlans: () => void;
+  onContactSales: () => void;
 }) {
   return (
     <div style={styles.lockedFeatureCard}>
       <div style={styles.lockedFeatureTop}>
-        <span style={styles.lockedFeatureBadge}>Disponible en {requiredPlan.toUpperCase()}</span>
+        <span style={styles.lockedFeatureBadge}>
+          Disponible en {requiredPlan.toUpperCase()}
+        </span>
         <span style={styles.lockedFeatureMiniBadge}>Upgrade</span>
       </div>
 
@@ -1534,9 +1577,18 @@ function LockedFeatureCard({
           Mejora tu plan para desbloquear esta funcionalidad.
         </span>
 
-        <button style={styles.lockedFeatureButton} onClick={onOpenPlans}>
-          Mejorar plan
-        </button>
+        <div style={styles.lockedFeatureActions}>
+          <button style={styles.lockedFeatureButton} onClick={onOpenPlans}>
+            Ver planes
+          </button>
+
+          <button
+            style={styles.lockedFeatureSalesButton}
+            onClick={onContactSales}
+          >
+            Hablar con ventas
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1591,7 +1643,24 @@ assistantGrid: {
   alignItems: "center",
   columnGap: 16,
 },
+lockedFeatureActions: {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+},
 
+lockedFeatureSalesButton: {
+  minHeight: 42,
+  width: "fit-content",
+  padding: "0 16px",
+  borderRadius: 12,
+  border: "1px solid rgba(34,197,94,0.24)",
+  background: "rgba(34,197,94,0.14)",
+  color: "#14532D",
+  fontSize: 13,
+  fontWeight: 800,
+  cursor: "pointer",
+},
 actionButton: {
   marginLeft: "auto",
   background: "rgba(127,178,255,0.10)",
@@ -1902,3 +1971,5 @@ activePlanBadgeUltra: {
   color: "#FFFFFF",
 },
 };
+
+
