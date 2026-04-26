@@ -73,7 +73,75 @@ function billingPillStyle(
 
   return { background: "rgba(99,102,241,0.14)", color: "#4338CA" };
 }
+function getOptionalText(row: AdminBusinessOverview, key: string) {
+  const value = (row as unknown as Record<string, unknown>)[key];
 
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+
+  return "";
+}
+
+function csvCell(value: string | number | null | undefined) {
+  const text = String(value ?? "");
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function buildClientsCsv(rows: AdminBusinessOverview[]) {
+  const headers = [
+    "Nombre del local",
+    "Identificador",
+    "Nombre del dueño",
+    "Correo",
+    "WhatsApp",
+    "Plan",
+    "Estado del cliente",
+    "Estado de facturación",
+    "Usuarios",
+    "Última actividad",
+  ];
+
+  const body = rows.map((row) => {
+    const ownerName =
+      getOptionalText(row, "owner_name") ||
+      getOptionalText(row, "owner_full_name") ||
+      getOptionalText(row, "owner");
+
+    return [
+      row.business_name,
+      row.slug,
+      ownerName,
+      row.owner_email || "",
+      row.owner_whatsapp || "",
+      planLabel(row.plan),
+      row.status,
+      row.billing_status,
+      row.users_count,
+      row.last_seen_at || "",
+    ]
+      .map(csvCell)
+      .join(";");
+  });
+
+  return [headers.map(csvCell).join(";"), ...body].join("\r\n");
+}
+
+function downloadTextFile(content: string, filename: string) {
+  const blob = new Blob(["\uFEFF" + content], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
 export default function AdminClientsTable({ rows }: Props) {
   const [tableRows, setTableRows] = useState(rows);
   const [draftPlans, setDraftPlans] = useState<Record<string, Plan>>(
@@ -109,9 +177,24 @@ export default function AdminClientsTable({ rows }: Props) {
       );
     });
   }, [tableRows, searchTerm]);
+    function exportClients() {
+    const csv = buildClientsCsv(filteredRows);
+    const today = new Date().toISOString().slice(0, 10);
+
+    downloadTextFile(csv, `jasodatos_contactos_clientes_${today}.csv`);
+    setNotice(`Archivo exportado con ${filteredRows.length} clientes.`);
+  }
+  function exportClients() {
+    const csv = buildClientsCsv(filteredRows);
+    const today = new Date().toISOString().slice(0, 10);
+
+    downloadTextFile(csv, `jasodatos_contactos_clientes_${today}.csv`);
+    setNotice(`Archivo exportado con ${filteredRows.length} clientes.`);
+  }
 
   async function savePlan(businessId: string) {
     const plan = draftPlans[businessId];
+
 
     if (!plan) return;
 
@@ -193,9 +276,20 @@ export default function AdminClientsTable({ rows }: Props) {
           />
         </div>
 
-        <div style={styles.searchCounter}>
-          {filteredRows.length} de {tableRows.length} clientes
-        </div>
+<div style={styles.toolbarActions}>
+  <div style={styles.searchCounter}>
+    {filteredRows.length} de {tableRows.length} clientes
+  </div>
+
+  <button
+    type="button"
+    style={styles.exportButton}
+    onClick={exportClients}
+    disabled={filteredRows.length === 0}
+  >
+    Exportar contactos
+  </button>
+</div>
       </div>
 
       {notice ? <div style={styles.notice}>{notice}</div> : null}
@@ -306,6 +400,22 @@ export default function AdminClientsTable({ rows }: Props) {
                       >
                         Validar plan
                       </button>
+<button
+  type="button"
+  style={styles.secondaryActionButton}
+  onClick={async () => {
+    const appUrl = `${window.location.origin}/cargas?business=${row.slug}`;
+
+    try {
+      await navigator.clipboard.writeText(appUrl);
+      setNotice(`Enlace de app copiado para ${row.business_name}.`);
+    } catch {
+      setNotice(`Enlace de app: ${appUrl}`);
+    }
+  }}
+>
+  Copiar enlace app
+</button>
                     </div>
                   </td>
                 </tr>
@@ -534,4 +644,23 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 800,
     cursor: "pointer",
   },
+  toolbarActions: {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  flexWrap: "wrap",
+},
+
+exportButton: {
+  minHeight: 44,
+  borderRadius: 14,
+  border: "1px solid rgba(22, 163, 74, 0.25)",
+  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
+  color: "#FFFFFF",
+  padding: "0 16px",
+  fontSize: 13,
+  fontWeight: 900,
+  cursor: "pointer",
+  boxShadow: "0 10px 24px rgba(22, 163, 74, 0.16)",
+},
 };
