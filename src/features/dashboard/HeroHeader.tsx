@@ -34,53 +34,54 @@ export default function HeroHeader({
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
-  return (
-    <section style={styles.hero}>
-      <div>
-        <div style={styles.brandRow}>
-          <div style={styles.brandIcon}>{initials}</div>
+return (
+  <section style={styles.hero}>
+    <div>
+      <div style={styles.brandRow}>
+        <div style={styles.brandIcon}>{initials}</div>
 
-          <div>
-            <h1 style={styles.brandTitle}>{safeBusinessName}</h1>
-            <p style={styles.brandSubtitle}>
-              Inteligencia comercial que impulsa decisiones
-            </p>
+        <div>
+          <h1 style={styles.brandTitle}>{safeBusinessName}</h1>
+          <p style={styles.brandSubtitle}>
+            Inteligencia comercial que impulsa decisiones
+          </p>
 
-            <div style={styles.brandPlanRow}>
-              <span style={styles.brandPlanBadge}>Plan actual: {planLabel}</span>
-              <span style={styles.brandMeta}>
-                Registros válidos: {filteredCount} · Archivo: {fileName}
-              </span>
-            </div>
+          <div style={styles.brandPlanRow}>
+            <span style={styles.brandPlanBadge}>Plan actual: {planLabel}</span>
+            <span style={styles.brandMeta}>
+              Registros válidos: {filteredCount} · Archivo: {fileName}
+            </span>
           </div>
         </div>
       </div>
+    </div>
 
-      <div style={styles.heroActions}>
-        <button style={styles.primaryButton} onClick={() => onSelectAnotherFile?.()}>
-          Seleccionar archivo
-        </button>
+    <div style={styles.heroActions}>
+      <button style={styles.primaryButton} onClick={() => onSelectAnotherFile?.()}>
+        Seleccionar archivo
+      </button>
 
-        <button style={styles.secondaryButton} onClick={onExportExcel}>
-          Exportar Excel
-        </button>
+      <button style={styles.secondaryButton} onClick={onExportExcel}>
+        Exportar Excel
+      </button>
 
-        <button style={styles.secondaryButton} onClick={() => onClearFile?.()}>
-          Limpiar archivo
-        </button>
+      <button style={styles.secondaryButton} onClick={() => onClearFile?.()}>
+        Limpiar archivo
+      </button>
 
-        <button style={styles.planHeroButton} onClick={onOpenPlans}>
-          Ver planes · {planLabel}
-        </button>
+      <button style={styles.planHeroButton} onClick={onOpenPlans}>
+        Ver planes · {planLabel}
+      </button>
 
-        <button style={styles.secondaryButton} onClick={onOpenSettings}>
-          Configuración
-        </button>
-      </div>
-    </section>
-  );
-}
+      <button style={styles.secondaryButton} onClick={onOpenSettings}>
+        Configuración
+      </button>
+    </div>
 
+    <div style={styles.brandSignature}>JasoDatos</div>
+  </section>
+);
+}   
 const styles: Record<string, CSSProperties> = {
   hero: {
     display: "flex",
@@ -94,6 +95,7 @@ const styles: Record<string, CSSProperties> = {
     border: "1px solid rgba(255,255,255,0.12)",
     boxShadow: "0 14px 28px rgba(17,24,39,0.12)",
     flexWrap: "wrap",
+    position: "relative",
   },
   brandRow: {
     display: "flex",
@@ -187,4 +189,14 @@ const styles: Record<string, CSSProperties> = {
     cursor: "pointer",
     boxShadow: "0 10px 22px rgba(68,96,255,0.16)",
   },
+  brandSignature: {
+  position: "absolute",
+  right: 19,
+  bottom: 10,
+  fontSize: 12,
+  fontWeight: 200,
+  color: "rgba(255, 255, 255, 0.98)",
+  letterSpacing: "0.03em",
+},
 };
+
