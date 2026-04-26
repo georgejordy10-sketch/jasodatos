@@ -517,7 +517,16 @@ export default function DashboardComercial({
     updateChannel,
     resetSettings,
   } = useProfileSettings();
-const currentBusinessSlug = "bodega-central";
+const [currentBusinessSlug, setCurrentBusinessSlug] = useState("bodega-central");
+
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const businessSlug = params.get("business")?.trim();
+
+  if (businessSlug) {
+    setCurrentBusinessSlug(businessSlug);
+  }
+}, []);
 const {
   data: businessPlanData,
   loading: businessPlanLoading,
@@ -1330,6 +1339,27 @@ function openSalesWhatsapp() {
   updateThreshold={updateThreshold}
   updateChannel={updateChannel}
   resetSettings={resetSettings}
+  businessSlug={currentBusinessSlug}
+  onSaveCrm={async (payload) => {
+    const response = await fetch(
+      `/api/businesses/by-slug/${currentBusinessSlug}/crm`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error || "No se pudo guardar la información CRM."
+      );
+    }
+  }}
 />
 <SubscriptionPlansPanel
   open={plansOpen}

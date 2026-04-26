@@ -151,7 +151,7 @@ export default function ProfileSettingsPanel({
     style={styles.input}
     value={ownerName}
     onChange={(event) => setOwnerName(event.target.value)}
-    placeholder="Ej. Jorge Sánchez Ojeda"
+    placeholder="Ej. Primer nombre + Primer apellido"
   />
 </label>
 
@@ -507,3 +507,4 @@ helperTextError: {
   cursor: "pointer",
 },
 };
+
