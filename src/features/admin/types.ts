@@ -10,4 +10,9 @@ export type AdminBusinessOverview = {
   last_seen_at: string | null;
   billing_status: "manual" | "trial" | "active" | "past_due" | "canceled";
   users_count: number;
+owner_name: string | null;
+commercial_email: string | null;
+commercial_whatsapp: string | null;
+commercial_notes: string | null;
+last_contact_at: string | null;
 };
