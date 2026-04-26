@@ -21,7 +21,21 @@ function planLabel(plan: Plan) {
   if (plan === "pro") return "Pro";
   return "Ultra";
 }
+function clientStatusLabel(status: AdminBusinessOverview["status"]) {
+  if (status === "active") return "Activo";
+  if (status === "trial") return "Prueba";
+  if (status === "suspended") return "Suspendido";
+  return status;
+}
+function billingLabel(status: AdminBusinessOverview["billing_status"]) {
+  if (status === "active") return "Activo";
+  if (status === "trial") return "Prueba";
+  if (status === "manual") return "Manual";
+  if (status === "past_due") return "Pago vencido";
+  if (status === "canceled") return "Cancelado";
 
+  return status;
+}
 function planPillStyle(plan: Plan): CSSProperties {
   if (plan === "basic") {
     return {
@@ -79,6 +93,103 @@ function billingPillStyle(
   }
 
   return { background: "rgba(99,102,241,0.14)", color: "#4338CA" };
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleDateString("es-EC", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
+function getDaysRemaining(value: string | null) {
+  if (!value) return null;
+
+  const endDate = new Date(value);
+
+  if (Number.isNaN(endDate.getTime())) return null;
+
+  const today = new Date();
+  const diffMs = endDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  return diffDays;
+}
+
+function getValidityInfo(row: AdminBusinessOverview) {
+  const isTrial = row.billing_status === "trial" || row.status === "trial";
+  const date = isTrial ? row.trial_ends_at : row.current_period_ends_at;
+  const days = getDaysRemaining(date);
+
+  if (!date) {
+    return {
+      label: isTrial ? "Prueba sin fecha" : "Renovación no configurada",
+      dateLabel: "-",
+      daysLabel: "-",
+      status: "neutral" as const,
+    };
+  }
+
+  if (days === null) {
+    return {
+      label: "Fecha inválida",
+      dateLabel: "-",
+      daysLabel: "-",
+      status: "warning" as const,
+    };
+  }
+
+  if (days < 0) {
+    return {
+      label: isTrial
+  ? `Prueba vencida: ${formatDate(date)}`
+  : `Vencido: ${formatDate(date)}`,
+      dateLabel: formatDate(date),
+      daysLabel: "Vencido",
+      status: "danger" as const,
+    };
+  }
+
+  if (days === 0) {
+    return {
+      label: isTrial ? "Prueba termina hoy" : "Renueva hoy",
+      dateLabel: formatDate(date),
+      daysLabel: "Hoy",
+      status: "warning" as const,
+    };
+  }
+
+  return {
+    label: isTrial
+  ? `Prueba termina: ${formatDate(date)}`
+  : `Renueva: ${formatDate(date)}`,
+    dateLabel: formatDate(date),
+    daysLabel: `${days} día${days === 1 ? "" : "s"}`,
+    status: days <= 3 ? ("warning" as const) : ("ok" as const),
+  };
+}
+
+function validityPillStyle(status: "ok" | "warning" | "danger" | "neutral"): CSSProperties {
+  if (status === "danger") {
+    return { background: "rgba(239,68,68,0.12)", color: "#B91C1C" };
+  }
+
+  if (status === "warning") {
+    return { background: "rgba(245,158,11,0.14)", color: "#B45309" };
+  }
+
+  if (status === "ok") {
+    return { background: "rgba(34,197,94,0.14)", color: "#166534" };
+  }
+
+  return { background: "rgba(100,116,139,0.14)", color: "#475569" };
 }
 function getOptionalText(row: AdminBusinessOverview, key: string) {
   const value = (row as unknown as Record<string, unknown>)[key];
@@ -399,18 +510,20 @@ async function saveCrmContact() {
               <th style={styles.th}>Plan</th>
               <th style={styles.th}>Estado</th>
               <th style={styles.th}>Usuarios</th>
-              <th style={styles.th}>Owner</th>
+              <th style={styles.th}>Correo</th>
               <th style={styles.th}>WhatsApp</th>
-              <th style={styles.th}>Billing</th>
-              <th style={styles.th}>Última actividad</th>
-              <th style={styles.th}>Acción</th>
+              <th style={styles.th}>Facturación</th>
+<th style={styles.th}>Vigencia</th>
+<th style={styles.th}>Días restantes</th>
+<th style={styles.th}>Última actividad</th>
+<th style={styles.th}>Acción</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredRows.length === 0 ? (
               <tr>
-                <td style={styles.emptyCell} colSpan={9}>
+                <td style={styles.emptyCell} colSpan={11}>
                   No se encontraron clientes con ese criterio.
                 </td>
               </tr>
@@ -437,7 +550,7 @@ async function saveCrmContact() {
                         ...statusPillStyle(row.status),
                       }}
                     >
-                      {row.status}
+                      {clientStatusLabel(row.status)}
                     </span>
                   </td>
 
@@ -446,17 +559,39 @@ async function saveCrmContact() {
                   <td style={styles.td}>{row.owner_whatsapp || "-"}</td>
 
                   <td style={styles.td}>
-                    <span
-                      style={{
-                        ...styles.statusPill,
-                        ...billingPillStyle(row.billing_status),
-                      }}
-                    >
-                      {row.billing_status}
-                    </span>
-                  </td>
+  <span
+    style={{
+      ...styles.statusPill,
+      ...billingPillStyle(row.billing_status),
+    }}
+  >
+    {billingLabel(row.billing_status)}
+  </span>
+</td>
 
-                  <td style={styles.td}>{row.last_seen_at || "-"}</td>
+<td style={styles.td}>
+  <span
+    style={{
+      ...styles.statusPill,
+      ...validityPillStyle(getValidityInfo(row).status),
+    }}
+  >
+    {getValidityInfo(row).label}
+  </span>
+</td>
+
+<td style={styles.td}>
+  <span
+    style={{
+      ...styles.statusPill,
+      ...validityPillStyle(getValidityInfo(row).status),
+    }}
+  >
+    {getValidityInfo(row).daysLabel}
+  </span>
+</td>
+
+<td style={styles.td}>{row.last_seen_at || "-"}</td>
 
                   <td style={styles.td}>
                     <div style={styles.actionCell}>
@@ -786,7 +921,7 @@ const styles: Record<string, CSSProperties> = {
   },
   table: {
     width: "100%",
-    minWidth: 1500,
+    minWidth: 1760,
     borderCollapse: "collapse",
   },
   th: {
