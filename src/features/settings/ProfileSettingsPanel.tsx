@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import type { ChannelKey, ProfileSettings } from "./types";
 
 type ProfileSettingsPanelProps = {
@@ -8,9 +8,15 @@ type ProfileSettingsPanelProps = {
   onClose: () => void;
   settings: ProfileSettings;
   updateSettings: (patch: Partial<ProfileSettings>) => void;
-  updateThreshold: (field: "salesDropMediumPct" | "salesDropHighPct", value: number) => void;
-  updateChannel: (channel: ChannelKey, enabled: boolean) => void;
+  updateThreshold: (key: string, value: number) => void;
+  updateChannel: (channel: string, enabled: boolean) => void;
   resetSettings: () => void;
+  businessSlug: string;
+  onSaveCrm?: (payload: {
+    owner_name: string;
+    commercial_email: string;
+    commercial_whatsapp: string;
+  }) => Promise<void>;
 };
 
 function toNumber(value: string): number {
@@ -18,16 +24,6 @@ function toNumber(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export default function ProfileSettingsPanel({
-  open,
-  onClose,
-  settings,
-  updateSettings,
-  updateThreshold,
-  updateChannel,
-  resetSettings,
-}: ProfileSettingsPanelProps) {
-if (!open) return null;
 const COUNTRY_DIAL_CODES: Record<string, string> = {
   "es-EC": "593",
   "es-CO": "57",
@@ -46,7 +42,6 @@ function normalizeWhatsappPhone(value: string, locale: string) {
   const dialCode = COUNTRY_DIAL_CODES[locale] ?? "593";
 
   if (rawValue.startsWith("+")) return digits;
-
   if (digits.startsWith(dialCode)) return digits;
 
   if (locale === "es-EC" && digits.startsWith("0") && digits.length === 10) {
@@ -62,16 +57,65 @@ function normalizeWhatsappPhone(value: string, locale: string) {
   return digits;
 }
 
-const whatsappDigits = normalizeWhatsappPhone(
-  settings.businessWhatsapp,
-  settings.locale
-);
+export default function ProfileSettingsPanel({
+  open,
+  onClose,
+  settings,
+  updateSettings,
+  updateThreshold,
+  updateChannel,
+  resetSettings,
+  businessSlug,
+  onSaveCrm,
+}: ProfileSettingsPanelProps) {
+  const [ownerName, setOwnerName] = useState("");
+  const [commercialEmail, setCommercialEmail] = useState("");
+  const [savingCrm, setSavingCrm] = useState(false);
+  const [crmNotice, setCrmNotice] = useState("");
 
-const whatsappLooksValid =
-  whatsappDigits.length === 0 ||
-  (whatsappDigits.length >= 8 && whatsappDigits.length <= 15);
+  if (!open) return null;
 
-const whatsappPreview = whatsappDigits ? `https://wa.me/${whatsappDigits}` : "";
+  const whatsappDigits = normalizeWhatsappPhone(
+    settings.businessWhatsapp,
+    settings.locale
+  );
+
+  const whatsappLooksValid =
+    whatsappDigits.length === 0 ||
+    (whatsappDigits.length >= 8 && whatsappDigits.length <= 15);
+
+  const whatsappPreview = whatsappDigits
+    ? `https://wa.me/${whatsappDigits}`
+    : "";
+
+  async function saveCrmFromSettings() {
+    if (!onSaveCrm) return;
+
+    try {
+      setSavingCrm(true);
+      setCrmNotice("");
+
+      await onSaveCrm({
+        owner_name: ownerName,
+        commercial_email: commercialEmail,
+        commercial_whatsapp: normalizeWhatsappPhone(
+          settings.businessWhatsapp,
+          settings.locale
+        ),
+      });
+
+      setCrmNotice("Datos CRM guardados correctamente.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No se pudieron guardar los datos CRM.";
+
+      setCrmNotice(message);
+    } finally {
+      setSavingCrm(false);
+    }
+  }
 
   return (
     <div style={styles.overlay}>
@@ -101,6 +145,26 @@ const whatsappPreview = whatsappDigits ? `https://wa.me/${whatsappDigits}` : "";
                 onChange={(e) => updateSettings({ businessName: e.target.value })}
               />
             </label>
+            <label style={styles.label}>
+  <span>Nombre del dueño o responsable</span>
+  <input
+    style={styles.input}
+    value={ownerName}
+    onChange={(event) => setOwnerName(event.target.value)}
+    placeholder="Ej. Jorge Sánchez Ojeda"
+  />
+</label>
+
+<label style={styles.label}>
+  <span>Correo comercial</span>
+  <input
+    type="email"
+    style={styles.input}
+    value={commercialEmail}
+    onChange={(event) => setCommercialEmail(event.target.value)}
+    placeholder="correo@negocio.com"
+  />
+</label>
              <label style={styles.label}>
   <span>WhatsApp comercial</span>
   <input
@@ -132,6 +196,18 @@ onBlur={(e) =>
   : "Número inválido. Usa un celular válido para el formato regional seleccionado."}
   </small>
 </label>
+
+<button
+  type="button"
+  style={styles.crmSaveButton}
+  onClick={saveCrmFromSettings}
+  disabled={savingCrm || !businessSlug}
+>
+  {savingCrm ? "Guardando CRM..." : "Guardar datos CRM"}
+</button>
+
+{crmNotice ? <small style={styles.helperText}>{crmNotice}</small> : null}
+
 <label style={styles.label}>
   <span>Moneda</span>
   <select
@@ -419,4 +495,15 @@ helperTextError: {
     fontWeight: 800,
     cursor: "pointer",
   },
+  crmSaveButton: {
+  minHeight: 42,
+  borderRadius: 12,
+  border: "1px solid rgba(34,197,94,0.28)",
+  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
+  color: "#FFFFFF",
+  padding: "0 14px",
+  fontSize: 13,
+  fontWeight: 900,
+  cursor: "pointer",
+},
 };
