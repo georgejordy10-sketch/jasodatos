@@ -364,7 +364,7 @@ function buildJasoBotInsights(
       ],
       recomendaciones: [],
       promoWhatsApp:
-        "Buen día. Tenemos promociones especiales disponibles. Escríbenos para conocer las mejores opciones para ti.",
+        "Buen día. Tenemos promociones especiales disponibles. Escríbenos para conocer disponibilidad para ti.",
       tipoPromo: "general",
     };
   }
@@ -411,19 +411,19 @@ function buildJasoBotInsights(
   if (productosCriticos.length > 0) {
     const critico = productosCriticos[0].producto;
     tipoPromo = "liquidacion";
-
-    promoWhatsApp = `Buen día. Tenemos una oportunidad especial en ${critico}. Disponible por tiempo limitado, ideal para activar una compra rápida. Escríbenos y te compartimos el detalle de la promoción.`;
+s
+    promoWhatsApp = `Buen día. Oferta rápida: ${critico} con precio especial por liquidación de stock. Disponible hasta agotar existencias. Responde “QUIERO” para reservar.`;
   } else if (lowSucursal && topProducto) {
     const top = topProducto[0];
     tipoPromo = "impulso_sucursal";
 
-    promoWhatsApp = `Buen día. Estamos impulsando ${top} con una propuesta especial en ${lowSucursal[0]}. Si deseas conocer disponibilidad y condiciones, escríbenos por este medio.`;
+    promoWhatsApp = `Buen día. Estamos impulsando ${top} con una propuesta especial en ${lowSucursal[0]}. Disponible hasta agotar existencias. Responde “QUIERO” para reservar.`;
   } else if (productosOrdenados.length > 1) {
     const top = productosOrdenados[0][0];
     const bajo = productosOrdenados[productosOrdenados.length - 1][0];
     tipoPromo = "combo";
 
-    promoWhatsApp = `Buen día. Te compartimos una promoción especial: lleva ${top} y combínalo con ${bajo}. Es una excelente oportunidad para aprovechar una compra más completa. Escríbenos para enviarte la propuesta.`;
+    promoWhatsApp = `Buen día. Te compartimos una promoción especial: lleva ${top} y combínalo con ${bajo}. Es una excelente oportunidad para aprovechar una compra más completa. Disponible hasta agotar existencias. Responde “QUIERO” para reservar.`;
   } else if (topProducto) {
     const top = topProducto[0];
     tipoPromo = "producto_estrella";
@@ -1193,7 +1193,7 @@ const jasoBot = useMemo(() => {
 
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
-  setActionNotice(`Acción copiada: ${texto}`);
+  setActionNotice(`Campaña copiada. Puedes pegarla en WhatsApp, redes sociales o una lista de clientes: ${texto}`);
   setTimeout(() => {
     setActionNotice("");
   }, 3000);
@@ -1473,7 +1473,7 @@ function openSalesWhatsapp() {
           <div style={styles.assistantText}>
             {jasoBot.mensajePrincipal}
             <br />
-            <strong>Potencia esa promoción en tu WhatsApp</strong>
+            <strong>JasoDatos prepara la campaña. Tú eliges a qué cliente, grupo o lista enviarla.</strong>
           </div>
 
           <div style={styles.assistantChannelRow}>
@@ -1506,7 +1506,7 @@ function openSalesWhatsapp() {
                 <div style={styles.actionIcon}>⚡</div>
                 <div style={styles.actionText}>{item}</div>
                 <button style={styles.actionButton} onClick={() => usarAccion(item)}>
-                  Usar
+                  Copiar campaña
                 </button>
               </div>
             ))}
@@ -1534,7 +1534,7 @@ function openSalesWhatsapp() {
               ? "Disponible en plan Ultra"
               : !hasValidWhatsapp
               ? "Configura tu número celular para activar el envío a WhatsApp"
-              : "Mejora tus ventas en WhatsApp"}
+              : "Preparar campaña para WhatsApp"}
           </button>
 
           <button
