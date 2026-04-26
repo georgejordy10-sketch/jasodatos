@@ -411,7 +411,6 @@ function buildJasoBotInsights(
   if (productosCriticos.length > 0) {
     const critico = productosCriticos[0].producto;
     tipoPromo = "liquidacion";
-s
     promoWhatsApp = `Buen día. Oferta rápida: ${critico} con precio especial por liquidación de stock. Disponible hasta agotar existencias. Responde “QUIERO” para reservar.`;
   } else if (lowSucursal && topProducto) {
     const top = topProducto[0];
