@@ -493,6 +493,13 @@ if (topCanal && topCanal[0]) {
   };
 }
 type DetailModalType = "products" | "stock" | "channels" | null;
+type BusinessCrmData = {
+  owner_name: string | null;
+  commercial_email: string | null;
+  commercial_whatsapp: string | null;
+  commercial_notes: string | null;
+  last_contact_at: string | null;
+};
 export default function DashboardComercial({
   processedData,
   onClearFile,
@@ -509,7 +516,9 @@ export default function DashboardComercial({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [plansOpen, setPlansOpen] = useState(false);
   const [detailModal, setDetailModal] = useState<DetailModalType>(null);
-
+  const [businessCrmData, setBusinessCrmData] = useState<BusinessCrmData | null>(
+  null
+);
   const {
     settings,
     updateSettings,
@@ -527,6 +536,38 @@ useEffect(() => {
     setCurrentBusinessSlug(businessSlug);
   }
 }, []);
+
+useEffect(() => {
+  let cancelled = false;
+
+  async function loadBusinessCrm() {
+    try {
+      const response = await fetch(
+        `/api/businesses/by-slug/${currentBusinessSlug}/crm`
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result?.error || "No se pudo cargar la información CRM."
+        );
+      }
+
+      if (!cancelled) {
+        setBusinessCrmData(result.business ?? null);
+      }
+    } catch (error) {
+      console.error("Error cargando CRM del negocio:", error);
+    }
+  }
+
+  loadBusinessCrm();
+
+  return () => {
+    cancelled = true;
+  };
+}, [currentBusinessSlug]);
 const {
   data: businessPlanData,
   loading: businessPlanLoading,
@@ -1340,6 +1381,7 @@ function openSalesWhatsapp() {
   updateChannel={updateChannel}
   resetSettings={resetSettings}
   businessSlug={currentBusinessSlug}
+  initialCrmData={businessCrmData}
   onSaveCrm={async (payload) => {
     const response = await fetch(
       `/api/businesses/by-slug/${currentBusinessSlug}/crm`,
@@ -1359,6 +1401,8 @@ function openSalesWhatsapp() {
         result?.error || "No se pudo guardar la información CRM."
       );
     }
+
+    setBusinessCrmData(result.business ?? null);
   }}
 />
 <SubscriptionPlansPanel

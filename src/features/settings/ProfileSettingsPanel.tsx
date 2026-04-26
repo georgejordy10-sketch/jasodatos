@@ -1,7 +1,15 @@
 ﻿"use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { ChannelKey, ProfileSettings } from "./types";
+
+type InitialCrmData = {
+  owner_name: string | null;
+  commercial_email: string | null;
+  commercial_whatsapp: string | null;
+  commercial_notes: string | null;
+  last_contact_at: string | null;
+};
 
 type ProfileSettingsPanelProps = {
   open: boolean;
@@ -12,6 +20,7 @@ type ProfileSettingsPanelProps = {
   updateChannel: (channel: string, enabled: boolean) => void;
   resetSettings: () => void;
   businessSlug: string;
+  initialCrmData?: InitialCrmData | null;
   onSaveCrm?: (payload: {
     owner_name: string;
     commercial_email: string;
@@ -67,11 +76,33 @@ export default function ProfileSettingsPanel({
   resetSettings,
   businessSlug,
   onSaveCrm,
+  initialCrmData,
 }: ProfileSettingsPanelProps) {
   const [ownerName, setOwnerName] = useState("");
   const [commercialEmail, setCommercialEmail] = useState("");
   const [savingCrm, setSavingCrm] = useState(false);
   const [crmNotice, setCrmNotice] = useState("");
+useEffect(() => {
+  if (!open) return;
+
+  setOwnerName(initialCrmData?.owner_name ?? "");
+  setCommercialEmail(initialCrmData?.commercial_email ?? "");
+
+  const crmWhatsapp = initialCrmData?.commercial_whatsapp ?? "";
+
+  if (crmWhatsapp && crmWhatsapp !== settings.businessWhatsapp) {
+    updateSettings({
+      businessWhatsapp: crmWhatsapp,
+    });
+  }
+}, [
+  open,
+  initialCrmData?.owner_name,
+  initialCrmData?.commercial_email,
+  initialCrmData?.commercial_whatsapp,
+  settings.businessWhatsapp,
+  updateSettings,
+]);
 
   if (!open) return null;
 

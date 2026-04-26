@@ -14,7 +14,48 @@ function cleanText(value: unknown) {
 
   return text.length > 0 ? text : null;
 }
+export async function GET(_request: Request, context: Params) {
+  try {
+    const { slug } = await context.params;
+    const businessSlug = slug?.trim();
 
+    if (!businessSlug) {
+      return NextResponse.json(
+        { ok: false, error: "Slug del negocio requerido." },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createAdminSupabaseClient();
+
+    const { data, error } = await supabase
+      .from("businesses")
+      .select(
+        "id, slug, business_name, owner_name, commercial_email, commercial_whatsapp, commercial_notes, last_contact_at"
+      )
+      .eq("slug", businessSlug)
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      business: data,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo cargar la información CRM.";
+
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
+}
 export async function PATCH(request: Request, context: Params) {
   try {
     const { slug } = await context.params;
