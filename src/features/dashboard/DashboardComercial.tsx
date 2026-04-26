@@ -1415,7 +1415,7 @@ function openSalesWhatsapp() {
       <div style={styles.assistantGrid}>
         <div style={styles.assistantContent}>
           <div style={styles.assistantHeader}>
-            <span style={styles.assistantTitle}>Asistente Comercial</span>
+            <span style={styles.assistantTitle}>JasoBot Comercial</span>
             <ActivePlanBadge tone="pro">Incluido en PRO</ActivePlanBadge>
             {canUseWhatsappByPlan ? (
               <ActivePlanBadge tone="ultra">WhatsApp en ULTRA</ActivePlanBadge>
@@ -1562,7 +1562,7 @@ function openSalesWhatsapp() {
     </div>
   ) : (
     <LockedFeatureCard
-      title="Asistente Comercial"
+      title="JasoBot Comercial"
       description="Recibe recomendaciones accionables, promociones sugeridas y apoyo de WhatsApp. Disponible desde el plan Pro."
       requiredPlan="pro"
       onOpenPlans={() => setPlansOpen(true)}

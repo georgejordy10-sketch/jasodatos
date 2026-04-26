@@ -133,7 +133,7 @@ const PLAN_MARKETING: Record<
   },
   pro: {
     idealFor: "Negocios en crecimiento",
-    summary: "Desbloquea desempeño entre sucursales, asistente comercial y PDF.",
+    summary: "Desbloquea desempeño entre sucursales, JasoBot Comercial y PDF.",
     highlight: "Recomendado",
   },
   ultra: {

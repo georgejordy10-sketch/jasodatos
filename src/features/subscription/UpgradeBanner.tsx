@@ -18,7 +18,7 @@ function getUpgradeMessage(plan: SubscriptionPlan): {
     return {
       title: "Desbloquea análisis avanzados",
       subtitle:
-        "Activa Desempeño entre sucursales, Asistente Comercial y exportación PDF con el plan Pro.",
+        "Activa Desempeño entre sucursales, JasoBot Comercial y exportación PDF con el plan Pro.",
       cta: "Ver beneficios de Pro",
     };
   }

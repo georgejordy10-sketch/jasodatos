@@ -256,7 +256,7 @@ onBlur={(e) =>
                 checked={settings.showAssistant}
                 onChange={(e) => updateSettings({ showAssistant: e.target.checked })}
               />
-              <span>Mostrar asistente comercial</span>
+              <span>Mostrar JasoBot Comercial</span>
             </label>
 
             <div style={styles.footerRow}>
