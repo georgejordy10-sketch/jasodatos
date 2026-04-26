@@ -72,16 +72,23 @@ function goToAnchor(anchorId?: string) {
     inline: "nearest",
   });
 
-  target.style.transition = "box-shadow 0.25s ease, outline 0.25s ease";
-  target.style.outline = "2px solid rgba(34, 197, 94, 0.95)";
-  target.style.boxShadow = "0 0 0 6px rgba(34, 197, 94, 0.18)";
+  target.style.transition =
+    "box-shadow 0.25s ease, outline 0.25s ease, background-color 0.25s ease";
+  target.style.outline = "4px solid rgba(34, 197, 94, 1)";
+  target.style.outlineOffset = "4px";
+  target.style.boxShadow =
+    "0 0 0 10px rgba(34, 197, 94, 0.22), 0 12px 28px rgba(0, 0, 0, 0.28)";
+  target.style.backgroundColor = "rgba(34, 197, 94, 0.08)";
+  target.style.borderRadius = "18px";
 
   window.setTimeout(() => {
     target.style.outline = "";
+    target.style.outlineOffset = "";
     target.style.boxShadow = "";
-  }, 1600);
+    target.style.backgroundColor = "";
+    target.style.borderRadius = "";
+  }, 1800);
 }
-
 export default function AlertPanel({ alerts }: AlertPanelProps) {
   const total = alerts.length;
   const high = alerts.filter((a) => a.severity === "alta").length;
