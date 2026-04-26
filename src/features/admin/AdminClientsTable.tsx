@@ -8,6 +8,13 @@ type Props = {
 };
 
 type Plan = AdminBusinessOverview["plan"];
+type CrmDraft = {
+  owner_name: string;
+  commercial_email: string;
+  commercial_whatsapp: string;
+  commercial_notes: string;
+  last_contact_at: string;
+};
 
 function planLabel(plan: Plan) {
   if (plan === "basic") return "Basic";
@@ -111,13 +118,13 @@ function buildClientsCsv(rows: AdminBusinessOverview[]) {
       row.business_name,
       row.slug,
       ownerName,
-      row.owner_email || "",
-      row.owner_whatsapp || "",
+      row.commercial_email || row.owner_email || "",
+      row.commercial_whatsapp || row.owner_whatsapp || "",
       planLabel(row.plan),
       row.status,
       row.billing_status,
       row.users_count,
-      row.last_seen_at || "",
+      row.last_contact_at || row.last_seen_at || "",
     ]
       .map(csvCell)
       .join(";");
@@ -150,6 +157,10 @@ export default function AdminClientsTable({ rows }: Props) {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [notice, setNotice] = useState<string>("");
+  const [editingCrmRow, setEditingCrmRow] =
+  useState<AdminBusinessOverview | null>(null);
+const [crmDraft, setCrmDraft] = useState<CrmDraft | null>(null);
+const [savingCrmId, setSavingCrmId] = useState<string | null>(null);
 
   const totalUsers = useMemo(
     () => tableRows.reduce((acc, row) => acc + row.users_count, 0),
@@ -191,7 +202,93 @@ export default function AdminClientsTable({ rows }: Props) {
     downloadTextFile(csv, `jasodatos_contactos_clientes_${today}.csv`);
     setNotice(`Archivo exportado con ${filteredRows.length} clientes.`);
   }
+function openCrmEditor(row: AdminBusinessOverview) {
+  setEditingCrmRow(row);
+  setCrmDraft({
+    owner_name: row.owner_name || "",
+    commercial_email: row.commercial_email || row.owner_email || "",
+    commercial_whatsapp: row.commercial_whatsapp || row.owner_whatsapp || "",
+    commercial_notes: row.commercial_notes || "",
+    last_contact_at: row.last_contact_at
+      ? String(row.last_contact_at).slice(0, 10)
+      : "",
+  });
+}
 
+function closeCrmEditor() {
+  setEditingCrmRow(null);
+  setCrmDraft(null);
+}
+
+async function saveCrmContact() {
+  if (!editingCrmRow || !crmDraft) return;
+
+  try {
+    setSavingCrmId(editingCrmRow.id);
+    setNotice("");
+
+    const response = await fetch(
+      `/api/admin/businesses/${editingCrmRow.id}/crm`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          owner_name: crmDraft.owner_name,
+          commercial_email: crmDraft.commercial_email,
+          commercial_whatsapp: crmDraft.commercial_whatsapp,
+          commercial_notes: crmDraft.commercial_notes,
+          last_contact_at: crmDraft.last_contact_at,
+        }),
+      }
+    );
+
+    const raw = await response.text();
+    let result: { ok?: boolean; error?: string } = {};
+
+    if (raw) {
+      try {
+        result = JSON.parse(raw);
+      } catch {
+        throw new Error(raw || "La API devolvió una respuesta inválida.");
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error ||
+          `No se pudo actualizar el contacto (${response.status}).`
+      );
+    }
+
+    setTableRows((prev) =>
+      prev.map((row) =>
+        row.id === editingCrmRow.id
+          ? {
+              ...row,
+              owner_name: crmDraft.owner_name || null,
+              commercial_email: crmDraft.commercial_email || null,
+              commercial_whatsapp: crmDraft.commercial_whatsapp || null,
+              commercial_notes: crmDraft.commercial_notes || null,
+              last_contact_at: crmDraft.last_contact_at || null,
+            }
+          : row
+      )
+    );
+
+    setNotice(`Contacto actualizado para ${editingCrmRow.business_name}.`);
+    closeCrmEditor();
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo actualizar el contacto.";
+    setNotice(message);
+  } finally {
+    setSavingCrmId(null);
+  }
+}
   async function savePlan(businessId: string) {
     const plan = draftPlans[businessId];
 
@@ -416,6 +513,13 @@ export default function AdminClientsTable({ rows }: Props) {
 >
   Copiar enlace app
 </button>
+<button
+  type="button"
+  style={styles.secondaryActionButton}
+  onClick={() => openCrmEditor(row)}
+>
+  Editar contacto
+</button>
                     </div>
                   </td>
                 </tr>
@@ -424,6 +528,142 @@ export default function AdminClientsTable({ rows }: Props) {
           </tbody>
         </table>
       </div>
+            {editingCrmRow && crmDraft ? (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modal}>
+            <div style={styles.modalHeader}>
+              <div>
+                <p style={styles.modalEyebrow}>CRM Lite</p>
+                <h2 style={styles.modalTitle}>
+                  Editar contacto comercial
+                </h2>
+                <p style={styles.modalSubtitle}>
+                  {editingCrmRow.business_name} · {editingCrmRow.slug}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                style={styles.modalCloseButton}
+                onClick={closeCrmEditor}
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <div style={styles.modalGrid}>
+              <label style={styles.modalLabel}>
+                <span>Nombre del dueño</span>
+                <input
+                  style={styles.modalInput}
+                  value={crmDraft.owner_name}
+                  onChange={(event) =>
+                    setCrmDraft((current) =>
+                      current
+                        ? { ...current, owner_name: event.target.value }
+                        : current
+                    )
+                  }
+                  placeholder="Ej. Juan Pérez"
+                />
+              </label>
+
+              <label style={styles.modalLabel}>
+                <span>Correo comercial</span>
+                <input
+                  type="email"
+                  style={styles.modalInput}
+                  value={crmDraft.commercial_email}
+                  onChange={(event) =>
+                    setCrmDraft((current) =>
+                      current
+                        ? { ...current, commercial_email: event.target.value }
+                        : current
+                    )
+                  }
+                  placeholder="correo@negocio.com"
+                />
+              </label>
+
+              <label style={styles.modalLabel}>
+                <span>WhatsApp comercial</span>
+                <input
+                  type="tel"
+                  style={styles.modalInput}
+                  value={crmDraft.commercial_whatsapp}
+                  onChange={(event) =>
+                    setCrmDraft((current) =>
+                      current
+                        ? {
+                            ...current,
+                            commercial_whatsapp: event.target.value,
+                          }
+                        : current
+                    )
+                  }
+                  placeholder="593999111222"
+                />
+              </label>
+
+              <label style={styles.modalLabel}>
+                <span>Último contacto</span>
+                <input
+                  type="date"
+                  style={styles.modalInput}
+                  value={crmDraft.last_contact_at}
+                  onChange={(event) =>
+                    setCrmDraft((current) =>
+                      current
+                        ? { ...current, last_contact_at: event.target.value }
+                        : current
+                    )
+                  }
+                />
+              </label>
+
+              <label style={{ ...styles.modalLabel, ...styles.modalFull }}>
+                <span>Notas comerciales</span>
+                <textarea
+                  style={styles.modalTextarea}
+                  value={crmDraft.commercial_notes}
+                  onChange={(event) =>
+                    setCrmDraft((current) =>
+                      current
+                        ? {
+                            ...current,
+                            commercial_notes: event.target.value,
+                          }
+                        : current
+                    )
+                  }
+                  placeholder="Ej. Cliente interesado en plan Pro. Contactar nuevamente el viernes."
+                />
+              </label>
+            </div>
+
+            <div style={styles.modalActions}>
+              <button
+                type="button"
+                style={styles.secondaryActionButton}
+                onClick={closeCrmEditor}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                style={styles.saveButton}
+                onClick={saveCrmContact}
+                disabled={savingCrmId === editingCrmRow.id}
+              >
+                {savingCrmId === editingCrmRow.id
+                  ? "Guardando..."
+                  : "Guardar contacto"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}  
     </section>
   );
 }
@@ -663,4 +903,113 @@ exportButton: {
   cursor: "pointer",
   boxShadow: "0 10px 24px rgba(22, 163, 74, 0.16)",
 },
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 80,
+    display: "grid",
+    placeItems: "center",
+    padding: 24,
+    background: "rgba(15, 23, 42, 0.56)",
+    backdropFilter: "blur(8px)",
+  },
+  modal: {
+    width: "min(760px, 96vw)",
+    maxHeight: "88vh",
+    overflow: "auto",
+    borderRadius: 24,
+    background: "#FFFFFF",
+    border: "1px solid rgba(15, 23, 42, 0.10)",
+    boxShadow: "0 28px 80px rgba(15, 23, 42, 0.35)",
+  },
+  modalHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+    padding: 24,
+    borderBottom: "1px solid rgba(15, 23, 42, 0.08)",
+  },
+  modalEyebrow: {
+    margin: 0,
+    color: "#16A34A",
+    fontSize: 12,
+    fontWeight: 900,
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+  },
+  modalTitle: {
+    margin: "6px 0 0 0",
+    color: "#172554",
+    fontSize: 24,
+    fontWeight: 900,
+    letterSpacing: "-0.02em",
+  },
+  modalSubtitle: {
+    margin: "6px 0 0 0",
+    color: "#64748B",
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  modalCloseButton: {
+    minHeight: 38,
+    borderRadius: 12,
+    border: "1px solid rgba(15, 23, 42, 0.12)",
+    background: "#F8FAFC",
+    color: "#0F172A",
+    padding: "0 14px",
+    fontSize: 13,
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+  modalGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 14,
+    padding: 24,
+  },
+  modalLabel: {
+    display: "grid",
+    gap: 6,
+    color: "#172554",
+    fontSize: 12,
+    fontWeight: 900,
+  },
+  modalFull: {
+    gridColumn: "1 / -1",
+  },
+  modalInput: {
+    width: "100%",
+    minHeight: 42,
+    borderRadius: 12,
+    border: "1px solid rgba(15, 23, 42, 0.14)",
+    background: "#FFFFFF",
+    color: "#0F172A",
+    padding: "0 12px",
+    fontSize: 14,
+    fontWeight: 700,
+    outline: "none",
+  },
+  modalTextarea: {
+    width: "100%",
+    minHeight: 110,
+    resize: "vertical",
+    borderRadius: 12,
+    border: "1px solid rgba(15, 23, 42, 0.14)",
+    background: "#FFFFFF",
+    color: "#0F172A",
+    padding: 12,
+    fontSize: 14,
+    fontWeight: 700,
+    outline: "none",
+    fontFamily: "inherit",
+  },
+  modalActions: {
+    display: "flex",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: 10,
+    padding: 24,
+    borderTop: "1px solid rgba(15, 23, 42, 0.08)",
+  },
 };
