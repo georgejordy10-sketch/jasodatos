@@ -574,7 +574,10 @@ const {
   error: businessPlanError,
 } = useBusinessPlan(currentBusinessSlug);
 
-const currentPlan = businessPlanData?.currentPlan ?? "basic";
+const currentPlan =
+  businessPlanData?.currentPlan ??
+  businessPlanData?.business?.plan ??
+  "basic";
 const debugPlanMessage = businessPlanLoading
   ? "Cargando plan..."
   : businessPlanError
