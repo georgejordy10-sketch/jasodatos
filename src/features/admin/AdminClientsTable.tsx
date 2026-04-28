@@ -506,13 +506,15 @@ async function saveCrmContact() {
         <table style={styles.table}>
           <thead>
             <tr>
-              <th style={styles.th}>Negocio</th>
-              <th style={styles.th}>Plan</th>
-              <th style={styles.th}>Estado</th>
-              <th style={styles.th}>Usuarios</th>
-              <th style={styles.th}>Correo</th>
-              <th style={styles.th}>WhatsApp</th>
-              <th style={styles.th}>Facturación</th>
+<th style={styles.th}>Negocio</th>
+<th style={styles.th}>Plan</th>
+<th style={styles.th}>Estado</th>
+<th style={styles.th}>Usuarios</th>
+<th style={styles.th}>Responsable</th>
+<th style={styles.th}>Correo comercial</th>
+<th style={styles.th}>WhatsApp comercial</th>
+<th style={styles.th}>Origen</th>
+<th style={styles.th}>Facturación</th>
 <th style={styles.th}>Vigencia</th>
 <th style={styles.th}>Días restantes</th>
 <th style={styles.th}>Última actividad</th>
@@ -523,7 +525,7 @@ async function saveCrmContact() {
           <tbody>
             {filteredRows.length === 0 ? (
               <tr>
-                <td style={styles.emptyCell} colSpan={11}>
+                <td style={styles.emptyCell} colSpan={13}>
                   No se encontraron clientes con ese criterio.
                 </td>
               </tr>
@@ -555,9 +557,24 @@ async function saveCrmContact() {
                   </td>
 
                   <td style={styles.td}>{row.users_count}</td>
-                  <td style={styles.td}>{row.owner_email || "-"}</td>
-                  <td style={styles.td}>{row.owner_whatsapp || "-"}</td>
+                  <td style={styles.td}>
+  {row.owner_name || "Sin responsable"}
+</td>
 
+<td style={styles.td}>
+  {row.commercial_email || row.owner_email || "-"}
+</td>
+
+<td style={styles.td}>
+  {row.commercial_whatsapp || row.owner_whatsapp || "-"}
+</td>
+
+<td style={styles.td}>
+  {row.signup_source === "landing_trial"
+    ? "Registro web"
+    : row.signup_source || "-"}
+</td>
+                  
                   <td style={styles.td}>
   <span
     style={{
@@ -921,7 +938,7 @@ const styles: Record<string, CSSProperties> = {
   },
   table: {
     width: "100%",
-    minWidth: 1760,
+    minWidth: 1960,
     borderCollapse: "collapse",
   },
   th: {
