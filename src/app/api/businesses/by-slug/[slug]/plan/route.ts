@@ -14,7 +14,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
     const { data: business, error: businessError } = await supabase
       .from("businesses")
-      .select("id, business_name, slug, plan, status")
+      .select("id, business_name, slug, plan, status, ciudad, provincia, pais")
       .eq("slug", slug)
       .single();
 
@@ -42,13 +42,16 @@ export async function GET(_request: Request, context: RouteContext) {
     const billingStatus = subscription?.billing_status ?? "trial";
 
     return NextResponse.json({
-      business: {
-        business_name: business.business_name,
-        slug: business.slug,
-        plan: currentPlan,
-        status: business.status,
-        billing_status: billingStatus,
-      },
+business: {
+  business_name: business.business_name,
+  slug: business.slug,
+  plan: currentPlan,
+  status: business.status,
+  billing_status: billingStatus,
+  ciudad: business.ciudad,
+  provincia: business.provincia,
+  pais: business.pais,
+},
     });
   } catch (error) {
     const message =

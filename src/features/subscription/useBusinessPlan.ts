@@ -9,6 +9,9 @@ type BusinessPlanState = {
   currentPlan: SubscriptionPlan;
   status: string;
   billingStatus: string;
+  ciudad: string | null;
+  provincia: string | null;
+  pais: string | null;
 };
 
 export function useBusinessPlan(slug: string | null) {
@@ -50,13 +53,16 @@ if (!response.ok) {
   throw new Error(result?.error || "No se pudo cargar el plan del negocio");
 }
         if (!cancelled) {
-          setData({
-            businessName: result.business.business_name,
-            slug: result.business.slug,
-            currentPlan: result.business.plan,
-            status: result.business.status,
-            billingStatus: result.business.billing_status,
-          });
+setData({
+  businessName: result.business.business_name,
+  slug: result.business.slug,
+  currentPlan: result.business.plan,
+  status: result.business.status,
+  billingStatus: result.business.billing_status,
+  ciudad: result.business.ciudad ?? null,
+  provincia: result.business.provincia ?? null,
+  pais: result.business.pais ?? null,
+});
         }
       } catch (err) {
         if (!cancelled) {

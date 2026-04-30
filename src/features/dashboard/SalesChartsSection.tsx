@@ -36,6 +36,8 @@ type Props = {
   formatCompactMoney: (value: number) => string;
   formatMoney: (value: number) => string;
   onOpenProductDetails?: () => void;
+  onCompareProducts?: () => void;
+  isExportingPdf?: boolean;
 };
 function Card({
   title,
@@ -79,6 +81,8 @@ export default function SalesChartsSection({
   formatCompactMoney,
   formatMoney,
   onOpenProductDetails,
+  onCompareProducts,
+  isExportingPdf = false,
 }: Props) {
   return (
     <section style={styles.mainCharts}>
@@ -165,14 +169,26 @@ export default function SalesChartsSection({
         <Card
           title="Participación por producto"
           subtitle="Distribución de ventas por producto (top)"
-          action={
-  <button
-    type="button"
-    style={styles.viewAllButton}
-    onClick={onOpenProductDetails}
-  >
-    Ver todo
-  </button>
+action={
+  !isExportingPdf ? (
+    <div style={styles.productActions}>
+      <button
+        type="button"
+        style={styles.compareButton}
+        onClick={onCompareProducts}
+      >
+        Comparar productos
+      </button>
+
+      <button
+        type="button"
+        style={styles.viewAllButton}
+        onClick={onOpenProductDetails}
+      >
+        Ver todo
+      </button>
+    </div>
+  ) : null
 }
           fullHeight
         >
@@ -402,4 +418,23 @@ const styles: Record<string, CSSProperties> = {
     cursor: "pointer",
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.03)",
   },
+  productActions: {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  flexWrap: "wrap",
+},
+
+compareButton: {
+  minHeight: 34,
+  borderRadius: 999,
+  border: "1px solid rgba(127,178,255,0.28)",
+  background: "rgba(127,178,255,0.12)",
+  color: "#FFFFFF",
+  padding: "0 13px",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+},
 };

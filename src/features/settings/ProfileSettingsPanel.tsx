@@ -1,12 +1,15 @@
 ﻿"use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import type { ChannelKey, ProfileSettings } from "./types";
+import type { ProfileSettings } from "./types";
 
 type InitialCrmData = {
   owner_name: string | null;
   commercial_email: string | null;
   commercial_whatsapp: string | null;
+  ciudad: string | null;
+  provincia: string | null;
+  pais: string | null;
   commercial_notes: string | null;
   last_contact_at: string | null;
 };
@@ -25,6 +28,9 @@ type ProfileSettingsPanelProps = {
     owner_name: string;
     commercial_email: string;
     commercial_whatsapp: string;
+    ciudad: string;
+    provincia: string;
+    pais: string;
   }) => Promise<void>;
 };
 
@@ -75,34 +81,44 @@ export default function ProfileSettingsPanel({
   updateChannel,
   resetSettings,
   businessSlug,
-  onSaveCrm,
   initialCrmData,
+  onSaveCrm,
 }: ProfileSettingsPanelProps) {
   const [ownerName, setOwnerName] = useState("");
   const [commercialEmail, setCommercialEmail] = useState("");
+  const [ciudad, setCiudad] = useState("");
+  const [provincia, setProvincia] = useState("");
+  const [pais, setPais] = useState("");
   const [savingCrm, setSavingCrm] = useState(false);
   const [crmNotice, setCrmNotice] = useState("");
-useEffect(() => {
-  if (!open) return;
 
-  setOwnerName(initialCrmData?.owner_name ?? "");
-  setCommercialEmail(initialCrmData?.commercial_email ?? "");
+  useEffect(() => {
+    if (!open) return;
 
-  const crmWhatsapp = initialCrmData?.commercial_whatsapp ?? "";
+    setOwnerName(initialCrmData?.owner_name ?? "");
+    setCommercialEmail(initialCrmData?.commercial_email ?? "");
+    setCiudad(initialCrmData?.ciudad ?? "");
+    setProvincia(initialCrmData?.provincia ?? "");
+    setPais(initialCrmData?.pais ?? "");
 
-  if (crmWhatsapp && crmWhatsapp !== settings.businessWhatsapp) {
-    updateSettings({
-      businessWhatsapp: crmWhatsapp,
-    });
-  }
-}, [
-  open,
-  initialCrmData?.owner_name,
-  initialCrmData?.commercial_email,
-  initialCrmData?.commercial_whatsapp,
-  settings.businessWhatsapp,
-  updateSettings,
-]);
+    const crmWhatsapp = initialCrmData?.commercial_whatsapp ?? "";
+
+    if (crmWhatsapp && crmWhatsapp !== settings.businessWhatsapp) {
+      updateSettings({
+        businessWhatsapp: crmWhatsapp,
+      });
+    }
+  }, [
+    open,
+    initialCrmData?.owner_name,
+    initialCrmData?.commercial_email,
+    initialCrmData?.commercial_whatsapp,
+    initialCrmData?.ciudad,
+    initialCrmData?.provincia,
+    initialCrmData?.pais,
+    settings.businessWhatsapp,
+    updateSettings,
+  ]);
 
   if (!open) return null;
 
@@ -133,6 +149,9 @@ useEffect(() => {
           settings.businessWhatsapp,
           settings.locale
         ),
+        ciudad,
+        provincia,
+        pais,
       });
 
       setCrmNotice("Datos CRM guardados correctamente.");
@@ -155,7 +174,8 @@ useEffect(() => {
           <div>
             <h2 style={styles.title}>Configuración del negocio</h2>
             <p style={styles.subtitle}>
-              Ajusta datos base y umbrales comerciales. Los cambios se guardan automáticamente.
+              Ajusta datos base y umbrales comerciales. Los cambios se guardan
+              automáticamente.
             </p>
           </div>
 
@@ -164,7 +184,7 @@ useEffect(() => {
           </button>
         </div>
 
-        <div style={styles.grid}>
+        <div style={styles.contentGrid}>
           <section style={styles.card}>
             <h3 style={styles.cardTitle}>Datos del negocio</h3>
 
@@ -173,105 +193,172 @@ useEffect(() => {
               <input
                 style={styles.input}
                 value={settings.businessName}
-                onChange={(e) => updateSettings({ businessName: e.target.value })}
+                onChange={(e) =>
+                  updateSettings({ businessName: e.target.value })
+                }
               />
             </label>
+
             <label style={styles.label}>
-  <span>Nombre del dueño o responsable</span>
-  <input
-    style={styles.input}
-    value={ownerName}
-    onChange={(event) => setOwnerName(event.target.value)}
-    placeholder="Ej. Primer nombre + Primer apellido"
-  />
-</label>
+              <span>Nombre del dueño o responsable</span>
+              <input
+                style={styles.input}
+                value={ownerName}
+                onChange={(event) => setOwnerName(event.target.value)}
+                placeholder="Ej. Primer nombre + Primer Apellido"
+              />
+            </label>
 
-<label style={styles.label}>
-  <span>Correo comercial</span>
-  <input
-    type="email"
-    style={styles.input}
-    value={commercialEmail}
-    onChange={(event) => setCommercialEmail(event.target.value)}
-    placeholder="correo@negocio.com"
-  />
-</label>
-             <label style={styles.label}>
-  <span>WhatsApp comercial</span>
-  <input
-    type="tel"
-    inputMode="tel"
-    placeholder="+593997945350"
-    style={{
-      ...styles.input,
-      ...(whatsappLooksValid ? null : styles.inputError),
-    }}
-    value={settings.businessWhatsapp}
-    onChange={(e) => updateSettings({ businessWhatsapp: e.target.value })}
-onBlur={(e) =>
-  updateSettings({
-    businessWhatsapp: normalizeWhatsappPhone(e.target.value, settings.locale),
-  })
-}
-  />
+            <label style={styles.label}>
+              <span>Correo comercial</span>
+              <input
+                type="email"
+                style={styles.input}
+                value={commercialEmail}
+                onChange={(event) => setCommercialEmail(event.target.value)}
+                placeholder="correo@negocio.com"
+              />
+            </label>
 
-  <small
-    style={
-      whatsappLooksValid ? styles.helperText : { ...styles.helperText, ...styles.helperTextError }
-    }
-  >
-{whatsappDigits.length === 0
-  ? "Puedes escribir tu número local o con código internacional. Ejemplo Ecuador: 0997945350 o +593997945350."
-  : whatsappLooksValid
-  ? `Vista previa: ${whatsappPreview}`
-  : "Número inválido. Usa un celular válido para el formato regional seleccionado."}
-  </small>
-</label>
+            <label style={styles.label}>
+              <span>WhatsApp comercial</span>
+              <input
+                type="tel"
+                inputMode="tel"
+                placeholder="+593997945350"
+                style={{
+                  ...styles.input,
+                  ...(whatsappLooksValid ? null : styles.inputError),
+                }}
+                value={settings.businessWhatsapp}
+                onChange={(e) =>
+                  updateSettings({ businessWhatsapp: e.target.value })
+                }
+                onBlur={(e) =>
+                  updateSettings({
+                    businessWhatsapp: normalizeWhatsappPhone(
+                      e.target.value,
+                      settings.locale
+                    ),
+                  })
+                }
+              />
 
-<button
-  type="button"
-  style={styles.crmSaveButton}
-  onClick={saveCrmFromSettings}
-  disabled={savingCrm || !businessSlug}
->
-  {savingCrm ? "Guardando CRM..." : "Guardar datos CRM"}
-</button>
+              <small
+                style={
+                  whatsappLooksValid
+                    ? styles.helperText
+                    : { ...styles.helperText, ...styles.helperTextError }
+                }
+              >
+                {whatsappDigits.length === 0
+                  ? "Puedes escribir tu número local o con código internacional. Ejemplo Ecuador: 0997945350 o +593997945350."
+                  : whatsappLooksValid
+                  ? `Vista previa: ${whatsappPreview}`
+                  : "Número inválido. Usa un celular válido para el formato regional seleccionado."}
+              </small>
+            </label>
 
-{crmNotice ? <small style={styles.helperText}>{crmNotice}</small> : null}
+            <label style={styles.label}>
+              <span>Ciudad</span>
+              <input
+                style={styles.input}
+                value={ciudad}
+                onChange={(event) => setCiudad(event.target.value)}
+                placeholder="Ej. Quito"
+              />
+            </label>
 
-<label style={styles.label}>
-  <span>Moneda</span>
-  <select
-    style={styles.input}
-    value={settings.currencyCode}
-    onChange={(e) =>
-      updateSettings({
-        currencyCode: e.target.value as ProfileSettings["currencyCode"],
-      })
-    }
-  >
-    <option style={styles.selectOption} value="USD">Dólar estadounidense (USD)</option>
-    <option style={styles.selectOption} value="EUR">Euro (EUR)</option>
-    <option style={styles.selectOption} value="PEN">Sol peruano (PEN)</option>
-    <option style={styles.selectOption} value="COP">Peso colombiano (COP)</option>
-    <option style={styles.selectOption} value="MXN">Peso mexicano (MXN)</option>
-  </select>
-</label>
-<label style={styles.label}>
-  <span>Formato regional</span>
-  <select
-    style={styles.input}
-    value={settings.locale}
-    onChange={(e) => updateSettings({ locale: e.target.value })}
-  >
-    <option style={styles.selectOption} value="es-EC">Español (Ecuador)</option>
-    <option style={styles.selectOption} value="es-ES">Español (España)</option>
-    <option style={styles.selectOption} value="en-US">English (United States)</option>
-    <option style={styles.selectOption} value="es-MX">Español (México)</option>
-    <option style={styles.selectOption} value="es-CO">Español (Colombia)</option>
-    <option style={styles.selectOption} value="es-PE">Español (Perú)</option>
-  </select>
-</label>
+            <label style={styles.label}>
+              <span>Provincia</span>
+              <input
+                style={styles.input}
+                value={provincia}
+                onChange={(event) => setProvincia(event.target.value)}
+                placeholder="Ej. Pichincha"
+              />
+            </label>
+
+            <label style={styles.label}>
+              <span>País</span>
+              <input
+                style={styles.input}
+                value={pais}
+                onChange={(event) => setPais(event.target.value)}
+                placeholder="Ej. Ecuador"
+              />
+            </label>
+
+            <button
+              type="button"
+              style={styles.crmSaveButton}
+              onClick={saveCrmFromSettings}
+              disabled={savingCrm || !businessSlug}
+            >
+              {savingCrm ? "Guardando CRM..." : "Guardar datos CRM"}
+            </button>
+
+            {crmNotice ? (
+              <small style={styles.helperText}>{crmNotice}</small>
+            ) : null}
+
+            <label style={styles.label}>
+              <span>Moneda</span>
+              <select
+                style={styles.input}
+                value={settings.currencyCode}
+                onChange={(e) =>
+                  updateSettings({
+                    currencyCode:
+                      e.target.value as ProfileSettings["currencyCode"],
+                  })
+                }
+              >
+                <option style={styles.selectOption} value="USD">
+                  Dólar estadounidense (USD)
+                </option>
+                <option style={styles.selectOption} value="EUR">
+                  Euro (EUR)
+                </option>
+                <option style={styles.selectOption} value="PEN">
+                  Sol peruano (PEN)
+                </option>
+                <option style={styles.selectOption} value="COP">
+                  Peso colombiano (COP)
+                </option>
+                <option style={styles.selectOption} value="MXN">
+                  Peso mexicano (MXN)
+                </option>
+              </select>
+            </label>
+
+            <label style={styles.label}>
+              <span>Formato regional</span>
+              <select
+                style={styles.input}
+                value={settings.locale}
+                onChange={(e) => updateSettings({ locale: e.target.value })}
+              >
+                <option style={styles.selectOption} value="es-EC">
+                  Español (Ecuador)
+                </option>
+                <option style={styles.selectOption} value="es-ES">
+                  Español (España)
+                </option>
+                <option style={styles.selectOption} value="en-US">
+                  English (United States)
+                </option>
+                <option style={styles.selectOption} value="es-MX">
+                  Español (México)
+                </option>
+                <option style={styles.selectOption} value="es-CO">
+                  Español (Colombia)
+                </option>
+                <option style={styles.selectOption} value="es-PE">
+                  Español (Perú)
+                </option>
+              </select>
+            </label>
           </section>
 
           <section style={styles.card}>
@@ -281,7 +368,7 @@ onBlur={(e) =>
               <span>Stock mínimo por defecto</span>
               <input
                 type="number"
-                style={styles.input}
+                style={styles.compactNumberInput}
                 value={settings.defaultStockMin}
                 onChange={(e) =>
                   updateSettings({ defaultStockMin: toNumber(e.target.value) })
@@ -293,7 +380,7 @@ onBlur={(e) =>
               <span>Caída de ventas - alerta media (%)</span>
               <input
                 type="number"
-                style={styles.input}
+                style={styles.compactNumberInput}
                 value={settings.salesDropMediumPct}
                 onChange={(e) =>
                   updateThreshold("salesDropMediumPct", toNumber(e.target.value))
@@ -305,7 +392,7 @@ onBlur={(e) =>
               <span>Caída de ventas - alerta alta (%)</span>
               <input
                 type="number"
-                style={styles.input}
+                style={styles.compactNumberInput}
                 value={settings.salesDropHighPct}
                 onChange={(e) =>
                   updateThreshold("salesDropHighPct", toNumber(e.target.value))
@@ -314,67 +401,92 @@ onBlur={(e) =>
             </label>
           </section>
 
-          <section style={styles.card}>
-            <h3 style={styles.cardTitle}>Canales habilitados</h3>
+          <div style={styles.rightStack}>
+            <section style={styles.card}>
+              <h3 style={styles.cardTitle}>Canales habilitados</h3>
 
-            <label style={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={settings.channelsEnabled.ecommerce}
-                onChange={(e) => updateChannel("ecommerce", e.target.checked)}
-              />
-              <span>e-commerce</span>
-            </label>
+              <div style={styles.optionsList}>
+                <label style={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={settings.channelsEnabled.ecommerce}
+                    onChange={(e) =>
+                      updateChannel("ecommerce", e.target.checked)
+                    }
+                  />
+                  <span>e-commerce</span>
+                </label>
 
-            <label style={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={settings.channelsEnabled.mayorista}
-                onChange={(e) => updateChannel("mayorista", e.target.checked)}
-              />
-              <span>mayorista</span>
-            </label>
+                <label style={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={settings.channelsEnabled.mayorista}
+                    onChange={(e) =>
+                      updateChannel("mayorista", e.target.checked)
+                    }
+                  />
+                  <span>mayorista</span>
+                </label>
 
-            <label style={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={settings.channelsEnabled.tiendaFisica}
-                onChange={(e) => updateChannel("tiendaFisica", e.target.checked)}
-              />
-              <span>tienda física</span>
-            </label>
-          </section>
+                <label style={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={settings.channelsEnabled.tiendaFisica}
+                    onChange={(e) =>
+                      updateChannel("tiendaFisica", e.target.checked)
+                    }
+                  />
+                  <span>tienda física</span>
+                </label>
+              </div>
+            </section>
 
-          <section style={styles.card}>
-            <h3 style={styles.cardTitle}>Módulos visibles</h3>
+            <section style={styles.card}>
+              <h3 style={styles.cardTitle}>Módulos visibles</h3>
 
-            <label style={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={settings.showBenchmarking}
-                onChange={(e) => updateSettings({ showBenchmarking: e.target.checked })}
-              />
-              <span>Mostrar benchmarking</span>
-            </label>
+              <div style={styles.optionsList}>
+                <label style={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={settings.showBenchmarking}
+                    onChange={(e) =>
+                      updateSettings({ showBenchmarking: e.target.checked })
+                    }
+                  />
+                  <span>Desempeño entre Sucursales</span>
+                </label>
 
-            <label style={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={settings.showAssistant}
-                onChange={(e) => updateSettings({ showAssistant: e.target.checked })}
-              />
-              <span>Mostrar JasoBot Comercial</span>
-            </label>
+                <label style={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={settings.showAssistant}
+                    onChange={(e) =>
+                      updateSettings({ showAssistant: e.target.checked })
+                    }
+                  />
+                  <span>Mostrar JasoBot Comercial</span>
+                </label>
+              </div>
 
-            <div style={styles.footerRow}>
-              <button type="button" onClick={resetSettings} style={styles.secondaryButton}>
-                Restaurar valores
-              </button>
-              <button type="button" onClick={onClose} style={styles.primaryButton}>
-                Listo
-              </button>
-            </div>
-          </section>
+              <div style={styles.footerRow}>
+                <button
+                  type="button"
+                  onClick={resetSettings}
+                  style={styles.secondaryButton}
+                >
+                  Restaurar valores
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={styles.primaryButton}
+                >
+                  Listo
+                </button>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </div>
@@ -392,6 +504,7 @@ const styles: Record<string, CSSProperties> = {
     padding: 20,
     zIndex: 1000,
   },
+
   panel: {
     width: "min(1120px, 100%)",
     maxHeight: "90vh",
@@ -404,6 +517,7 @@ const styles: Record<string, CSSProperties> = {
     display: "grid",
     gap: 18,
   },
+
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -411,6 +525,7 @@ const styles: Record<string, CSSProperties> = {
     gap: 12,
     flexWrap: "wrap",
   },
+
   title: {
     margin: 0,
     color: "#FFFFFF",
@@ -418,12 +533,14 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 800,
     lineHeight: 1.1,
   },
+
   subtitle: {
     margin: "6px 0 0 0",
     color: "rgba(236,242,255,0.90)",
     fontSize: 14,
     lineHeight: 1.45,
   },
+
   closeButton: {
     minHeight: 40,
     padding: "0 14px",
@@ -435,11 +552,20 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 800,
     cursor: "pointer",
   },
-  grid: {
+
+  contentGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-    gap: 14,
+    gridTemplateColumns: "1.05fr 0.95fr 0.95fr",
+    gap: 16,
+    alignItems: "start",
   },
+
+  rightStack: {
+    display: "grid",
+    gap: 16,
+    alignContent: "start",
+  },
+
   card: {
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.08)",
@@ -447,13 +573,16 @@ const styles: Record<string, CSSProperties> = {
     padding: 16,
     display: "grid",
     gap: 12,
+    alignContent: "start",
   },
+
   cardTitle: {
     margin: 0,
     color: "#FFFFFF",
     fontSize: 17,
     fontWeight: 800,
   },
+
   label: {
     display: "grid",
     gap: 6,
@@ -461,6 +590,7 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 13,
     fontWeight: 600,
   },
+
   input: {
     width: "100%",
     minHeight: 42,
@@ -472,31 +602,55 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 14,
     outline: "none",
   },
-  inputError: {
-  border: "1px solid rgba(239,68,68,0.55)",
-  boxShadow: "0 0 0 1px rgba(239,68,68,0.18)",
-},
 
-helperText: {
-  color: "rgba(236,242,255,0.74)",
-  fontSize: 12,
-  lineHeight: 1.35,
-},
-selectOption: {
-  color: "#111827",
-  background: "#FFFFFF",
-},
-helperTextError: {
-  color: "#FCA5A5",
-},
+  compactNumberInput: {
+    width: "100%",
+    minHeight: 52,
+    height: 52,
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: "rgba(255,255,255,0.08)",
+    color: "#FFFFFF",
+    padding: "0 14px",
+    fontSize: 20,
+    fontWeight: 900,
+    outline: "none",
+  },
+
+  inputError: {
+    border: "1px solid rgba(239,68,68,0.55)",
+    boxShadow: "0 0 0 1px rgba(239,68,68,0.18)",
+  },
+
+  helperText: {
+    color: "rgba(236,242,255,0.74)",
+    fontSize: 12,
+    lineHeight: 1.35,
+  },
+
+  helperTextError: {
+    color: "#FCA5A5",
+  },
+
+  selectOption: {
+    color: "#111827",
+    background: "#FFFFFF",
+  },
+
+  optionsList: {
+    display: "grid",
+    gap: 12,
+  },
+
   checkboxRow: {
     display: "flex",
     alignItems: "center",
     gap: 10,
     color: "#F5F8FF",
     fontSize: 14,
-    fontWeight: 500,
+    fontWeight: 600,
   },
+
   footerRow: {
     display: "flex",
     gap: 10,
@@ -504,6 +658,7 @@ helperTextError: {
     marginTop: 8,
     flexWrap: "wrap",
   },
+
   primaryButton: {
     minHeight: 40,
     padding: "0 14px",
@@ -515,6 +670,7 @@ helperTextError: {
     fontWeight: 800,
     cursor: "pointer",
   },
+
   secondaryButton: {
     minHeight: 40,
     padding: "0 14px",
@@ -526,16 +682,16 @@ helperTextError: {
     fontWeight: 800,
     cursor: "pointer",
   },
-  crmSaveButton: {
-  minHeight: 42,
-  borderRadius: 12,
-  border: "1px solid rgba(34,197,94,0.28)",
-  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
-  color: "#FFFFFF",
-  padding: "0 14px",
-  fontSize: 13,
-  fontWeight: 900,
-  cursor: "pointer",
-},
-};
 
+  crmSaveButton: {
+    minHeight: 42,
+    borderRadius: 12,
+    border: "1px solid rgba(34,197,94,0.28)",
+    background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
+    color: "#FFFFFF",
+    padding: "0 14px",
+    fontSize: 13,
+    fontWeight: 900,
+    cursor: "pointer",
+  },
+};

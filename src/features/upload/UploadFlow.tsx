@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { listProfiles } from "@/core/profiles/registry";
 import type { ProfileId } from "@/core/profiles/types";
 import DashboardComercial from "@/features/dashboard/DashboardComercial";
@@ -24,8 +24,72 @@ const profileId: ProfileId = "comercial";
   const [initialData, setInitialData] = useState<ReadDatasetInitialResult | null>(null);
   const [confirmedMappings, setConfirmedMappings] = useState<ConfirmedMapping[]>([]);
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
-
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 const selectedProfile = profiles[0];
+function formatColumnLabel(value: string) {
+  const customLabels: Record<string, string> = {
+    sku: "Código del producto",
+    categoria: "Categoría del producto",
+    precio_unitario: "Precio unitario",
+    costo_unitario: "Costo unitario",
+    tipo_movimiento: "Tipo de movimiento",
+    bodega: "Bodega",
+    canal_venta: "Canal de venta",
+    ciudad: "Ciudad",
+    provincia: "Provincia",
+    pais: "País",
+  };
+
+  const normalizedValue = value.trim().toLowerCase();
+
+  if (customLabels[normalizedValue]) {
+    return customLabels[normalizedValue];
+  }
+
+  return value
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatConfidenceLabel(confidence: number | null | undefined) {
+  const value = Number(confidence ?? 0);
+
+  if (value >= 0.9) return "Alta";
+  if (value >= 0.6) return "Media";
+  if (value > 0) return "Baja";
+
+  return "Sin coincidencia";
+}
+
+function formatReasonLabel(reason: string | null | undefined) {
+  const normalizedReason = String(reason ?? "").trim().toLowerCase();
+
+  if (normalizedReason.includes("coincidencia exacta")) {
+    return "Coincidencia detectada automáticamente.";
+  }
+
+  if (normalizedReason.includes("sin coincidencia")) {
+    return "Revisar manualmente.";
+  }
+
+  return reason || "Revisar manualmente.";
+}
+
+function isManualMapping(
+  sourceColumn: string,
+  suggestedTargetField: string | null | undefined
+) {
+  const currentTargetField = getCurrentTargetField(sourceColumn);
+  const originalTargetField = suggestedTargetField ?? "";
+
+  if (!currentTargetField && !originalTargetField) {
+    return false;
+  }
+
+  return currentTargetField !== originalTargetField;
+}
 
   async function handleReadFile() {
     if (!file) {
@@ -88,13 +152,18 @@ const selectedProfile = profiles[0];
     setProcessedData(result);
   }
 
-  function resetFlow() {
-    setFile(null);
-    setError("");
-    setInitialData(null);
-    setConfirmedMappings([]);
-    setProcessedData(null);
+function resetFlow() {
+  setFile(null);
+  setLoading(false);
+  setError("");
+  setInitialData(null);
+  setConfirmedMappings([]);
+  setProcessedData(null);
+
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
   }
+}
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -111,18 +180,21 @@ const selectedProfile = profiles[0];
 
         <div style={{ display: "grid", gap: 8 }}>
           <label htmlFor="file">Archivo</label>
-          <input
-            id="file"
-            type="file"
-            accept=".csv,.xlsx,.xls"
-            onChange={(e) => {
-              const nextFile = e.target.files?.[0] ?? null;
-              setFile(nextFile);
-              setInitialData(null);
-              setConfirmedMappings([]);
-              setProcessedData(null);
-              setError("");
-            }}
+<input
+  ref={fileInputRef}
+  id="file"
+  type="file"
+  accept=".csv,.xlsx,.xls"
+onChange={(e) => {
+  const nextFile = e.target.files?.[0] ?? null;
+
+  setFile(nextFile);
+  setLoading(false);
+  setError("");
+  setInitialData(null);
+  setConfirmedMappings([]);
+  setProcessedData(null);
+}}
           />
           {file ? (
             <small style={{ color: "#374151" }}>
@@ -218,11 +290,11 @@ const selectedProfile = profiles[0];
                 </tr>
               </thead>
               <tbody>
-                {initialData.mappingCandidates.map((candidate) => (
-                  <tr key={candidate.sourceColumn}>
-                    <td style={tdStyle}>{candidate.sourceColumn}</td>
-                    <td style={tdStyle}>
-                      <select
+{initialData.mappingCandidates.map((candidate) => (
+  <tr key={candidate.sourceColumn}>
+    <td style={tdStyle}>{formatColumnLabel(candidate.sourceColumn)}</td>
+    <td style={tdStyle}>
+      <select
                         value={getCurrentTargetField(candidate.sourceColumn)}
                         onChange={(e) => updateMapping(candidate.sourceColumn, e.target.value)}
                         style={{
@@ -234,14 +306,22 @@ const selectedProfile = profiles[0];
                       >
                         <option value="">No mapear</option>
                         {selectedProfile.fields.map((field) => (
-                          <option key={field.key} value={field.key}>
-                            {field.label} ({field.key})
-                          </option>
+                         <option key={field.key} value={field.key}>
+  {field.label}
+</option>
                         ))}
                       </select>
                     </td>
-                    <td style={tdStyle}>{candidate.confidence.toFixed(2)}</td>
-                    <td style={tdStyle}>{candidate.reason}</td>
+                    <td style={tdStyle}>
+  {isManualMapping(candidate.sourceColumn, candidate.targetField)
+    ? "Manual"
+    : formatConfidenceLabel(candidate.confidence)}
+</td>
+<td style={tdStyle}>
+  {isManualMapping(candidate.sourceColumn, candidate.targetField)
+    ? "Campo ajustado manualmente."
+    : formatReasonLabel(candidate.reason)}
+</td>
                   </tr>
                 ))}
               </tbody>
@@ -320,12 +400,8 @@ const selectedProfile = profiles[0];
 {processedData.analytics && processedData.profileId === "comercial" ? (
 <DashboardComercial
   processedData={processedData}
-  onClearFile={() => {
-    window.location.reload();
-  }}
-  onSelectAnotherFile={() => {
-    window.location.reload();
-  }}
+onClearFile={resetFlow}
+onSelectAnotherFile={resetFlow}
 />
 ) : null}
         </div>

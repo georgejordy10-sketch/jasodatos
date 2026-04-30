@@ -13,6 +13,9 @@ export type AdminBusinessOverview = {
 owner_name: string | null;
 commercial_email: string | null;
 commercial_whatsapp: string | null;
+ciudad: string | null;
+provincia: string | null;
+pais: string | null;
 commercial_notes: string | null;
 last_contact_at: string | null;
 trial_started_at: string | null;

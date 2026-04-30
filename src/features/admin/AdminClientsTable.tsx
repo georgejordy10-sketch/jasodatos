@@ -12,6 +12,9 @@ type CrmDraft = {
   owner_name: string;
   commercial_email: string;
   commercial_whatsapp: string;
+  ciudad: string;
+  provincia: string;
+  pais: string;
   commercial_notes: string;
   last_contact_at: string;
 };
@@ -267,6 +270,9 @@ export default function AdminClientsTable({ rows }: Props) {
   );
   const [savingId, setSavingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+  "all" | AdminBusinessOverview["status"]
+>("all");
   const [notice, setNotice] = useState<string>("");
   const [editingCrmRow, setEditingCrmRow] =
   useState<AdminBusinessOverview | null>(null);
@@ -278,34 +284,39 @@ const [savingCrmId, setSavingCrmId] = useState<string | null>(null);
     [tableRows]
   );
 
-  const filteredRows = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
+const filteredRows = useMemo(() => {
+  const term = searchTerm.trim().toLowerCase();
 
-    if (!term) return tableRows;
+  return tableRows.filter((row) => {
+    const matchesStatus =
+      statusFilter === "all" ? true : row.status === statusFilter;
 
-    return tableRows.filter((row) => {
-      const values = [
-        row.business_name,
-        row.slug,
-        row.owner_email,
-        row.owner_whatsapp,
-        row.plan,
-        row.status,
-        row.billing_status,
-      ];
+    const values = [
+      row.business_name,
+      row.slug,
+      row.owner_email,
+      row.owner_whatsapp,
+      row.owner_name,
+      row.commercial_email,
+      row.commercial_whatsapp,
+      row.ciudad,
+      row.provincia,
+      row.pais,
+      row.plan,
+      row.status,
+      row.billing_status,
+      row.signup_source,
+    ];
 
-      return values.some((value) =>
-        String(value ?? "").toLowerCase().includes(term)
-      );
-    });
-  }, [tableRows, searchTerm]);
-    function exportClients() {
-    const csv = buildClientsCsv(filteredRows);
-    const today = new Date().toISOString().slice(0, 10);
+    const matchesSearch = !term
+      ? true
+      : values.some((value) =>
+          String(value ?? "").toLowerCase().includes(term)
+        );
 
-    downloadTextFile(csv, `jasodatos_contactos_clientes_${today}.csv`);
-    setNotice(`Archivo exportado con ${filteredRows.length} clientes.`);
-  }
+    return matchesStatus && matchesSearch;
+  });
+}, [tableRows, searchTerm, statusFilter]);
   function exportClients() {
     const csv = buildClientsCsv(filteredRows);
     const today = new Date().toISOString().slice(0, 10);
@@ -319,6 +330,9 @@ function openCrmEditor(row: AdminBusinessOverview) {
     owner_name: row.owner_name || "",
     commercial_email: row.commercial_email || row.owner_email || "",
     commercial_whatsapp: row.commercial_whatsapp || row.owner_whatsapp || "",
+    ciudad: row.ciudad || "",
+    provincia: row.provincia || "",
+    pais: row.pais || "",
     commercial_notes: row.commercial_notes || "",
     last_contact_at: row.last_contact_at
       ? String(row.last_contact_at).slice(0, 10)
@@ -349,6 +363,9 @@ async function saveCrmContact() {
           owner_name: crmDraft.owner_name,
           commercial_email: crmDraft.commercial_email,
           commercial_whatsapp: crmDraft.commercial_whatsapp,
+          ciudad: crmDraft.ciudad,
+          provincia: crmDraft.provincia,
+          pais: crmDraft.pais,
           commercial_notes: crmDraft.commercial_notes,
           last_contact_at: crmDraft.last_contact_at,
         }),
@@ -381,6 +398,9 @@ async function saveCrmContact() {
               owner_name: crmDraft.owner_name || null,
               commercial_email: crmDraft.commercial_email || null,
               commercial_whatsapp: crmDraft.commercial_whatsapp || null,
+              ciudad: crmDraft.ciudad || null,
+              provincia: crmDraft.provincia || null,
+              pais: crmDraft.pais || null,
               commercial_notes: crmDraft.commercial_notes || null,
               last_contact_at: crmDraft.last_contact_at || null,
             }
@@ -400,27 +420,174 @@ async function saveCrmContact() {
     setSavingCrmId(null);
   }
 }
-  async function savePlan(businessId: string) {
-    const plan = draftPlans[businessId];
+async function savePlan(businessId: string) {
+  const plan = draftPlans[businessId];
 
+  if (!plan) return;
 
-    if (!plan) return;
+  try {
+    setSavingId(businessId);
+    setNotice("");
 
-    try {
-      setSavingId(businessId);
-      setNotice("");
+    const response = await fetch(`/api/admin/businesses/${businessId}/plan`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        plan,
+        action: "change_plan",
+      }),
+    });
 
-      const response = await fetch(`/api/admin/businesses/${businessId}/plan`, {
+    const raw = await response.text();
+
+    let result: { ok?: boolean; plan?: Plan; error?: string } = {};
+
+    if (raw) {
+      try {
+        result = JSON.parse(raw);
+      } catch {
+        throw new Error(raw || "La API devolvió una respuesta inválida.");
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error || `No se pudo actualizar el plan (${response.status}).`
+      );
+    }
+
+    setTableRows((prev) =>
+      prev.map((row) =>
+        row.id === businessId
+          ? {
+              ...row,
+              plan,
+            }
+          : row
+      )
+    );
+
+    setNotice("Plan actualizado correctamente.");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo actualizar el plan.";
+    setNotice(message);
+  } finally {
+    setSavingId(null);
+  }
+}
+async function renewPlan(row: AdminBusinessOverview) {
+  const plan = draftPlans[row.id] ?? row.plan;
+
+  try {
+    setSavingId(row.id);
+    setNotice("");
+
+    const response = await fetch(`/api/admin/businesses/${row.id}/plan`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        plan,
+        action: "renew",
+      }),
+    });
+
+    const raw = await response.text();
+
+    let result: {
+      ok?: boolean;
+      plan?: Plan;
+      status?: AdminBusinessOverview["status"];
+      billing_status?: AdminBusinessOverview["billing_status"];
+      current_period_starts_at?: string;
+      current_period_ends_at?: string;
+      error?: string;
+    } = {};
+
+    if (raw) {
+      try {
+        result = JSON.parse(raw);
+      } catch {
+        throw new Error(raw || "La API devolvió una respuesta inválida.");
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error || `No se pudo renovar el plan (${response.status}).`
+      );
+    }
+
+    setTableRows((prev) =>
+      prev.map((item) =>
+        item.id === row.id
+          ? {
+              ...item,
+              plan,
+              status: result.status ?? "active",
+              billing_status: result.billing_status ?? "active",
+              trial_ends_at: null,
+              current_period_starts_at:
+                result.current_period_starts_at ??
+                new Date().toISOString(),
+              current_period_ends_at:
+                result.current_period_ends_at ??
+                item.current_period_ends_at,
+            }
+          : item
+      )
+    );
+
+    setNotice(`Plan renovado por 30 días para ${row.business_name}.`);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo renovar el plan.";
+    setNotice(message);
+  } finally {
+    setSavingId(null);
+  }
+}
+async function archiveVisibleTrialBusinesses() {
+  const trialRows = filteredRows.filter((row) => row.status === "trial");
+
+  if (trialRows.length === 0) {
+    setNotice("No hay pruebas visibles para archivar.");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Se archivarán ${trialRows.length} pruebas visibles. Esta acción marcará los negocios como inactivos y su facturación como cancelada.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setSavingId("bulk-archive-trials");
+    setNotice("");
+
+    for (const row of trialRows) {
+      const response = await fetch(`/api/admin/businesses/${row.id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({
+          status: "inactive",
+        }),
       });
 
       const raw = await response.text();
 
-      let result: { ok?: boolean; plan?: string; error?: string } = {};
+      let result: {
+        ok?: boolean;
+        status?: AdminBusinessOverview["status"];
+        billing_status?: AdminBusinessOverview["billing_status"];
+        error?: string;
+      } = {};
 
       if (raw) {
         try {
@@ -432,24 +599,103 @@ async function saveCrmContact() {
 
       if (!response.ok) {
         throw new Error(
-          result?.error || `No se pudo actualizar el plan (${response.status}).`
+          result?.error ||
+            `No se pudo archivar ${row.business_name} (${response.status}).`
         );
       }
-
-      setTableRows((prev) =>
-        prev.map((row) => (row.id === businessId ? { ...row, plan } : row))
-      );
-
-      setNotice("Plan actualizado correctamente.");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "No se pudo actualizar el plan";
-      setNotice(message);
-    } finally {
-      setSavingId(null);
     }
-  }
 
+    const archivedIds = new Set(trialRows.map((row) => row.id));
+
+    setTableRows((prev) =>
+      prev.map((row) =>
+        archivedIds.has(row.id)
+          ? {
+              ...row,
+              status: "inactive",
+              billing_status: "canceled",
+            }
+          : row
+      )
+    );
+
+    setNotice(`Se archivaron ${trialRows.length} pruebas visibles.`);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudieron archivar las pruebas visibles.";
+
+    setNotice(message);
+  } finally {
+    setSavingId(null);
+  }
+}
+async function archiveBusiness(row: AdminBusinessOverview) {
+  const confirmed = window.confirm(
+    `¿Seguro que deseas archivar el negocio "${row.business_name}"? El cliente quedará inactivo y su facturación se marcará como cancelada.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setSavingId(row.id);
+    setNotice("");
+
+    const response = await fetch(`/api/admin/businesses/${row.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        status: "inactive",
+      }),
+    });
+
+    const raw = await response.text();
+
+    let result: {
+      ok?: boolean;
+      status?: AdminBusinessOverview["status"];
+      billing_status?: AdminBusinessOverview["billing_status"];
+      error?: string;
+    } = {};
+
+    if (raw) {
+      try {
+        result = JSON.parse(raw);
+      } catch {
+        throw new Error(raw || "La API devolvió una respuesta inválida.");
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error || `No se pudo archivar el negocio (${response.status}).`
+      );
+    }
+
+    setTableRows((prev) =>
+      prev.map((item) =>
+        item.id === row.id
+          ? {
+              ...item,
+              status: result.status ?? "inactive",
+              billing_status: result.billing_status ?? "canceled",
+            }
+          : item
+      )
+    );
+
+    setNotice(`Negocio archivado: ${row.business_name}.`);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo archivar el negocio.";
+    setNotice(message);
+  } finally {
+    setSavingId(null);
+  }
+}
   return (
     <section style={styles.page}>
       <div style={styles.header}>
@@ -483,11 +729,36 @@ async function saveCrmContact() {
             style={styles.searchInput}
           />
         </div>
-
+<select
+    style={styles.statusFilterSelect}
+    value={statusFilter}
+    onChange={(event) =>
+      setStatusFilter(
+        event.target.value as "all" | AdminBusinessOverview["status"]
+      )
+    }
+  >
+    <option value="all">Todos los estados</option>
+    <option value="trial">Pruebas</option>
+    <option value="active">Activos</option>
+    <option value="suspended">Suspendidos</option>
+    <option value="inactive">Archivados</option>
+  </select>
 <div style={styles.toolbarActions}>
   <div style={styles.searchCounter}>
     {filteredRows.length} de {tableRows.length} clientes
   </div>
+
+  <button
+    type="button"
+    style={styles.bulkArchiveButton}
+    onClick={archiveVisibleTrialBusinesses}
+    disabled={savingId === "bulk-archive-trials"}
+  >
+    {savingId === "bulk-archive-trials"
+      ? "Archivando pruebas..."
+      : "Archivar pruebas visibles"}
+  </button>
 
   <button
     type="button"
@@ -498,12 +769,16 @@ async function saveCrmContact() {
     Exportar contactos
   </button>
 </div>
+
       </div>
 
       {notice ? <div style={styles.notice}>{notice}</div> : null}
+<div style={styles.tableHint}>
+  Desliza horizontalmente para ver toda la información del cliente.
+</div>
 
-      <div style={styles.tableShell}>
-        <table style={styles.table}>
+<div style={styles.tableShell}>
+  <table style={styles.table}>
           <thead>
             <tr>
 <th style={styles.th}>Negocio</th>
@@ -514,18 +789,19 @@ async function saveCrmContact() {
 <th style={styles.th}>Correo comercial</th>
 <th style={styles.th}>WhatsApp comercial</th>
 <th style={styles.th}>Origen</th>
+<th style={styles.th}>Ubicación</th>
 <th style={styles.th}>Facturación</th>
 <th style={styles.th}>Vigencia</th>
 <th style={styles.th}>Días restantes</th>
 <th style={styles.th}>Última actividad</th>
-<th style={styles.th}>Acción</th>
+<th style={{ ...styles.th, ...styles.stickyActionTh }}>Acción</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredRows.length === 0 ? (
               <tr>
-                <td style={styles.emptyCell} colSpan={13}>
+                <td style={styles.emptyCell} colSpan={14}>
                   No se encontraron clientes con ese criterio.
                 </td>
               </tr>
@@ -574,6 +850,21 @@ async function saveCrmContact() {
     ? "Registro web"
     : row.signup_source || "-"}
 </td>
+<td style={styles.td}>
+  <div style={styles.locationBlock}>
+    <strong style={styles.locationCity}>
+      {row.ciudad || "Ciudad no definida"}
+    </strong>
+
+    <span style={styles.locationMeta}>
+      {row.provincia || "Provincia no definida"}
+    </span>
+
+    <span style={styles.locationMeta}>
+      {row.pais || "País no definido"}
+    </span>
+  </div>
+</td>
                   
                   <td style={styles.td}>
   <span
@@ -610,8 +901,8 @@ async function saveCrmContact() {
 
 <td style={styles.td}>{row.last_seen_at || "-"}</td>
 
-                  <td style={styles.td}>
-                    <div style={styles.actionCell}>
+<td style={{ ...styles.td, ...styles.stickyActionTd }}>
+  <div style={styles.actionCell}>
                       <select
                         style={styles.planSelect}
                         value={draftPlans[row.id] ?? row.plan}
@@ -635,7 +926,14 @@ async function saveCrmContact() {
                       >
                         {savingId === row.id ? "Guardando..." : "Cambiar plan"}
                       </button>
-
+                     <button
+  type="button"
+  style={styles.secondaryActionButton}
+  onClick={() => renewPlan(row)}
+  disabled={savingId === row.id}
+>
+  Renovar 30 días
+</button>
                       <button
                         type="button"
                         style={styles.secondaryActionButton}
@@ -671,6 +969,14 @@ async function saveCrmContact() {
   onClick={() => openCrmEditor(row)}
 >
   Editar contacto
+</button>
+<button
+  type="button"
+  style={styles.dangerActionButton}
+  onClick={() => archiveBusiness(row)}
+  disabled={savingId === row.id || row.status === "inactive"}
+>
+  {row.status === "inactive" ? "Archivado" : "Archivar negocio"}
 </button>
                     </div>
                   </td>
@@ -756,7 +1062,49 @@ async function saveCrmContact() {
                   placeholder="593999111222"
                 />
               </label>
+                             <label style={styles.modalLabel}>
+                <span>Ciudad</span>
+                <input
+                  style={styles.modalInput}
+                  value={crmDraft.ciudad}
+                  onChange={(event) =>
+                    setCrmDraft((current) =>
+                      current ? { ...current, ciudad: event.target.value } : current
+                    )
+                  }
+                  placeholder="Ej. Quito"
+                />
+              </label>
 
+              <label style={styles.modalLabel}>
+                <span>Provincia</span>
+                <input
+                  style={styles.modalInput}
+                  value={crmDraft.provincia}
+                  onChange={(event) =>
+                    setCrmDraft((current) =>
+                      current
+                        ? { ...current, provincia: event.target.value }
+                        : current
+                    )
+                  }
+                  placeholder="Ej. Pichincha"
+                />
+              </label>
+
+              <label style={styles.modalLabel}>
+                <span>País</span>
+                <input
+                  style={styles.modalInput}
+                  value={crmDraft.pais}
+                  onChange={(event) =>
+                    setCrmDraft((current) =>
+                      current ? { ...current, pais: event.target.value } : current
+                    )
+                  }
+                  placeholder="Ej. Ecuador"
+                />
+              </label>
               <label style={styles.modalLabel}>
                 <span>Último contacto</span>
                 <input
@@ -929,18 +1277,23 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 700,
     boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
   },
-  tableShell: {
-    overflowX: "auto",
-    background: "#FFFFFF",
-    borderRadius: 20,
-    border: "1px solid rgba(15, 23, 42, 0.08)",
-    boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
-  },
-  table: {
-    width: "100%",
-    minWidth: 1960,
-    borderCollapse: "collapse",
-  },
+tableShell: {
+  width: "100%",
+  maxWidth: "100%",
+  maxHeight: "calc(100vh - 260px)",
+  overflowX: "auto",
+  overflowY: "auto",
+  paddingBottom: 12,
+  borderRadius: 18,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "#ffffff",
+  scrollbarGutter: "stable",
+},
+table: {
+  width: "100%",
+  minWidth: 1880,
+  borderCollapse: "collapse",
+},
   th: {
     textAlign: "left",
     padding: "14px 16px",
@@ -1164,4 +1517,79 @@ exportButton: {
     padding: 24,
     borderTop: "1px solid rgba(15, 23, 42, 0.08)",
   },
+  tableHint: {
+  marginBottom: 8,
+  color: "#64748B",
+  fontSize: 12,
+  fontWeight: 800,
+},
+dangerActionButton: {
+  border: "1px solid rgba(220,38,38,0.35)",
+  background: "rgba(254,226,226,0.75)",
+  color: "#991B1B",
+  borderRadius: 10,
+  padding: "8px 10px",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+},
+locationBlock: {
+  display: "grid",
+  gap: 3,
+  minWidth: 150,
+},
+
+locationCity: {
+  color: "#0F172A",
+  fontSize: 13,
+  fontWeight: 900,
+  lineHeight: 1.25,
+},
+
+locationMeta: {
+  color: "#64748B",
+  fontSize: 12,
+  fontWeight: 700,
+  lineHeight: 1.25,
+},
+stickyActionTh: {
+  position: "sticky",
+  right: 0,
+  zIndex: 4,
+  background: "#F8FAFC",
+  boxShadow: "-10px 0 18px rgba(15,23,42,0.08)",
+},
+
+stickyActionTd: {
+  position: "sticky",
+  right: 0,
+  zIndex: 3,
+  background: "#FFFFFF",
+  boxShadow: "-10px 0 18px rgba(15,23,42,0.08)",
+},
+statusFilterSelect: {
+  minHeight: 42,
+  minWidth: 190,
+  borderRadius: 12,
+  border: "1px solid rgba(148,163,184,0.35)",
+  background: "#FFFFFF",
+  color: "#0F172A",
+  padding: "0 12px",
+  fontSize: 13,
+  fontWeight: 800,
+  outline: "none",
+},
+bulkArchiveButton: {
+  minHeight: 42,
+  borderRadius: 12,
+  border: "1px solid rgba(220,38,38,0.35)",
+  background: "rgba(254,226,226,0.85)",
+  color: "#991B1B",
+  padding: "0 14px",
+  fontSize: 13,
+  fontWeight: 900,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+},
 };

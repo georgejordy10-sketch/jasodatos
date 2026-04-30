@@ -5,14 +5,20 @@ import AlertPanel from "@/features/alerts/AlertPanel";
 import type { BusinessAlert } from "@/features/alerts/types";
 
 type Props = {
-  alerts: BusinessAlert[];
+  alerts: AlertItem[];
+  isExportingPdf?: boolean;
 };
 
-export default function AlertsSection({ alerts }: Props) {
+export default function AlertsSection({
+  alerts,
+  isExportingPdf = false,
+}: Props) {
   return (
     <section style={styles.wrapper}>
       <div style={styles.modulePlanRow}>
-        <span style={styles.badge}>Incluido en BASIC</span>
+{!isExportingPdf ? (
+  <span style={styles.badge}>Incluido en BASIC</span>
+) : null}
         <span style={styles.modulePlanText}>Alertas base del negocio</span>
       </div>
 
@@ -35,7 +41,7 @@ const styles: Record<string, CSSProperties> = {
     width: "fit-content",
     background: "transparent",
     border: "none",
-  },
+  },    
   badge: {
     display: "inline-flex",
     alignItems: "center",

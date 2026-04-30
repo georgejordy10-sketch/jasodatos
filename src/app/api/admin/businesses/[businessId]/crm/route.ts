@@ -1,13 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-type Params = {
-  params: Promise<{
-    businessId: string;
-  }>;
-};
-
-function getSupabaseAdminClient() {
+function createAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -18,39 +12,40 @@ function getSupabaseAdminClient() {
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
+      autoRefreshToken: false,
     },
   });
 }
 
-export async function PATCH(request: Request, context: Params) {
+function cleanText(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ businessId: string }> }
+) {
   try {
-    const { businessId } = await context.params;
+    const { businessId } = await params;
     const body = await request.json();
 
-    const owner_name =
-      typeof body.owner_name === "string" ? body.owner_name.trim() : null;
+    if (!businessId) {
+      return NextResponse.json(
+        { ok: false, error: "Falta businessId." },
+        { status: 400 }
+      );
+    }
 
-    const commercial_email =
-      typeof body.commercial_email === "string"
-        ? body.commercial_email.trim()
-        : null;
+    const owner_name = cleanText(body.owner_name);
+    const commercial_email = cleanText(body.commercial_email);
+    const commercial_whatsapp = cleanText(body.commercial_whatsapp);
+    const ciudad = cleanText(body.ciudad);
+    const provincia = cleanText(body.provincia);
+    const pais = cleanText(body.pais);
+    const commercial_notes = cleanText(body.commercial_notes);
+    const last_contact_at = cleanText(body.last_contact_at);
 
-    const commercial_whatsapp =
-      typeof body.commercial_whatsapp === "string"
-        ? body.commercial_whatsapp.trim()
-        : null;
-
-    const commercial_notes =
-      typeof body.commercial_notes === "string"
-        ? body.commercial_notes.trim()
-        : null;
-
-    const last_contact_at =
-      typeof body.last_contact_at === "string" && body.last_contact_at
-        ? body.last_contact_at
-        : null;
-
-    const supabase = getSupabaseAdminClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from("businesses")
@@ -58,12 +53,15 @@ export async function PATCH(request: Request, context: Params) {
         owner_name,
         commercial_email,
         commercial_whatsapp,
+        ciudad,
+        provincia,
+        pais,
         commercial_notes,
         last_contact_at,
       })
       .eq("id", businessId)
       .select(
-        "id, owner_name, commercial_email, commercial_whatsapp, commercial_notes, last_contact_at"
+        "id, owner_name, commercial_email, commercial_whatsapp, ciudad, provincia, pais, commercial_notes, last_contact_at"
       )
       .single();
 
@@ -74,14 +72,13 @@ export async function PATCH(request: Request, context: Params) {
       );
     }
 
-    return NextResponse.json({
-      ok: true,
-      business: data,
-    });
+    return NextResponse.json({ ok: true, business: data }, { status: 200 });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "No se pudo actualizar CRM.";
+    const message = error instanceof Error ? error.message : "Error inesperado";
 
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: message },
+      { status: 500 }
+    );
   }
 }
