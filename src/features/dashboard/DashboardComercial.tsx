@@ -2184,7 +2184,10 @@ stock, rotación, cobertura, rentabilidad y tendencia.
 />
 {settings.showBenchmarking &&
   (canUseBenchmarking ? (
-    <div id="benchmarking-sucursales">
+    <>
+      {isExportingPdf ? <div style={styles.pdfSpacerBeforeBenchmarking} /> : null}
+
+      <div id="benchmarking-sucursales">
 <div style={styles.modulePlanRow}>
   {!isExportingPdf ? (
     <ActivePlanBadge tone="pro">Incluido en PRO</ActivePlanBadge>
@@ -2196,7 +2199,8 @@ stock, rotación, cobertura, rentabilidad y tendencia.
 </div>
 
       <BenchmarkingSucursales rows={benchmarkRows} />
-    </div>
+       </div>
+    </>
   ) : (
     <LockedFeatureCard
       title="desempeño entre sucursales"
@@ -3504,7 +3508,7 @@ pdfSectionLabel: {
   margin: "8px 0",
 },
 pdfSpacerBeforeAssistant: {
-  height: 380,
+  height: 160,
 },
 insightBadge: {
   width: "fit-content",
@@ -3517,6 +3521,9 @@ insightBadge: {
   fontWeight: 900,
   textTransform: "uppercase",
   letterSpacing: "0.04em",
+},
+pdfSpacerBeforeBenchmarking: {
+  height: 0,
 },
 };
 
