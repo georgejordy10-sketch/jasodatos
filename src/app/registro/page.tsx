@@ -13,6 +13,19 @@ type SignupForm = {
   locale: string;
 };
 
+type RecoverForm = {
+  business_name: string;
+  commercial_email: string;
+  commercial_whatsapp: string;
+};
+type RecoveredBusiness = {
+  slug: string;
+  business_name: string;
+  owner_name?: string | null;
+  status?: string | null;
+  trial_ends_at?: string | null;
+  redirectTo: string;
+};
 const countryByLocale: Record<string, string> = {
   "es-EC": "Ecuador",
   "es-CO": "Colombia",
@@ -34,13 +47,39 @@ export default function RegistroPage() {
     locale: "es-EC",
   });
 
+  const [recoverForm, setRecoverForm] = useState<RecoverForm>({
+    business_name: "",
+    commercial_email: "",
+    commercial_whatsapp: "",
+  });
+
+  const [accessMode, setAccessMode] = useState<"signup" | "recover">("signup");
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [recoveringBusiness, setRecoveringBusiness] = useState(false);
+  const [recoveredBusiness, setRecoveredBusiness] =
+  useState<RecoveredBusiness | null>(null);
   const [notice, setNotice] = useState("");
   const [slug, setSlug] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [redirectTo, setRedirectTo] = useState("");
   const [debugCode, setDebugCode] = useState("");
+
+  const registrationLocked = Boolean(slug);
+  const trialActivated = Boolean(redirectTo);
+
+function switchMode(mode: "signup" | "recover") {
+  setAccessMode(mode);
+  setNotice("");
+  setRecoveredBusiness(null);
+
+    if (mode === "recover") {
+      setSlug("");
+      setVerificationCode("");
+      setRedirectTo("");
+      setDebugCode("");
+    }
+  }
 
   async function submitTrial() {
     try {
@@ -152,223 +191,433 @@ export default function RegistroPage() {
     }
   }
 
-  const registrationLocked = Boolean(slug);
-  const trialActivated = Boolean(redirectTo);
+async function recoverBusinessAccess() {
+  try {
+    setRecoveringBusiness(true);
+    setNotice("");
+    setRecoveredBusiness(null);
 
+    const hasSearchValue =
+      recoverForm.business_name.trim() ||
+      recoverForm.commercial_email.trim() ||
+      recoverForm.commercial_whatsapp.trim();
+
+    if (!hasSearchValue) {
+      throw new Error(
+        "Ingresa el nombre del negocio, correo comercial o WhatsApp registrado."
+      );
+    }
+
+    const response = await fetch("/api/public/recover-business", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(recoverForm),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error || "No se pudo recuperar el acceso al negocio."
+      );
+    }
+
+    if (!result.redirectTo || !result.business?.slug) {
+      throw new Error("No se encontró una ruta válida para este negocio.");
+    }
+
+    setRecoveredBusiness({
+      slug: result.business.slug,
+      business_name: result.business.business_name,
+      owner_name: result.business.owner_name ?? null,
+      status: result.business.status ?? null,
+      trial_ends_at: result.business.trial_ends_at ?? null,
+      redirectTo: result.redirectTo,
+    });
+
+    setNotice("");
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo recuperar el acceso al negocio.";
+
+    setNotice(message);
+  } finally {
+    setRecoveringBusiness(false);
+  }
+}
   return (
     <main style={styles.page}>
       <section style={styles.card}>
-        <div style={styles.badge}>Prueba gratis · Ultra 3 días</div>
+        <div style={styles.badge}>JasoDatos · Acceso comercial</div>
 
-        <h1 style={styles.title}>Empieza a probar JasoDatos</h1>
+        <h1 style={styles.title}>Empieza a usar JasoDatos</h1>
 
         <p style={styles.subtitle}>
-          Registra tu negocio, valida tu correo y carga tu archivo CSV o Excel
-          para descubrir oportunidades comerciales en minutos.
+          Registra tu negocio o recupera tu acceso para analizar ventas,
+          productos, stock y oportunidades comerciales.
         </p>
 
-        <div style={styles.grid}>
-          <label style={styles.label}>
-            <span>Nombre del negocio</span>
-            <input
-              required
-              disabled={registrationLocked}
-              style={styles.input}
-              value={form.business_name}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  business_name: event.target.value,
-                }))
-              }
-              placeholder="Ej. Comercial El Sol"
-            />
-          </label>
-
-          <label style={styles.label}>
-            <span>Nombre del dueño o responsable</span>
-            <input
-              required
-              disabled={registrationLocked}
-              style={styles.input}
-              value={form.owner_name}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  owner_name: event.target.value,
-                }))
-              }
-              placeholder="Nombre + Apellido"
-            />
-          </label>
-
-          <label style={styles.label}>
-            <span>Correo comercial</span>
-            <input
-              required
-              disabled={registrationLocked}
-              type="email"
-              style={styles.input}
-              value={form.commercial_email}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  commercial_email: event.target.value,
-                }))
-              }
-              placeholder="correo@negocio.com"
-            />
-          </label>
-
-          <label style={styles.label}>
-            <span>WhatsApp comercial</span>
-            <input
-              required
-              disabled={registrationLocked}
-              type="tel"
-              style={styles.input}
-              value={form.commercial_whatsapp}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  commercial_whatsapp: event.target.value,
-                }))
-              }
-              placeholder="0999999999 o +593999999999"
-            />
-          </label>
-
-          <label style={styles.label}>
-            <span>Ciudad</span>
-            <input
-              required
-              disabled={registrationLocked}
-              style={styles.input}
-              value={form.ciudad}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  ciudad: event.target.value,
-                }))
-              }
-              placeholder="Ej. Quito"
-            />
-          </label>
-
-          <label style={styles.label}>
-            <span>Provincia</span>
-            <input
-              required
-              disabled={registrationLocked}
-              style={styles.input}
-              value={form.provincia}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  provincia: event.target.value,
-                }))
-              }
-              placeholder="Ej. Pichincha"
-            />
-          </label>
-
-          <label style={styles.label}>
-            <span>País</span>
-            <select
-              required
-              disabled={registrationLocked}
-              style={styles.input}
-              value={form.locale}
-              onChange={(event) => {
-                const nextLocale = event.target.value;
-
-                setForm((current) => ({
-                  ...current,
-                  locale: nextLocale,
-                  pais: countryByLocale[nextLocale] ?? current.pais,
-                }));
-              }}
-            >
-              <option value="es-EC">Ecuador</option>
-              <option value="es-CO">Colombia</option>
-              <option value="es-PE">Perú</option>
-              <option value="es-MX">México</option>
-              <option value="es-ES">España</option>
-              <option value="en-US">Estados Unidos</option>
-            </select>
-          </label>
-        </div>
-
-        {!registrationLocked ? (
+        <div style={styles.modeSwitcher}>
           <button
             type="button"
-            style={styles.button}
-            onClick={submitTrial}
-            disabled={loading}
+            style={{
+              ...styles.modeButton,
+              ...(accessMode === "signup" ? styles.modeButtonActive : null),
+            }}
+            onClick={() => switchMode("signup")}
           >
-            {loading ? "Enviando código..." : "Crear prueba gratis"}
+            Crear prueba gratis
           </button>
-        ) : null}
 
-        {registrationLocked && !trialActivated ? (
-          <div style={styles.verificationBox}>
-            <h2 style={styles.verificationTitle}>Verifica tu correo</h2>
+          <button
+            type="button"
+            style={{
+              ...styles.modeButton,
+              ...(accessMode === "recover" ? styles.modeButtonActive : null),
+            }}
+            onClick={() => switchMode("recover")}
+          >
+            Acceder a mi negocio
+          </button>
+        </div>
 
-            <p style={styles.verificationText}>
-              Enviamos un código de 6 dígitos a{" "}
-              <strong>{form.commercial_email}</strong>. Ingresa el código para
-              activar tu prueba gratis.
-            </p>
+        {accessMode === "signup" ? (
+          <>
+            <div style={styles.grid}>
+              <label style={styles.label}>
+                <span>Nombre del negocio</span>
+                <input
+                  required
+                  disabled={registrationLocked}
+                  style={styles.input}
+                  value={form.business_name}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      business_name: event.target.value,
+                    }))
+                  }
+                  placeholder="Ej. Comercial El Sol"
+                />
+              </label>
 
-            {debugCode ? (
-              <div style={styles.debugCode}>
-                Código local de prueba: <strong>{debugCode}</strong>
+              <label style={styles.label}>
+                <span>Nombre del dueño o responsable</span>
+                <input
+                  required
+                  disabled={registrationLocked}
+                  style={styles.input}
+                  value={form.owner_name}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      owner_name: event.target.value,
+                    }))
+                  }
+                  placeholder="Nombre + Apellido"
+                />
+              </label>
+
+              <label style={styles.label}>
+                <span>Correo comercial</span>
+                <input
+                  required
+                  disabled={registrationLocked}
+                  type="email"
+                  style={styles.input}
+                  value={form.commercial_email}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      commercial_email: event.target.value,
+                    }))
+                  }
+                  placeholder="correo@negocio.com"
+                />
+              </label>
+
+              <label style={styles.label}>
+                <span>WhatsApp comercial</span>
+                <input
+                  required
+                  disabled={registrationLocked}
+                  type="tel"
+                  style={styles.input}
+                  value={form.commercial_whatsapp}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      commercial_whatsapp: event.target.value,
+                    }))
+                  }
+                  placeholder="0999999999 o +593999999999"
+                />
+              </label>
+
+              <label style={styles.label}>
+                <span>Ciudad</span>
+                <input
+                  required
+                  disabled={registrationLocked}
+                  style={styles.input}
+                  value={form.ciudad}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      ciudad: event.target.value,
+                    }))
+                  }
+                  placeholder="Ej. Quito"
+                />
+              </label>
+
+              <label style={styles.label}>
+                <span>Provincia</span>
+                <input
+                  required
+                  disabled={registrationLocked}
+                  style={styles.input}
+                  value={form.provincia}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      provincia: event.target.value,
+                    }))
+                  }
+                  placeholder="Ej. Pichincha"
+                />
+              </label>
+
+              <label style={styles.label}>
+                <span>País</span>
+                <select
+                  required
+                  disabled={registrationLocked}
+                  style={styles.input}
+                  value={form.locale}
+                  onChange={(event) => {
+                    const nextLocale = event.target.value;
+
+                    setForm((current) => ({
+                      ...current,
+                      locale: nextLocale,
+                      pais: countryByLocale[nextLocale] ?? current.pais,
+                    }));
+                  }}
+                >
+                  <option value="es-EC">Ecuador</option>
+                  <option value="es-CO">Colombia</option>
+                  <option value="es-PE">Perú</option>
+                  <option value="es-MX">México</option>
+                  <option value="es-ES">España</option>
+                  <option value="en-US">Estados Unidos</option>
+                </select>
+              </label>
+            </div>
+
+            {!registrationLocked ? (
+              <button
+                type="button"
+                style={styles.button}
+                onClick={submitTrial}
+                disabled={loading}
+              >
+                {loading ? "Enviando código..." : "Crear prueba gratis"}
+              </button>
+            ) : null}
+
+            {registrationLocked && !trialActivated ? (
+              <div style={styles.verificationBox}>
+                <h2 style={styles.verificationTitle}>Verifica tu correo</h2>
+
+                <p style={styles.verificationText}>
+                  Enviamos un código de 6 dígitos a{" "}
+                  <strong>{form.commercial_email}</strong>. Ingresa el código
+                  para activar tu prueba gratis.
+                </p>
+
+                {debugCode ? (
+                  <div style={styles.debugCode}>
+                    Código local de prueba: <strong>{debugCode}</strong>
+                  </div>
+                ) : null}
+
+                <label style={styles.label}>
+                  <span>Código de verificación</span>
+                  <input
+                    style={styles.input}
+                    value={verificationCode}
+                    onChange={(event) =>
+                      setVerificationCode(event.target.value)
+                    }
+                    placeholder="Ej. 123456"
+                    inputMode="numeric"
+                    maxLength={6}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  style={styles.button}
+                  onClick={verifyTrial}
+                  disabled={verifying}
+                >
+                  {verifying
+                    ? "Verificando..."
+                    : "Verificar correo y activar prueba"}
+                </button>
               </div>
             ) : null}
 
-            <label style={styles.label}>
-              <span>Código de verificación</span>
-              <input
-                style={styles.input}
-                value={verificationCode}
-                onChange={(event) => setVerificationCode(event.target.value)}
-                placeholder="Ej. 123456"
-                inputMode="numeric"
-                maxLength={6}
-              />
-            </label>
+            {redirectTo ? (
+              <button
+                type="button"
+                style={styles.secondaryButton}
+                onClick={() => {
+                  window.location.href = redirectTo;
+                }}
+              >
+                Ir a cargar archivo
+              </button>
+            ) : null}
+
+            <p style={styles.footerText}>
+              La prueba se activa únicamente después de validar el correo. Así
+              protegemos la matriz de clientes y evitamos registros ficticios.
+            </p>
+          </>
+        ) : null}
+
+        {accessMode === "recover" ? (
+          <div style={styles.recoverBox}>
+            <h2 style={styles.recoverTitle}>Busca tu negocio</h2>
+
+            <p style={styles.recoverText}>
+              Ingresa el nombre del negocio, correo comercial o WhatsApp
+              registrado para recuperar el acceso.
+            </p>
+
+            <div style={styles.recoverGrid}>
+              <label style={styles.label}>
+                <span>Nombre del negocio</span>
+                <input
+                  style={styles.input}
+                  value={recoverForm.business_name}
+                  onChange={(event) =>
+                    setRecoverForm((current) => ({
+                      ...current,
+                      business_name: event.target.value,
+                    }))
+                  }
+                  placeholder="Ej. Comercial El Sol"
+                />
+              </label>
+
+              <label style={styles.label}>
+                <span>Correo comercial</span>
+                <input
+                  type="email"
+                  style={styles.input}
+                  value={recoverForm.commercial_email}
+                  onChange={(event) =>
+                    setRecoverForm((current) => ({
+                      ...current,
+                      commercial_email: event.target.value,
+                    }))
+                  }
+                  placeholder="correo@negocio.com"
+                />
+              </label>
+
+              <label style={styles.label}>
+                <span>WhatsApp comercial</span>
+                <input
+                  type="tel"
+                  style={styles.input}
+                  value={recoverForm.commercial_whatsapp}
+                  onChange={(event) =>
+                    setRecoverForm((current) => ({
+                      ...current,
+                      commercial_whatsapp: event.target.value,
+                    }))
+                  }
+                  placeholder="0999999999 o +593999999999"
+                />
+              </label>
+            </div>
 
             <button
               type="button"
               style={styles.button}
-              onClick={verifyTrial}
-              disabled={verifying}
+              onClick={recoverBusinessAccess}
+              disabled={recoveringBusiness}
             >
-              {verifying
-                ? "Verificando..."
-                : "Verificar correo y activar prueba"}
+              {recoveringBusiness ? "Buscando negocio..." : "Buscar acceso"}
             </button>
+            {recoveredBusiness ? (
+  <div style={styles.recoveredBusinessBox}>
+    <div>
+      <p style={styles.recoveredEyebrow}>Negocio encontrado</p>
+
+      <h3 style={styles.recoveredTitle}>
+        {recoveredBusiness.business_name}
+      </h3>
+
+      <p style={styles.recoveredText}>
+        {recoveredBusiness.owner_name
+          ? `Responsable: ${recoveredBusiness.owner_name}`
+          : "Confirma que este es tu negocio antes de continuar."}
+      </p>
+
+      <span style={styles.recoveredStatus}>
+        {recoveredBusiness.status === "active"
+          ? "Plan activo"
+          : recoveredBusiness.status === "trial"
+          ? "Prueba activa"
+          : recoveredBusiness.status === "expired"
+          ? "Acceso vencido"
+          : "Acceso registrado"}
+      </span>
+    </div>
+
+    <div style={styles.recoveredActions}>
+      <div style={styles.recoveredActions}>
+  <button
+    type="button"
+    style={styles.confirmAccessButton}
+    onClick={() => {
+      window.location.href = recoveredBusiness.redirectTo;
+    }}
+  >
+    Sí, acceder a este negocio
+  </button>
+
+  <button
+    type="button"
+    style={styles.changeSearchButton}
+    onClick={() => {
+      setRecoveredBusiness(null);
+      setNotice("");
+    }}
+  >
+    No es mi negocio, buscar otro
+  </button>
+</div>
+    </div>
+  </div>
+) : null}
+            <p style={styles.footerText}>
+              Este acceso aplica para negocios en prueba o negocios con plan
+              activo. No necesitas recordar enlaces técnicos.
+            </p>
           </div>
         ) : null}
 
         {notice ? <div style={styles.notice}>{notice}</div> : null}
-
-        {redirectTo ? (
-          <button
-            type="button"
-            style={styles.secondaryButton}
-            onClick={() => {
-              window.location.href = redirectTo;
-            }}
-          >
-            Ir a cargar archivo
-          </button>
-        ) : null}
-
-        <p style={styles.footerText}>
-          La prueba se activa únicamente después de validar el correo. Así
-          protegemos la matriz de clientes y evitamos registros ficticios.
-        </p>
       </section>
     </main>
   );
@@ -424,9 +673,43 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 600,
   },
 
+  modeSwitcher: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 10,
+    marginBottom: 22,
+    padding: 6,
+    borderRadius: 18,
+    background: "rgba(67,56,202,0.08)",
+    border: "1px solid rgba(67,56,202,0.12)",
+  },
+
+  modeButton: {
+    minHeight: 44,
+    borderRadius: 14,
+    border: "1px solid transparent",
+    background: "transparent",
+    color: "#4338CA",
+    fontSize: 14,
+    fontWeight: 900,
+    cursor: "pointer",
+  },
+
+  modeButtonActive: {
+    background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)",
+    color: "#FFFFFF",
+    boxShadow: "0 12px 24px rgba(67,56,202,0.22)",
+  },
+
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 14,
+  },
+
+  recoverGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr",
     gap: 14,
   },
 
@@ -448,6 +731,26 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 14,
     fontWeight: 700,
     outline: "none",
+  },
+
+  recoverBox: {
+    display: "grid",
+    gap: 14,
+  },
+
+  recoverTitle: {
+    margin: 0,
+    color: "#172554",
+    fontSize: 22,
+    fontWeight: 900,
+  },
+
+  recoverText: {
+    margin: 0,
+    color: "#475569",
+    fontSize: 14,
+    lineHeight: 1.55,
+    fontWeight: 700,
   },
 
   verificationBox: {
@@ -520,8 +823,7 @@ const styles: Record<string, CSSProperties> = {
     cursor: "pointer",
     boxShadow: "0 16px 34px rgba(67,56,202,0.28)",
   },
-
-  footerText: {
+    footerText: {
     margin: "14px 0 0",
     color: "#64748B",
     fontSize: 12,
@@ -529,4 +831,75 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 600,
     textAlign: "center",
   },
+  recoveredBusinessBox: {
+  marginTop: 18,
+  padding: 18,
+  borderRadius: 20,
+  border: "1px solid rgba(34,197,94,0.24)",
+  background:
+    "linear-gradient(135deg, rgba(34,197,94,0.10) 0%, rgba(67,56,202,0.06) 100%)",
+  display: "grid",
+  gap: 12,
+},
+
+recoveredEyebrow: {
+  display: "inline-flex",
+  width: "fit-content",
+  padding: "4px 10px",
+  borderRadius: 999,
+  background: "rgba(34,197,94,0.14)",
+  color: "#15803D",
+  fontSize: 11,
+  fontWeight: 900,
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+},
+
+recoveredTitle: {
+  margin: "10px 0 4px",
+  color: "#172554",
+  fontSize: 22,
+  fontWeight: 900,
+},
+
+recoveredText: {
+  margin: "4px 0 0",
+  color: "#475569",
+  fontSize: 14,
+  fontWeight: 700,
+  lineHeight: 1.45,
+},
+
+confirmAccessButton: {
+  width: "100%",
+  minHeight: 46,
+  borderRadius: 16,
+  border: "none",
+  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
+  color: "#FFFFFF",
+  fontSize: 15,
+  fontWeight: 900,
+  cursor: "pointer",
+  padding: "0 16px",
+  boxShadow: "0 14px 28px rgba(34,197,94,0.22)",
+},
+
+changeSearchButton: {
+  width: "100%",
+  minHeight: 44,
+  borderRadius: 14,
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  background: "#FFFFFF",
+  color: "#334155",
+  fontSize: 14,
+  fontWeight: 800,
+  cursor: "pointer",
+  padding: "0 16px",
+  boxShadow: "none",
+},
+recoveredActions: {
+  display: "grid",
+  gap: 12,
+  marginTop: 10,
+},
 };
