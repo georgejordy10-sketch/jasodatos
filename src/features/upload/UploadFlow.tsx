@@ -53,7 +53,28 @@ function formatColumnLabel(value: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function formatConfidenceLabel(confidence: number | null | undefined) {
+function normalizeColumnName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function isOptionalCommercialColumn(columnName: string) {
+  const normalizedColumn = normalizeColumnName(columnName);
+
+  return ["bodega", "tipo de movimiento"].includes(normalizedColumn);
+}
+
+function formatConfidenceLabel(
+  confidence: number | null | undefined,
+  columnName = ""
+) {
+  if (isOptionalCommercialColumn(columnName)) {
+    return "Campo opcional";
+  }
+
   const value = Number(confidence ?? 0);
 
   if (value >= 0.9) return "Alta";
@@ -63,7 +84,14 @@ function formatConfidenceLabel(confidence: number | null | undefined) {
   return "Sin coincidencia";
 }
 
-function formatReasonLabel(reason: string | null | undefined) {
+function formatReasonLabel(
+  reason: string | null | undefined,
+  columnName = ""
+) {
+  if (isOptionalCommercialColumn(columnName)) {
+    return "No requerido para el dashboard comercial actual.";
+  }
+
   const normalizedReason = String(reason ?? "").trim().toLowerCase();
 
   if (normalizedReason.includes("coincidencia exacta")) {
@@ -76,7 +104,6 @@ function formatReasonLabel(reason: string | null | undefined) {
 
   return reason || "Revisar manualmente.";
 }
-
 function isManualMapping(
   sourceColumn: string,
   suggestedTargetField: string | null | undefined
@@ -312,15 +339,15 @@ onChange={(e) => {
                         ))}
                       </select>
                     </td>
-                    <td style={tdStyle}>
+<td style={tdStyle}>
   {isManualMapping(candidate.sourceColumn, candidate.targetField)
     ? "Manual"
-    : formatConfidenceLabel(candidate.confidence)}
+    : formatConfidenceLabel(candidate.confidence, candidate.sourceColumn)}
 </td>
 <td style={tdStyle}>
   {isManualMapping(candidate.sourceColumn, candidate.targetField)
     ? "Campo ajustado manualmente."
-    : formatReasonLabel(candidate.reason)}
+    : formatReasonLabel(candidate.reason, candidate.sourceColumn)}
 </td>
                   </tr>
                 ))}

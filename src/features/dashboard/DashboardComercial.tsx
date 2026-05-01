@@ -476,10 +476,10 @@ function buildStockRisk(
       const producto = toText(row.producto, "Sin producto");
       const diasCobertura = stock <= 0 ? 0 : Math.max(1, Math.round(stock / 5));
 
-      let estado = "ptimo";
+      let estado = "Óptimo";
       if (stock <= 0) estado = "Sin stock";
-      else if (stock <= criticalThreshold) estado = "Crtico";
-      else if (stock <= minimo) estado = "En riesgo";
+      else if (stock <= criticalThreshold) estado = "Crítico";
+      else if (stock < minimo) estado = "En riesgo";
 
       return {
         producto,
@@ -588,7 +588,7 @@ function buildJasoBotInsights(
   if (productosCriticos.length > 0) {
     const critico = productosCriticos[0].producto;
     tipoPromo = "liquidacion";
-    promoWhatsApp = `Buen día. Oferta rpida: ${critico} con precio especial por liquidacin de stock. Disponible hasta agotar existencias. Responde QUIERO para reservar.`;
+    promoWhatsApp = `Buen día. Oferta rápida: ${critico} con precio especial por liquidación de stock. Disponible hasta agotar existencias. Responde QUIERO para reservar.`;
   } else if (lowSucursal && topProducto) {
     const top = topProducto[0];
     tipoPromo = "impulso_sucursal";
@@ -658,7 +658,7 @@ if (topCanal && topCanal[0]) {
 
   if (productosCriticos.length > 0) {
     const nombresCriticos = productosCriticos.map((p) => p.producto).join(", ");
-    insights[1] = `Productos crticos: ${nombresCriticos}`;
+    insights[1] = `Productos críticos: ${nombresCriticos}`;
   }
 
   return {
@@ -671,6 +671,7 @@ if (topCanal && topCanal[0]) {
 }
 type DetailModalType = "products" | "stock" | "channels" | null;
 type BusinessCrmData = {
+  business_name: string | null;
   owner_name: string | null;
   commercial_email: string | null;
   commercial_whatsapp: string | null;
@@ -709,14 +710,24 @@ export default function DashboardComercial({
     updateChannel,
     resetSettings,
   } = useProfileSettings();
+const BUSINESS_SLUG_STORAGE_KEY = "jasodatos.currentBusinessSlug";
+
 const [currentBusinessSlug, setCurrentBusinessSlug] = useState("");
 
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
-  const businessSlug = params.get("business")?.trim();
+  const businessSlugFromUrl = params.get("business")?.trim();
+  const businessSlugFromStorage =
+    window.localStorage.getItem(BUSINESS_SLUG_STORAGE_KEY)?.trim() ?? "";
 
-  if (businessSlug) {
-    setCurrentBusinessSlug(businessSlug);
+  const resolvedBusinessSlug = businessSlugFromUrl || businessSlugFromStorage;
+
+  if (resolvedBusinessSlug) {
+    setCurrentBusinessSlug(resolvedBusinessSlug);
+    window.localStorage.setItem(
+      BUSINESS_SLUG_STORAGE_KEY,
+      resolvedBusinessSlug
+    );
   }
 }, []);
 
@@ -777,7 +788,10 @@ const businessContextMessage = !currentBusinessSlug
   : "";
 const planLabel = PLAN_LABELS[currentPlan];
 const businessDisplayName =
-  businessPlanData?.businessName || settings.businessName || "JasoDatos";
+  settings.businessName?.trim() ||
+  businessCrmData?.business_name?.trim() ||
+  businessPlanData?.businessName ||
+  "JasoDatos";
 
 const businessLocationLabel = [
   businessPlanData?.ciudad,
@@ -937,7 +951,7 @@ const canUseWhatsappActions = canUseWhatsappByPlan && canUseWhatsappInputs;
 const whatsappDisabledReason = !canUseWhatsappByPlan
   ? "Disponible en plan Ultra."
   : !hasValidWhatsapp
-  ? "Configura un WhatsApp vlido en Configuracin del negocio."
+  ? "Configura un WhatsApp válido en Configuración del negocio."
   : activeChannels.length === 0
   ? "Activa al menos un canal para usar acciones de WhatsApp."
   : "";
@@ -945,7 +959,7 @@ const whatsappDisabledReason = !canUseWhatsappByPlan
 const pdfDisabledReason = !canExportPdf
   ? "Disponible desde el plan Pro."
   : !hasValidWhatsapp
-  ? "Configura un WhatsApp vlido en Configuracin del negocio."
+  ? "Configura un WhatsApp válido en Configuración del negocio."
   : activeChannels.length === 0
   ? "Activa al menos un canal para compartir."
   : "";
@@ -1631,7 +1645,7 @@ const kpiItems = [
     subtitle: "del total de ventas",
   },
   {
-    title: "Stock crtico",
+    title: "Stock crítico",
     value: stockCritico === null ? "No Disponible" : formatInt(stockCritico),
     badge: "Reglas activas",
     subtitle: "Revisar inventario",
@@ -1644,7 +1658,7 @@ const jasoBot = useMemo(() => {
 
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
-  setActionNotice(`Campaa copiada. Puedes pegarla en WhatsApp, redes sociales o una lista de clientes: ${texto}`);
+  setActionNotice(`Campaña copiada. Puedes pegarla en WhatsApp, redes sociales o una lista de clientes: ${texto}`);
   setTimeout(() => {
     setActionNotice("");
   }, 3000);
@@ -1700,7 +1714,7 @@ ${jasoBot.insights.map((item) => ` ${item}`).join("\n")}
 Acciones sugeridas:
 ${recomendaciones}
 
-Ya se descarg el reporte en PDF para que puedas adjuntarlo y compartirlo por este medio.`
+El reporte PDF se descargó correctamente. Puedes adjuntarlo y compartirlo por WhatsApp.`
   );
 
 const phone = normalizeWhatsappNumber(settings.businessWhatsapp, settings.locale);
@@ -1796,7 +1810,13 @@ function openSalesWhatsapp() {
   resetSettings={resetSettings}
   businessSlug={currentBusinessSlug}
   initialCrmData={businessCrmData}
-  onSaveCrm={async (payload) => {
+    onSaveCrm={async (payload) => {
+    if (!currentBusinessSlug) {
+      throw new Error(
+        "No se detectó el negocio activo. Ingresa desde el enlace del negocio para guardar la configuración."
+      );
+    }
+
     const response = await fetch(
       `/api/businesses/by-slug/${encodeURIComponent(currentBusinessSlug)}/crm`,
       {

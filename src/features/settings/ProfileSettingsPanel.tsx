@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { ProfileSettings } from "./types";
 
 type InitialCrmData = {
@@ -97,9 +97,29 @@ export default function ProfileSettingsPanel({
   const [pais, setPais] = useState("");
   const [savingCrm, setSavingCrm] = useState(false);
   const [crmNotice, setCrmNotice] = useState("");
+  const lastLoadedCrmKeyRef = useRef("");
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      lastLoadedCrmKeyRef.current = "";
+      return;
+    }
+
+    const crmKey = [
+      businessSlug,
+      initialCrmData?.owner_name ?? "",
+      initialCrmData?.commercial_email ?? "",
+      initialCrmData?.commercial_whatsapp ?? "",
+      initialCrmData?.ciudad ?? "",
+      initialCrmData?.provincia ?? "",
+      initialCrmData?.pais ?? "",
+    ].join("|");
+
+    if (crmKey === lastLoadedCrmKeyRef.current) {
+      return;
+    }
+
+    lastLoadedCrmKeyRef.current = crmKey;
 
     setOwnerName(initialCrmData?.owner_name ?? "");
     setCommercialEmail(initialCrmData?.commercial_email ?? "");
@@ -109,30 +129,26 @@ export default function ProfileSettingsPanel({
 
     const crmWhatsapp = initialCrmData?.commercial_whatsapp ?? "";
 
-    if (crmWhatsapp && crmWhatsapp !== settings.businessWhatsapp) {
+    if (crmWhatsapp) {
       updateSettings({
         businessWhatsapp: crmWhatsapp,
       });
     }
   }, [
     open,
+    businessSlug,
     initialCrmData?.owner_name,
     initialCrmData?.commercial_email,
     initialCrmData?.commercial_whatsapp,
     initialCrmData?.ciudad,
     initialCrmData?.provincia,
     initialCrmData?.pais,
-    settings.businessWhatsapp,
     updateSettings,
   ]);
-
-  if (!open) return null;
-
-  const whatsappDigits = normalizeWhatsappPhone(
+    const whatsappDigits = normalizeWhatsappPhone(
     settings.businessWhatsapp,
     settings.locale
   );
-
   const whatsappLooksValid =
     whatsappDigits.length === 0 ||
     (whatsappDigits.length >= 8 && whatsappDigits.length <= 15);
@@ -140,9 +156,18 @@ export default function ProfileSettingsPanel({
   const whatsappPreview = whatsappDigits
     ? `https://wa.me/${whatsappDigits}`
     : "";
+      async function saveCrmFromSettings() {
+    if (!onSaveCrm) {
+      setCrmNotice("No está conectada la función para guardar CRM.");
+      return;
+    }
 
-  async function saveCrmFromSettings() {
-    if (!onSaveCrm) return;
+    if (!businessSlug) {
+      setCrmNotice(
+        "No se detectó el negocio activo. Ingresa desde el enlace del negocio para guardar la configuración."
+      );
+      return;
+    }
 
     try {
       setSavingCrm(true);
@@ -172,6 +197,18 @@ export default function ProfileSettingsPanel({
       setSavingCrm(false);
     }
   }
+
+  function resetPanelValues() {
+    resetSettings();
+    setOwnerName("");
+    setCommercialEmail("");
+    setCiudad("");
+    setProvincia("");
+    setPais("");
+    setCrmNotice("Valores restaurados. Guarda los datos CRM si quieres aplicar este cambio al negocio.");
+  }
+
+  if (!open) return null;
 
   return (
     <div style={styles.overlay}>
@@ -483,15 +520,23 @@ export default function ProfileSettingsPanel({
               <div style={styles.footerRow}>
                 <button
                   type="button"
-                  onClick={resetSettings}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    resetPanelValues();
+                  }}
                   style={styles.secondaryButton}
                 >
                   Restaurar valores
                 </button>
 
-                <button
+                               <button
                   type="button"
-                  onClick={onClose}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onClose();
+                  }}
                   style={styles.primaryButton}
                 >
                   Listo
