@@ -139,7 +139,7 @@ export default function SalesChartsSection({
 
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  formatter={(value: number) => formatMoney(value)}
+                  formatter={(value) => formatMoney(Number(value ?? 0))}
                 />
 
                 <Area
@@ -213,7 +213,7 @@ action={
                     </Pie>
                     <Tooltip
                       contentStyle={tooltipStyle}
-                      formatter={(value: number) => formatMoney(value)}
+                      formatter={(value) => formatMoney(Number(value ?? 0))}
                     />
                   </PieChart>
                 </ResponsiveContainer>

@@ -258,7 +258,7 @@ function isWithinRange(value: unknown, fromDate: string, toDate: string): boolea
 function getChannelDisplayName(key: ChannelKey): string {
   if (key === "ecommerce") return "e-commerce";
   if (key === "mayorista") return "mayorista";
-  return "tienda fsica";
+  return "tienda física";
 }
 function normalizeChannelKey(value: unknown): ChannelKey | null {
   const raw = toText(value, "").trim().toLowerCase();
@@ -635,8 +635,8 @@ if (topCanal && topCanal[0]) {
 
   let mensajePrincipal = `Prioriza ${nombreProductoTop} como producto ancla y ejectalo primero en ${nombreSucursalTop} para acelerar ventas en ${nombreCanalTop}.`;
 
-  if (tipoPromo === "liquidacion" && productosCriticos.length > 0) {
-    mensajePrincipal = `Detectamos presin de inventario en ${productosCriticos[0].producto}. La mejor jugada ahora es activar una salida comercial rpida antes de que el stock siga perdiendo traccin.`;
+  if (tipoPromo === "liquidación" && productosCriticos.length > 0) {
+    mensajePrincipal = `Detectamos presión de inventario en ${productosCriticos[0].producto}. La mejor jugada ahora es activar una salida comercial rápida antes de que el stock siga perdiendo tracción.`;
   } else if (tipoPromo === "impulso_sucursal") {
     mensajePrincipal = `Existe una oportunidad clara para recuperar desempeño en ${nombreSucursalBaja}. Activa una promoción enfocada con ${nombreProductoTop} para levantar conversión en esa sucursal.`;
   } else if (tipoPromo === "combo" && productosOrdenados.length > 1) {
@@ -649,7 +649,7 @@ if (topCanal && topCanal[0]) {
 
   const insights: string[] = [];
 
-  insights.push(`Enfcate en: ${nombreProductoTop}`);
+  insights.push(`Enfócate en: ${nombreProductoTop}`);
   insights.push(`Sucursal lder: ${nombreSucursalTop}`);
   insights.push(`Sucursal a reforzar: ${nombreSucursalBaja}`);
   if (nombreCanalTop && nombreCanalTop !== "tu canal principal") {
@@ -769,14 +769,11 @@ const {
   error: businessPlanError,
 } = useBusinessPlan(currentBusinessSlug || null);
 
-const currentPlan =
-  businessPlanData?.currentPlan ??
-  businessPlanData?.business?.plan ??
-  "basic";
+const currentPlan = businessPlanData?.currentPlan ?? "basic";
 const businessContextMessage = !currentBusinessSlug
-  ? "Este dashboard no est vinculado a un negocio. Ingresa desde el botn generado al crear la prueba gratis."
+  ? "Este dashboard no está vinculado a un negocio. Ingresa desde el botón generado al crear la prueba gratis."
   : businessPlanError
-  ? "No se encontr el negocio vinculado a esta URL. Revisa que el enlace tenga el cdigo correcto del negocio."
+  ? "No se encontró el negocio vinculado a esta URL. Revisa que el enlace tenga el código correcto del negocio."
   : "";
 const planLabel = PLAN_LABELS[currentPlan];
 const businessDisplayName =
@@ -803,11 +800,21 @@ function setCurrentPlan(_plan: SubscriptionPlan) {
   setPlansOpen(true);
 }
 
+const channelsEnabled: Record<ChannelKey, boolean> =
+  "channelsEnabled" in settings &&
+  typeof settings.channelsEnabled === "object" &&
+  settings.channelsEnabled !== null
+    ? (settings.channelsEnabled as Record<ChannelKey, boolean>)
+    : {
+        ecommerce: true,
+        mayorista: true,
+        tiendaFisica: true,
+      };
 const activeChannels = useMemo(() => {
-  return (Object.entries(settings.channelsEnabled) as [ChannelKey, boolean][])
+  return (Object.entries(channelsEnabled) as [ChannelKey, boolean][])
     .filter(([, enabled]) => enabled)
     .map(([key]) => key);
-}, [settings.channelsEnabled]);
+}, [channelsEnabled]);
 
 const activeChannelsLabel = activeChannels.length
   ? activeChannels.map(getChannelDisplayName).join("  ")
@@ -874,7 +881,7 @@ const filteredRows = useMemo(() => {
     const matchSucursal = selectedSucursal === "Todas" || sucursal === selectedSucursal;
     const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
     const matchDate = isWithinRange(row.fecha, fromDate, toDate);
-    const matchChannel = isRowChannelEnabled(row, settings.channelsEnabled);
+    const matchChannel = isRowChannelEnabled(row, channelsEnabled);
 
     return matchSucursal && matchProducto && matchDate && matchChannel;
   });
@@ -884,14 +891,14 @@ const filteredRows = useMemo(() => {
   selectedProducto,
   fromDate,
   toDate,
-  settings.channelsEnabled,
+  channelsEnabled,
 ]);
 const benchmarkRows = useMemo(() => {
   return processedData.validRows.filter((row) => {
     const producto = toText(row.producto, "Sin producto");
     const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
     const matchDate = isWithinRange(row.fecha, fromDate, toDate);
-    const matchChannel = isRowChannelEnabled(row, settings.channelsEnabled);
+    const matchChannel = isRowChannelEnabled(row, channelsEnabled);
 
     return matchProducto && matchDate && matchChannel;
   });
@@ -900,7 +907,7 @@ const benchmarkRows = useMemo(() => {
   selectedProducto,
   fromDate,
   toDate,
-  settings.channelsEnabled,
+  channelsEnabled
 ]);
 const topActiveChannel = useMemo(() => {
   const totals = new Map<string, number>();
@@ -916,9 +923,8 @@ const topActiveChannel = useMemo(() => {
   const ordered = [...totals.entries()].sort((a, b) => b[1] - a[1]);
   return ordered.length ? ordered[0][0] : null;
 }, [filteredRows]);
-
 const topActiveChannelLabel = topActiveChannel
-  ? getChannelDisplayName(topActiveChannel)
+  ? getChannelDisplayName(topActiveChannel as ChannelKey)
   : "Sin canales habilitados";
 const whatsappDigits = normalizeWhatsappNumber(
   settings.businessWhatsapp,
@@ -983,7 +989,7 @@ const variationPct = useMemo(() => {
       const producto = toText(row.producto, "Sin producto");
       const matchSucursal = selectedSucursal === "Todas" || sucursal === selectedSucursal;
       const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
-      const matchChannel = isRowChannelEnabled(row, settings.channelsEnabled);
+      const matchChannel = isRowChannelEnabled(row, channelsEnabled);
       return matchSucursal && matchProducto && matchChannel;
     })
     .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
@@ -1000,7 +1006,7 @@ const variationPct = useMemo(() => {
       const producto = toText(row.producto, "Sin producto");
       const matchSucursal = selectedSucursal === "Todas" || sucursal === selectedSucursal;
       const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
-      const matchChannel = isRowChannelEnabled(row, settings.channelsEnabled);
+      const matchChannel = isRowChannelEnabled(row, channelsEnabled);
       return matchSucursal && matchProducto && matchChannel;
     })
     .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
@@ -1013,7 +1019,7 @@ const variationPct = useMemo(() => {
   toDate,
   selectedSucursal,
   selectedProducto,
-  settings.channelsEnabled,
+  channelsEnabled,
 ]);
 
   const ventasTotales = useMemo(() => {
@@ -1108,7 +1114,7 @@ function formatComparisonMetricValue(value: number): string {
     return `${value.toFixed(1)} días`;
   }
 
-  return formatInt(value, settings.locale);
+  return formatInt(value);
 }
 
 const productComparisonInsight = useMemo(() => {
@@ -1586,12 +1592,11 @@ const benchmarkSummary = useMemo(() => {
 const weakestBranch = benchmarkSummary.length
   ? benchmarkSummary[benchmarkSummary.length - 1]
   : null;
+
 const alerts = useMemo(() => {
   return buildAlerts({
     stockCriticalCount: stockCritico,
     salesChangePct: variationPct,
-    salesDropMediumPct: settings.salesDropMediumPct,
-    salesDropHighPct: settings.salesDropHighPct,
     weakestBranchName: weakestBranch?.sucursal ?? null,
     weakestBranchSharePct: weakestBranch?.participacion ?? null,
     topProductSharePct: Number(porcentajeTop),
@@ -1615,7 +1620,7 @@ const kpiItems = [
   },
   {
     title: "Unidades totales",
-    value: formatInt(unidadesTotales, settings.locale),
+    value: formatInt(unidadesTotales),
     badge: `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
     subtitle: "vs. Período anterior",
   },
@@ -1629,7 +1634,7 @@ const kpiItems = [
     title: "Stock crtico",
     value: stockCritico === null ? "No Disponible" : formatInt(stockCritico),
     badge: "Reglas activas",
-    subtitle: "revisar inventario",
+    subtitle: "Revisar inventario",
     accent: "danger" as const,
   },
 ];
@@ -1747,7 +1752,6 @@ function openSalesWhatsapp() {
   onClearFile={onClearFile}
   onOpenPlans={() => setPlansOpen(true)}
   onOpenSettings={() => setSettingsOpen(true)}
-  isExportingPdf={isExportingPdf}
 />
 {businessLocationLabel ? (
   <div style={styles.businessLocationBar}>
@@ -2057,7 +2061,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
                     {formatMoney(row.ventas, settings.locale, settings.currencyCode)}
                   </td>
                   <td style={styles.productComparisonTd}>
-                    {formatInt(row.unidades, settings.locale)}
+                    {formatInt(row.unidades)}
                   </td>
                   <td style={styles.productComparisonTd}>
                     {row.participacion.toFixed(1)}%
@@ -2084,7 +2088,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
                     )}
                   </td>
                   <td style={styles.productComparisonTd}>
-                    {formatInt(row.stock, settings.locale)}
+                    {formatInt(row.stock)}
                   </td>
                   <td style={styles.productComparisonTd}>
                     {row.rotacion.toFixed(2)}
@@ -2113,7 +2117,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
                   )}
                 </td>
                 <td style={styles.productComparisonTotalTd}>
-                  {formatInt(productComparisonTotal.unidades, settings.locale)}
+                  {formatInt(productComparisonTotal.unidades)}
                 </td>
                 <td style={styles.productComparisonTotalTd}>
                   {productComparisonTotal.participacion.toFixed(1)}%
@@ -2140,7 +2144,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
                   )}
                 </td>
                 <td style={styles.productComparisonTotalTd}>
-                  {formatInt(productComparisonTotal.stock, settings.locale)}
+                  {formatInt(productComparisonTotal.stock)}
                 </td>
                 <td style={styles.productComparisonTotalTd}>-</td>
                 <td style={styles.productComparisonTotalTd}>-</td>
@@ -2410,7 +2414,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
   toDateKey={toDateKey}
   toText={toText}
   toNumber={toNumber}
-  formatInt={(value) => formatInt(value, settings.locale)}
+  formatInt={(value) => formatInt(value)}
   formatMoney={(value) => formatMoney(value, settings.locale, settings.currencyCode)}
 />
 <style jsx global>{`

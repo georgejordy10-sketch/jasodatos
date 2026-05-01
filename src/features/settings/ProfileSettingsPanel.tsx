@@ -19,8 +19,14 @@ type ProfileSettingsPanelProps = {
   onClose: () => void;
   settings: ProfileSettings;
   updateSettings: (patch: Partial<ProfileSettings>) => void;
-  updateThreshold: (key: string, value: number) => void;
-  updateChannel: (channel: string, enabled: boolean) => void;
+  updateThreshold: (
+  field: "salesDropMediumPct" | "salesDropHighPct",
+  value: number
+) => void;
+  updateChannel: (
+  channel: "ecommerce" | "mayorista" | "tiendaFisica",
+  enabled: boolean
+) => void;
   resetSettings: () => void;
   businessSlug: string;
   initialCrmData?: InitialCrmData | null;
@@ -223,26 +229,32 @@ export default function ProfileSettingsPanel({
             <label style={styles.label}>
               <span>WhatsApp comercial</span>
               <input
-                type="tel"
-                inputMode="tel"
-                placeholder="+593997945350"
-                style={{
-                  ...styles.input,
-                  ...(whatsappLooksValid ? null : styles.inputError),
-                }}
-                value={settings.businessWhatsapp}
-                onChange={(e) =>
-                  updateSettings({ businessWhatsapp: e.target.value })
-                }
-                onBlur={(e) =>
-                  updateSettings({
-                    businessWhatsapp: normalizeWhatsappPhone(
-                      e.target.value,
-                      settings.locale
-                    ),
-                  })
-                }
-              />
+  type="tel"
+  inputMode="tel"
+  placeholder="+593997945350"
+  style={{
+    ...styles.input,
+    ...(whatsappLooksValid ? null : styles.inputError),
+  }}
+  value={settings.businessWhatsapp}
+  onChange={(event) => {
+    const value = event.target.value.replace(/[^\d+]/g, "");
+
+    updateSettings({
+      businessWhatsapp: value,
+    });
+  }}
+  onBlur={(event) => {
+    const normalizedWhatsapp = normalizeWhatsappPhone(
+      event.target.value,
+      settings.locale
+    );
+
+    updateSettings({
+      businessWhatsapp: normalizedWhatsapp,
+    });
+  }}
+/>
 
               <small
                 style={

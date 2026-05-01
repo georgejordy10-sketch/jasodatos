@@ -246,7 +246,7 @@ onOpenChannelDetails,
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  formatter={(value: number) => formatMoney(value)}
+                  formatter={(value) => formatMoney(Number(value ?? 0))}
                 />
                 <Legend verticalAlign="top" height={36} />
                 {channelResult.channels.map((channel, index) => (

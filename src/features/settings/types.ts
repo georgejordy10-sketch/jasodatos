@@ -5,12 +5,17 @@ export type CurrencyCode = "USD" | "EUR" | "PEN" | "COP" | "MXN";
 export type ProfileSettings = {
   businessName: string;
   businessWhatsapp: string;
-  currencyCode: CurrencyCode;
+  currencySymbol: string;
+  currencyCode: string;
   locale: string;
   defaultStockMin: number;
   salesDropMediumPct: number;
   salesDropHighPct: number;
   showBenchmarking: boolean;
   showAssistant: boolean;
-  s: Record<ChannelKey, boolean>;
+  channelsEnabled: {
+    ecommerce: boolean;
+    mayorista: boolean;
+    tiendaFisica: boolean;
+  };
 };

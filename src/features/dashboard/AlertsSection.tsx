@@ -5,7 +5,7 @@ import AlertPanel from "@/features/alerts/AlertPanel";
 import type { BusinessAlert } from "@/features/alerts/types";
 
 type Props = {
-  alerts: AlertItem[];
+  alerts: BusinessAlert[];
   isExportingPdf?: boolean;
 };
 
