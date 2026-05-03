@@ -44,10 +44,10 @@ function LoginForm() {
 
     setStatus("idle");
 
-    if (error) {
-      setErrorMessage("No se pudo iniciar sesión. Revisa el correo y la contraseña.");
-      return;
-    }
+if (error) {
+  setErrorMessage(error.message);
+  return;
+}
 
     router.replace(nextPath);
     router.refresh();
