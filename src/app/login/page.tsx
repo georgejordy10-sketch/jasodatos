@@ -1,12 +1,12 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
 const ADMIN_EMAILS = ["jaso.23@hotmail.com", "georgejordy.10@gmail.com"];
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -54,65 +54,83 @@ export default function LoginPage() {
   }
 
   return (
+    <section style={styles.card}>
+      <div style={styles.brand}>JD</div>
+
+      <p style={styles.eyebrow}>Acceso administrador</p>
+
+      <h1 style={styles.title}>Entrar a JasoDatos Admin</h1>
+
+      <p style={styles.text}>
+        Usa un correo administrador autorizado para gestionar clientes, planes y accesos.
+      </p>
+
+      <form onSubmit={handleLogin} style={styles.form}>
+        <label style={styles.label}>
+          Correo administrador
+          <input
+            style={styles.input}
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="jaso.23@hotmail.com"
+            autoComplete="email"
+            required
+          />
+        </label>
+
+        <label style={styles.label}>
+          Contraseña
+          <input
+            style={styles.input}
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="••••••••"
+            autoComplete="current-password"
+            required
+          />
+        </label>
+
+        {errorMessage ? <p style={styles.error}>{errorMessage}</p> : null}
+
+        <button
+          style={{
+            ...styles.button,
+            opacity: status === "loading" ? 0.72 : 1,
+            cursor: status === "loading" ? "not-allowed" : "pointer",
+          }}
+          type="submit"
+          disabled={status === "loading"}
+        >
+          {status === "loading" ? "Validando..." : "Entrar al panel"}
+        </button>
+      </form>
+
+      <a style={styles.backLink} href="/registro">
+        Volver al registro
+      </a>
+    </section>
+  );
+}
+
+function LoginFallback() {
+  return (
+    <section style={styles.card}>
+      <div style={styles.brand}>JD</div>
+      <p style={styles.eyebrow}>Acceso administrador</p>
+      <h1 style={styles.title}>Cargando acceso...</h1>
+      <p style={styles.text}>Preparando validación segura del panel.</p>
+    </section>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <main style={styles.page}>
-      <section style={styles.card}>
-        <div style={styles.brand}>JD</div>
-
-        <p style={styles.eyebrow}>Acceso administrador</p>
-
-        <h1 style={styles.title}>Entrar a JasoDatos Admin</h1>
-
-        <p style={styles.text}>
-          Usa un correo administrador autorizado para gestionar clientes, planes y
-          accesos.
-        </p>
-
-        <form onSubmit={handleLogin} style={styles.form}>
-          <label style={styles.label}>
-            Correo administrador
-            <input
-              style={styles.input}
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="jaso.23@hotmail.com"
-              autoComplete="email"
-              required
-            />
-          </label>
-
-          <label style={styles.label}>
-            Contraseña
-            <input
-              style={styles.input}
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-            />
-          </label>
-
-          {errorMessage ? <p style={styles.error}>{errorMessage}</p> : null}
-
-          <button
-            style={{
-              ...styles.button,
-              opacity: status === "loading" ? 0.72 : 1,
-              cursor: status === "loading" ? "not-allowed" : "pointer",
-            }}
-            type="submit"
-            disabled={status === "loading"}
-          >
-            {status === "loading" ? "Validando..." : "Entrar al panel"}
-          </button>
-        </form>
-
-        <a style={styles.backLink} href="/registro">
-          Volver al registro
-        </a>
-      </section>
+      <Suspense fallback={<LoginFallback />}>
+        <LoginForm />
+      </Suspense>
     </main>
   );
 }
