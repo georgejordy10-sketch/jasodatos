@@ -11,19 +11,24 @@ import {
   type ProcessDatasetResult,
 } from "@/core/ingestion/readDataset";
 import type { ConfirmedMapping } from "@/core/mapping/types";
-
+import {
+  calculateDataQualityReport,
+  type DataQualityReport,
+} from "@/features/upload/dataQuality";
 export default function UploadFlow() {
 
   const profiles = useMemo(() => listProfiles(), []);
 const profileId: ProfileId = "comercial";
   const [file, setFile] = useState<File | null>(null);
-
+  const [hasDataConsent, setHasDataConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
   const [initialData, setInitialData] = useState<ReadDatasetInitialResult | null>(null);
   const [confirmedMappings, setConfirmedMappings] = useState<ConfirmedMapping[]>([]);
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
+  const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
+  const qualityTheme = qualityReport ? getQualitySummary(qualityReport) : null;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 const selectedProfile = profiles[0];
 function formatColumnLabel(value: string) {
@@ -104,6 +109,79 @@ function formatReasonLabel(
 
   return reason || "Revisar manualmente.";
 }
+function getQualitySummary(report: DataQualityReport) {
+  const base = {
+    textColor: "#334155",
+    headingColor: "#0f172a",
+    mutedColor: "#64748b",
+    chipBackground: "#f8fafc",
+    chipBorder: "#e2e8f0",
+    chipText: "#334155",
+    cardBackground: "#ffffff",
+  };
+
+if (report.status === "good") {
+  return {
+    ...base,
+    badge: "Listo para analizar",
+    title: "Archivo listo para el análisis",
+    message:
+      "La estructura y calidad del archivo son adecuadas para generar el panel comercial.",
+    recommendationTitle: "Recomendación",
+    background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 55%, #ede9fe 100%)",
+    border: "#a5b4fc",
+    statusColor: "#1e1b4b",
+    accent: "#4f46e5",
+    chipBackground: "#eef2ff",
+    chipBorder: "#c7d2fe",
+    chipText: "#3730a3",
+    cardBackground: "#ffffff",
+  };
+}
+
+if (report.status === "warning") {
+  return {
+    ...base,
+    badge: "Observaciones menores",
+    title: "Archivo apto para análisis",
+    message:
+      "El archivo puede procesarse. Hay algunos campos opcionales que no serán usados en esta versión del panel.",
+    recommendationTitle: "Recomendación",
+    background: "linear-gradient(135deg, #f8faff 0%, #f5f3ff 55%, #eef2ff 100%)",
+    border: "#c4b5fd",
+    statusColor: "#1e1b4b",
+    accent: "#7c3aed",
+    chipBackground: "#eef2ff",
+    chipBorder: "#c7d2fe",
+    chipText: "#3730a3",
+    cardBackground: "#ffffff",
+  };
+}
+
+  return {
+    ...base,
+    badge: "Corrección necesaria",
+    title: "Archivo no apto para análisis completo",
+    message:
+      "Corrige los errores críticos antes de generar indicadores para evitar decisiones basadas en datos defectuosos.",
+    recommendationTitle: "Recomendación",
+    background: "linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)",
+    border: "#fca5a5",
+    statusColor: "#b91c1c",
+    accent: "#ef4444",
+  };
+}
+function buildQualityReport(
+  rawRows: Record<string, unknown>[],
+  columns: string[],
+  mappings: ConfirmedMapping[]
+) {
+  return calculateDataQualityReport({
+    rawRows,
+    columns,
+    mappings,
+  });
+}
 function isManualMapping(
   sourceColumn: string,
   suggestedTargetField: string | null | undefined
@@ -123,40 +201,64 @@ function isManualMapping(
       setError("Selecciona un archivo antes de continuar.");
       return;
     }
-
+if (!hasDataConsent) {
+  setError(
+    "Confirma que tienes autorización para procesar este archivo antes de continuar."
+  );
+  return;
+}
     setLoading(true);
     setError("");
     setProcessedData(null);
 
     try {
-      const result = await readDatasetInitial(file, profileId);
-      setInitialData(result);
-      setConfirmedMappings(result.suggestedMappings);
+const result = await readDatasetInitial(file, profileId);
+const initialQualityReport = buildQualityReport(
+  result.rawRows,
+  result.columns,
+  result.suggestedMappings
+);
+
+setInitialData(result);
+setConfirmedMappings(result.suggestedMappings);
+setQualityReport(initialQualityReport);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo leer el archivo.");
       setInitialData(null);
       setConfirmedMappings([]);
+      setQualityReport(null);
     } finally {
       setLoading(false);
     }
   }
 
-  function updateMapping(sourceColumn: string, targetField: string) {
-    setConfirmedMappings((prev) => {
-      const withoutCurrent = prev.filter((m) => m.sourceColumn !== sourceColumn);
+function updateMapping(sourceColumn: string, targetField: string) {
+  setConfirmedMappings((prev) => {
+    const withoutCurrent = prev.filter((m) => m.sourceColumn !== sourceColumn);
 
-      if (!targetField) return withoutCurrent;
+    const nextMappings = targetField
+      ? [
+          ...withoutCurrent,
+          {
+            sourceColumn,
+            targetField,
+          },
+        ]
+      : withoutCurrent;
 
-      return [
-        ...withoutCurrent,
-        {
-          sourceColumn,
-          targetField,
-        },
-      ];
-    });
-  }
+    if (initialData) {
+      const nextQualityReport = buildQualityReport(
+        initialData.rawRows,
+        initialData.columns,
+        nextMappings
+      );
 
+      setQualityReport(nextQualityReport);
+    }
+
+    return nextMappings;
+  });
+}
   function getCurrentTargetField(sourceColumn: string): string {
     return confirmedMappings.find((m) => m.sourceColumn === sourceColumn)?.targetField ?? "";
   }
@@ -167,9 +269,24 @@ function isManualMapping(
       return;
     }
 
-    setError("");
+setError("");
 
-    const result = processDataset(
+const currentQualityReport = buildQualityReport(
+  initialData.rawRows,
+  initialData.columns,
+  confirmedMappings
+);
+
+setQualityReport(currentQualityReport);
+
+if (currentQualityReport.status === "blocked") {
+  setError(
+    "El archivo no cumple la calidad mínima para generar el dashboard. Corrige los errores críticos o ajusta el mapeo de columnas."
+  );
+  return;
+}
+
+const result = processDataset(
       initialData.rawRows,
       initialData.profileId,
       confirmedMappings,
@@ -186,6 +303,8 @@ function resetFlow() {
   setInitialData(null);
   setConfirmedMappings([]);
   setProcessedData(null);
+  setQualityReport(null);
+  setHasDataConsent(false);
 
   if (fileInputRef.current) {
     fileInputRef.current.value = "";
@@ -221,6 +340,8 @@ onChange={(e) => {
   setInitialData(null);
   setConfirmedMappings([]);
   setProcessedData(null);
+  setQualityReport(null);
+  setHasDataConsent(false);
 }}
           />
           {file ? (
@@ -228,24 +349,66 @@ onChange={(e) => {
               Archivo seleccionado: <strong>{file.name}</strong>
             </small>
           ) : null}
+        <label
+style={{
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 10,
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid #c7d2fe",
+  background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
+  color: "#1e1b4b",
+  fontSize: 14,
+  lineHeight: 1.5,
+  cursor: "pointer",
+}}
+>
+  <input
+    type="checkbox"
+    checked={hasDataConsent}
+    onChange={(e) => {
+      setHasDataConsent(e.target.checked);
+      setError("");
+    }}
+    style={{ marginTop: 3 }}
+  />
+<span>
+  Confirmo que tengo autorización para procesar este archivo.{" "}
+  <small style={{ color: "#475569" }}>
+    Los resultados dependerán de la calidad y exactitud de los datos cargados.
+  </small>{" "}
+  <a
+    href="/legal/privacidad"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      color: "#1d4ed8",
+      fontWeight: 700,
+      textDecoration: "underline",
+    }}
+  >
+    Ver política de privacidad
+  </a>
+</span>
+</label>
         </div>
-
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={handleReadFile}
-            disabled={loading || !file}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 8,
-              border: "1px solid #111827",
-              background: "#111827",
-              color: "#ffffff",
-              cursor: loading || !file ? "not-allowed" : "pointer",
-            }}
-          >
-            {loading ? "Leyendo..." : "Leer archivo"}
-          </button>
+<button
+  type="button"
+  onClick={handleReadFile}
+  disabled={loading || !file || !hasDataConsent}
+  style={{
+    padding: "10px 14px",
+    borderRadius: 8,
+    border: "1px solid #111827",
+    background: loading || !file || !hasDataConsent ? "#9ca3af" : "#111827",
+    color: "#ffffff",
+    cursor: loading || !file || !hasDataConsent ? "not-allowed" : "pointer",
+  }}
+>
+  {loading ? "Leyendo..." : "Leer archivo"}
+</button>
 
           <button
             type="button"
@@ -288,18 +451,257 @@ onChange={(e) => {
             gap: 12,
           }}
         >
-          <h3 style={{ margin: 0 }}>Revisión de mapeo</h3>
+          <h3 style={{ margin: 0, fontSize: 24, color: "#111827" }}>
+  Revisión de columnas
+</h3>
 
-          <div style={{ color: "#374151" }}>
-            <strong>Archivo:</strong> {initialData.fileName}
-          </div>
-          <div style={{ color: "#374151" }}>
-            <strong>Columnas detectadas:</strong> {initialData.columns.length}
-          </div>
-          <div style={{ color: "#374151" }}>
-            <strong>Filas detectadas:</strong> {initialData.rawRows.length}
-          </div>
+<p style={{ margin: 0, color: "#475569", fontSize: 14 }}>
+  JasoDatos detectó las columnas del archivo y sugirió a qué campo comercial corresponde cada una.
+  Puedes ajustar manualmente cualquier asignación antes de procesar el archivo.
+</p>
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 10,
+  }}
+>
+  <div style={infoCardStyle}>
+    <span style={infoLabelStyle}>Archivo cargado</span>
+    <strong style={infoValueStyle}>{initialData.fileName}</strong>
+  </div>
 
+  <div style={infoCardStyle}>
+    <span style={infoLabelStyle}>Columnas detectadas</span>
+    <strong style={infoValueStyle}>{initialData.columns.length}</strong>
+  </div>
+
+  <div style={infoCardStyle}>
+    <span style={infoLabelStyle}>Filas detectadas</span>
+    <strong style={infoValueStyle}>{initialData.rawRows.length}</strong>
+  </div>
+</div>
+{qualityReport ? (
+  <div
+    style={{
+      background: qualityTheme?.background ?? "#ffffff",
+      color: qualityTheme?.textColor ?? "#334155",
+      border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+      borderRadius: 18,
+      padding: 18,
+      display: "grid",
+      gap: 16,
+      boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+      }}
+    >
+      <div style={{ display: "grid", gap: 6 }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            width: "fit-content",
+            padding: "6px 12px",
+            borderRadius: 999,
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: "0.02em",
+            background: "#ffffff",
+            border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+            color: qualityTheme?.statusColor ?? "#334155",
+          }}
+        >
+          {qualityTheme?.badge}
+        </div>
+
+        <strong
+          style={{
+            fontSize: 28,
+            lineHeight: 1.1,
+            color: qualityTheme?.statusColor ?? "#0f172a",
+          }}
+        >
+          {qualityTheme?.title}
+        </strong>
+
+        <span
+          style={{
+            fontSize: 15,
+            color: qualityTheme?.textColor ?? "#334155",
+          }}
+        >
+          {qualityTheme?.message}
+        </span>
+
+        <div
+          style={{
+            marginTop: 6,
+            padding: "10px 12px",
+            borderRadius: 12,
+            background: "#ffffff",
+            border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+            color: qualityTheme?.textColor ?? "#334155",
+            fontSize: 14,
+            lineHeight: 1.5,
+          }}
+        >
+          <strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
+            Recomendación:
+          </strong>{" "}
+          {qualityReport.recommendation}
+        </div>
+      </div>
+
+      <div
+        style={{
+          minWidth: 160,
+          borderRadius: 16,
+          padding: "14px 16px",
+          background: "#ffffff",
+          border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: 12, color: qualityTheme?.mutedColor ?? "#64748b" }}>
+          Calidad del archivo
+        </div>
+        <div
+          style={{
+            fontSize: 34,
+            fontWeight: 800,
+            lineHeight: 1.1,
+            color: qualityTheme?.accent ?? "#4f46e5",
+          }}
+        >
+          {qualityReport.score}/100
+        </div>
+      </div>
+    </div>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+        gap: 10,
+      }}
+    >
+      {[
+        { label: "Filas detectadas", value: qualityReport.totalRows },
+        { label: "Filas vacías", value: qualityReport.emptyRows },
+        { label: "Filas duplicadas", value: qualityReport.duplicateRows },
+        { label: "Columnas mapeadas", value: qualityReport.mappedColumns },
+        {
+          label: "Columnas no mapeadas",
+          value: qualityReport.unmappedColumns.length,
+        },
+      ].map((item) => (
+        <div
+          key={item.label}
+          style={{
+            background: "#ffffff",
+            border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+            borderRadius: 14,
+            padding: 12,
+            display: "grid",
+            gap: 4,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              color: qualityTheme?.mutedColor ?? "#64748b",
+            }}
+          >
+            {item.label}
+          </span>
+          <strong
+            style={{
+              fontSize: 24,
+              lineHeight: 1.1,
+              color: qualityTheme?.headingColor ?? "#0f172a",
+            }}
+          >
+            {item.value}
+          </strong>
+        </div>
+      ))}
+    </div>
+
+    {qualityReport.unmappedColumns.length > 0 ? (
+      <div
+        style={{
+          background: "#ffffff",
+          border: `1px dashed ${qualityTheme?.border ?? "#e2e8f0"}`,
+          borderRadius: 14,
+          padding: 12,
+          display: "grid",
+          gap: 8,
+        }}
+      >
+        <strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
+          Columnas no mapeadas
+        </strong>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {qualityReport.unmappedColumns.map((column) => (
+            <span
+              key={column}
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: qualityTheme?.chipBackground ?? "#f8fafc",
+                border: `1px solid ${qualityTheme?.chipBorder ?? "#e2e8f0"}`,
+                fontSize: 13,
+                color: qualityTheme?.chipText ?? "#334155",
+              }}
+            >
+              {formatColumnLabel(column)}
+            </span>
+          ))}
+        </div>
+      </div>
+    ) : null}
+
+    {qualityReport.issues.length > 0 ? (
+      <div
+        style={{
+          background: "#ffffff",
+          border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+          borderRadius: 14,
+          padding: 12,
+          display: "grid",
+          gap: 8,
+        }}
+      >
+        <strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
+          Observaciones detectadas
+        </strong>
+
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: 18,
+            color: qualityTheme?.textColor ?? "#334155",
+          }}
+        >
+          {qualityReport.issues.slice(0, 8).map((issue, index) => (
+            <li key={`${issue.type}-${index}`} style={{ marginBottom: 6 }}>
+              {issue.message}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : null}
+  </div>
+) : null}
           <div style={{ overflowX: "auto" }}>
             <table
               style={{
@@ -331,7 +733,7 @@ onChange={(e) => {
                           border: "1px solid #d1d5db",
                         }}
                       >
-                        <option value="">No mapear</option>
+                        <option value="">No usar en el análisis</option>
                         {selectedProfile.fields.map((field) => (
                          <option key={field.key} value={field.key}>
   {field.label}
@@ -355,22 +757,40 @@ onChange={(e) => {
             </table>
           </div>
 
-          <div>
-            <button
-              type="button"
-              onClick={handleProcess}
-              style={{
-                padding: "10px 14px",
-                borderRadius: 8,
-                border: "1px solid #111827",
-                background: "#111827",
-                color: "#ffffff",
-                cursor: "pointer",
-              }}
-            >
-              Procesar dataset
-            </button>
-          </div>
+         <div
+  style={{
+    display: "flex",
+    justifyContent: "flex-end",
+    paddingTop: 16,
+    paddingBottom: 8,
+  }}
+>
+<button
+  type="button"
+  onClick={handleProcess}
+  disabled={qualityReport?.status === "blocked"}
+    style={{
+      padding: "12px 18px",
+      borderRadius: 12,
+      border: "1px solid transparent",
+      background:
+        qualityReport?.status === "blocked"
+          ? "#9ca3af"
+          : "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
+      color: "#ffffff",
+      cursor: qualityReport?.status === "blocked" ? "not-allowed" : "pointer",
+      fontWeight: 800,
+      boxShadow:
+        qualityReport?.status === "blocked"
+          ? "none"
+          : "0 10px 24px rgba(79, 70, 229, 0.22)",
+    }}
+  >
+    {qualityReport?.status === "blocked"
+      ? "Corrige calidad del archivo"
+      : "Procesar archivo"}
+  </button>
+</div>
         </div>
       ) : null}
 
@@ -384,7 +804,7 @@ onChange={(e) => {
             gap: 12,
           }}
         >
-          <h3 style={{ margin: 0 }}>Resultado del procesamiento</h3>
+          <h3 style={{ margin: 0 }}>Resultado del análisis del archivo</h3>
 
           <div style={{ display: "grid", gap: 6 }}>
             <div>
@@ -448,4 +868,23 @@ const tdStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderBottom: "1px solid #e5e7eb",
   verticalAlign: "top",
+};
+const infoCardStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 4,
+  border: "1px solid #dbeafe",
+  borderRadius: 14,
+  padding: 12,
+  background: "linear-gradient(135deg, #ffffff 0%, #f8faff 100%)",
+};
+
+const infoLabelStyle: React.CSSProperties = {
+  color: "#64748b",
+  fontSize: 12,
+};
+
+const infoValueStyle: React.CSSProperties = {
+  color: "#0f172a",
+  fontSize: 15,
+  overflowWrap: "anywhere",
 };

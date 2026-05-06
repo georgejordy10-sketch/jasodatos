@@ -57,6 +57,7 @@ export default function RegistroPage() {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [recoveringBusiness, setRecoveringBusiness] = useState(false);
+  const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
   const [recoveredBusiness, setRecoveredBusiness] =
   useState<RecoveredBusiness | null>(null);
   const [notice, setNotice] = useState("");
@@ -81,12 +82,19 @@ function switchMode(mode: "signup" | "recover") {
     }
   }
 
-  async function submitTrial() {
-    try {
-      setLoading(true);
-      setNotice("");
-      setRedirectTo("");
-      setDebugCode("");
+async function submitTrial() {
+  if (!acceptedLegalTerms) {
+    setNotice(
+      "Para crear la prueba debes aceptar los Términos y Condiciones y la Política de Privacidad de JasoDatos."
+    );
+    return;
+  }
+
+  try {
+    setLoading(true);
+    setNotice("");
+    setRedirectTo("");
+    setDebugCode("");
 
       if (!form.business_name.trim()) {
         throw new Error("El nombre del negocio es obligatorio.");
@@ -418,17 +426,55 @@ async function recoverBusinessAccess() {
                 </select>
               </label>
             </div>
+             {!registrationLocked ? (
+  <div style={{ display: "grid", gap: 12 }}>
+    <label style={styles.legalCheckbox}>
+      <input
+        type="checkbox"
+        checked={acceptedLegalTerms}
+        onChange={(event) => {
+          setAcceptedLegalTerms(event.target.checked);
+          setNotice("");
+        }}
+        style={{ marginTop: 3 }}
+      />
 
-            {!registrationLocked ? (
-              <button
-                type="button"
-                style={styles.button}
-                onClick={submitTrial}
-                disabled={loading}
-              >
-                {loading ? "Enviando código..." : "Crear prueba gratis"}
-              </button>
-            ) : null}
+      <span>
+        Acepto los{" "}
+        <a
+          href="/legal/terminos"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={styles.legalLink}
+        >
+          Términos y Condiciones
+        </a>{" "}
+        y la{" "}
+        <a
+          href="/legal/privacidad"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={styles.legalLink}
+        >
+          Política de Privacidad
+        </a>{" "}
+        de JasoDatos.
+      </span>
+    </label>
+
+    <button
+      type="button"
+      style={{
+        ...styles.button,
+        ...(loading || !acceptedLegalTerms ? styles.buttonDisabled : null),
+      }}
+      onClick={submitTrial}
+      disabled={loading || !acceptedLegalTerms}
+    >
+      {loading ? "Enviando código..." : "Crear prueba gratis"}
+    </button>
+  </div>
+) : null}
 
             {registrationLocked && !trialActivated ? (
               <div style={styles.verificationBox}>
@@ -902,4 +948,30 @@ recoveredActions: {
   gap: 12,
   marginTop: 10,
 },
+legalCheckbox: {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 10,
+  padding: "12px 14px",
+  borderRadius: 14,
+  border: "1px solid #c7d2fe",
+  background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
+  color: "#1e1b4b",
+  fontSize: 14,
+  lineHeight: 1.5,
+  cursor: "pointer",
+} satisfies CSSProperties,
+
+legalLink: {
+  color: "#2563eb",
+  fontWeight: 800,
+  textDecoration: "underline",
+  textUnderlineOffset: 3,
+} satisfies CSSProperties,
+
+buttonDisabled: {
+  background: "#9ca3af",
+  cursor: "not-allowed",
+  boxShadow: "none",
+} satisfies CSSProperties,
 };
