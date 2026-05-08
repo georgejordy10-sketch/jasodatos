@@ -284,6 +284,39 @@ const [savingCrmId, setSavingCrmId] = useState<string | null>(null);
     [tableRows]
   );
 
+const thCompact: React.CSSProperties = {
+  padding: "10px 10px",
+  fontSize: 12,
+  lineHeight: 1.15,
+  letterSpacing: "-0.01em",
+  whiteSpace: "nowrap",
+};
+
+const tdCompact: React.CSSProperties = {
+  padding: "10px 10px",
+  fontSize: 12,
+  lineHeight: 1.2,
+  verticalAlign: "middle",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+const colWidths = {
+  negocio: { width: 135, maxWidth: 135 },
+  plan: { width: 70, maxWidth: 70 },
+  estado: { width: 90, maxWidth: 90 },
+  usuarios: { width: 68, maxWidth: 68, textAlign: "center" as const },
+  responsable: { width: 145, maxWidth: 145 },
+  correo: { width: 210, maxWidth: 210 },
+  whatsapp: { width: 130, maxWidth: 130 },
+  origen: { width: 95, maxWidth: 95 },
+  ubicacion: { width: 120, maxWidth: 120 },
+  facturacion: { width: 95, maxWidth: 95 },
+  vigencia: { width: 130, maxWidth: 130 },
+  dias: { width: 110, maxWidth: 110 },
+  actividad: { width: 110, maxWidth: 110 },
+  accion: { width: 145, maxWidth: 145 },
+};
 const filteredRows = useMemo(() => {
   const term = searchTerm.trim().toLowerCase();
 
@@ -772,35 +805,80 @@ async function archiveBusiness(row: AdminBusinessOverview) {
 
       </div>
 
-      {notice ? <div style={styles.notice}>{notice}</div> : null}
+{notice ? <div style={styles.notice}>{notice}</div> : null}
+
 <div style={styles.tableHint}>
   Desliza horizontalmente para ver toda la información del cliente.
 </div>
 
 <div style={styles.tableShell}>
-  <table style={styles.table}>
-          <thead>
-            <tr>
-<th style={styles.th}>Negocio</th>
-<th style={styles.th}>Plan</th>
-<th style={styles.th}>Estado</th>
-<th style={styles.th}>Usuarios</th>
-<th style={styles.th}>Responsable</th>
-<th style={styles.th}>Correo comercial</th>
-<th style={styles.th}>WhatsApp comercial</th>
-<th style={styles.th}>Origen</th>
-<th style={styles.th}>Ubicación</th>
-<th style={styles.th}>Facturación</th>
-<th style={styles.th}>Vigencia</th>
-<th style={styles.th}>Días restantes</th>
-<th style={styles.th}>Última actividad</th>
-<th style={{ ...styles.th, ...styles.stickyActionTh }}>Acción</th>
-            </tr>
-          </thead>
+<table
+  style={{
+    ...styles.table,
+    width: "100%",
+    minWidth: 1460,
+    borderCollapse: "separate",
+    borderSpacing: 0,
+    tableLayout: "fixed",
+  }}
+>
+    <thead>
+      <tr>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.negocio }}>
+          Negocio
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.plan }}>
+          Plan
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.estado }}>
+          Estado
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.usuarios }}>
+          Usuarios
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.responsable }}>
+          Responsable
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.correo }}>
+          Correo comercial
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.whatsapp }}>
+          WhatsApp comercial
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.origen }}>
+          Origen
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.ubicacion }}>
+          Ubicación
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.facturacion }}>
+          Facturación
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.vigencia }}>
+          Vigencia
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.dias }}>
+          Días restantes
+        </th>
+        <th style={{ ...styles.th, ...thCompact, ...colWidths.actividad }}>
+          Última actividad
+        </th>
+        <th
+          style={{
+            ...styles.th,
+            ...thCompact,
+            ...colWidths.accion,
+            ...styles.stickyActionTh,
+          }}
+        >
+          Acción
+        </th>
+      </tr>
+    </thead>
 
-          <tbody>
-            {filteredRows.length === 0 ? (
-              <tr>
+    <tbody>
+      {filteredRows.length === 0 ? (
+        <tr>
                 <td style={styles.emptyCell} colSpan={14}>
                   No se encontraron clientes con ese criterio.
                 </td>
@@ -808,12 +886,12 @@ async function archiveBusiness(row: AdminBusinessOverview) {
             ) : (
               filteredRows.map((row) => (
                 <tr key={row.id}>
-                  <td style={styles.td}>
+                  <td style={{ ...styles.td, ...tdCompact, ...colWidths.negocio }}>
                     <div style={styles.businessName}>{row.business_name}</div>
                     <div style={styles.businessSlug}>{row.slug}</div>
                   </td>
 
-                  <td style={styles.td}>
+                  <td style={{ ...styles.td, ...tdCompact, ...colWidths.plan }}>
                     <span
                       style={{ ...styles.planPill, ...planPillStyle(row.plan) }}
                     >
@@ -821,7 +899,7 @@ async function archiveBusiness(row: AdminBusinessOverview) {
                     </span>
                   </td>
 
-                  <td style={styles.td}>
+                  <td style={{ ...styles.td, ...tdCompact, ...colWidths.estado }}>
                     <span
                       style={{
                         ...styles.statusPill,
@@ -832,25 +910,25 @@ async function archiveBusiness(row: AdminBusinessOverview) {
                     </span>
                   </td>
 
-                  <td style={styles.td}>{row.users_count}</td>
-                  <td style={styles.td}>
+                  <td style={{ ...styles.td, ...tdCompact, ...colWidths.usuarios }}>{row.users_count}</td>
+                  <td style={{ ...styles.td, ...tdCompact, ...colWidths.responsable }}>
   {row.owner_name || "Sin responsable"}
 </td>
 
-<td style={styles.td}>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.correo }}>
   {row.commercial_email || row.owner_email || "-"}
 </td>
 
-<td style={styles.td}>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.whatsapp }}>
   {row.commercial_whatsapp || row.owner_whatsapp || "-"}
 </td>
 
-<td style={styles.td}>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.origen }}>
   {row.signup_source === "landing_trial"
     ? "Registro web"
     : row.signup_source || "-"}
 </td>
-<td style={styles.td}>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.ubicacion }}>
   <div style={styles.locationBlock}>
     <strong style={styles.locationCity}>
       {row.ciudad || "Ciudad no definida"}
@@ -866,7 +944,7 @@ async function archiveBusiness(row: AdminBusinessOverview) {
   </div>
 </td>
                   
-                  <td style={styles.td}>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.facturacion }}>
   <span
     style={{
       ...styles.statusPill,
@@ -877,18 +955,31 @@ async function archiveBusiness(row: AdminBusinessOverview) {
   </span>
 </td>
 
-<td style={styles.td}>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.vigencia }}>
   <span
     style={{
       ...styles.statusPill,
       ...validityPillStyle(getValidityInfo(row).status),
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 2,
+      whiteSpace: "normal",
+      textAlign: "center",
+      lineHeight: 1.15,
     }}
   >
-    {getValidityInfo(row).label}
+    {getValidityInfo(row).label.includes(":") ? (
+      <>
+        <span>{getValidityInfo(row).label.split(":")[0]}:</span>
+        <span>{getValidityInfo(row).label.split(":").slice(1).join(":").trim()}</span>
+      </>
+    ) : (
+      getValidityInfo(row).label
+    )}
   </span>
 </td>
 
-<td style={styles.td}>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.dias }}>
   <span
     style={{
       ...styles.statusPill,
@@ -899,9 +990,11 @@ async function archiveBusiness(row: AdminBusinessOverview) {
   </span>
 </td>
 
-<td style={styles.td}>{row.last_seen_at || "-"}</td>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.actividad }}>
+  {row.last_seen_at || "-"}
+</td>
 
-<td style={{ ...styles.td, ...styles.stickyActionTd }}>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.accion, ...styles.stickyActionTd }}>
   <div style={styles.actionCell}>
                       <select
                         style={styles.planSelect}
@@ -1291,28 +1384,27 @@ tableShell: {
 },
 table: {
   width: "100%",
-  minWidth: 1880,
-  borderCollapse: "collapse",
+  borderCollapse: "separate",
+  borderSpacing: 0,
+  tableLayout: "fixed",
 },
-  th: {
-    textAlign: "left",
-    padding: "14px 16px",
-    fontSize: 12,
-    fontWeight: 800,
-    color: "#475569",
-    background: "#F8FAFC",
-    borderBottom: "1px solid rgba(15, 23, 42, 0.08)",
-    whiteSpace: "nowrap",
-  },
-  td: {
-    padding: "14px 16px",
-    fontSize: 14,
-    color: "#0F172A",
-    borderBottom: "1px solid rgba(15, 23, 42, 0.06)",
-    verticalAlign: "middle",
-    fontWeight: 600,
-    whiteSpace: "nowrap",
-  },
+th: {
+  padding: "10px 10px",
+  fontSize: 12,
+  fontWeight: 800,
+  color: "#334155",
+  background: "#F8FAFC",
+  borderBottom: "1px solid #E2E8F0",
+  textAlign: "left",
+  whiteSpace: "nowrap",
+},
+td: {
+  padding: "10px 10px",
+  fontSize: 12,
+  color: "#0F172A",
+  borderBottom: "1px solid #E2E8F0",
+  verticalAlign: "middle",
+},
   emptyCell: {
     padding: "28px 16px",
     fontSize: 14,
@@ -1340,60 +1432,76 @@ table: {
     fontSize: 12,
     fontWeight: 800,
   },
-  statusPill: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 28,
-    padding: "0 12px",
-    borderRadius: 999,
-    fontSize: 12,
-    fontWeight: 800,
-    textTransform: "capitalize",
-  },
-  actionCell: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  planSelect: {
-    minHeight: 38,
-    borderRadius: 10,
-    border: "1px solid rgba(15, 23, 42, 0.12)",
-    background: "#FFFFFF",
-    color: "#0F172A",
-    padding: "0 10px",
-    fontWeight: 700,
-    outline: "none",
-  },
-  saveButton: {
-    minHeight: 38,
-    borderRadius: 10,
-    border: "1px solid rgba(79,70,229,0.18)",
-    background: "linear-gradient(135deg, #4460FF 0%, #5B6CFF 100%)",
-    color: "#FFFFFF",
-    padding: "0 12px",
-    fontSize: 13,
-    fontWeight: 800,
-    cursor: "pointer",
-  },
-  secondaryActionButton: {
-    minHeight: 38,
-    borderRadius: 10,
-    border: "1px solid rgba(37, 99, 235, 0.25)",
-    background: "rgba(37, 99, 235, 0.08)",
-    color: "#1D4ED8",
-    padding: "0 12px",
-    fontSize: 13,
-    fontWeight: 800,
-    cursor: "pointer",
-  },
+statusPill: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  maxWidth: "100%",
+  padding: "5px 10px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 900,
+  lineHeight: 1.1,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+},
+ actionCell: {
+  display: "grid",
+  gap: 6,
+  alignItems: "start",
+},
   toolbarActions: {
   display: "flex",
   alignItems: "center",
   gap: 10,
   flexWrap: "wrap",
+},
+planSelect: {
+  minHeight: 32,
+  padding: "0 10px",
+  borderRadius: 10,
+  border: "1px solid #CBD5E1",
+  background: "#FFFFFF",
+  color: "#0F172A",
+  fontSize: 12,
+  fontWeight: 800,
+},
+
+saveButton: {
+  minHeight: 32,
+  padding: "0 10px",
+  borderRadius: 10,
+  border: "1px solid #4F46E5",
+  background: "#4F46E5",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+},
+
+secondaryActionButton: {
+  minHeight: 32,
+  padding: "0 10px",
+  borderRadius: 10,
+  border: "1px solid #93C5FD",
+  background: "#EFF6FF",
+  color: "#1D4ED8",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+},
+
+dangerActionButton: {
+  minHeight: 32,
+  padding: "0 10px",
+  borderRadius: 10,
+  border: "1px solid #FCA5A5",
+  background: "#FEF2F2",
+  color: "#B91C1C",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
 },
 
 exportButton: {
@@ -1523,17 +1631,7 @@ exportButton: {
   fontSize: 12,
   fontWeight: 800,
 },
-dangerActionButton: {
-  border: "1px solid rgba(220,38,38,0.35)",
-  background: "rgba(254,226,226,0.75)",
-  color: "#991B1B",
-  borderRadius: 10,
-  padding: "8px 10px",
-  fontSize: 12,
-  fontWeight: 900,
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-},
+
 locationBlock: {
   display: "grid",
   gap: 3,
