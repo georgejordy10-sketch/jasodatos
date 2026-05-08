@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
+import { requireAdmin } from "@/lib/adminAuth";
 function createAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -26,6 +26,12 @@ export async function PATCH(
   { params }: { params: Promise<{ businessId: string }> }
 ) {
   try {
+    const adminAuth = await requireAdmin(request);
+
+    if (!adminAuth.ok) {
+      return adminAuth.response;
+    }
+
     const { businessId } = await params;
     const body = await request.json();
 

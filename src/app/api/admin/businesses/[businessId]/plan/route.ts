@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/adminAuth";
 
 type Plan = "basic" | "pro" | "ultra";
 type PlanAction = "change_plan" | "renew";
@@ -18,7 +19,13 @@ function addDays(date: Date, days: number) {
   return nextDate;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const adminAuth = await requireAdmin(request);
+
+  if (!adminAuth.ok) {
+    return adminAuth.response;
+  }
+
   return NextResponse.json({ ok: true, route: "admin plan route alive" });
 }
 
@@ -27,6 +34,12 @@ export async function PATCH(
   { params }: { params: Promise<{ businessId: string }> }
 ) {
   try {
+    const adminAuth = await requireAdmin(request);
+
+    if (!adminAuth.ok) {
+      return adminAuth.response;
+    }
+
     const { businessId } = await params;
     const body = await request.json();
 

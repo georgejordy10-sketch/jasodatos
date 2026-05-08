@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/adminAuth";
 
 type BusinessStatus = "active" | "trial" | "suspended" | "inactive";
 
@@ -17,6 +18,12 @@ export async function PATCH(
   { params }: { params: Promise<{ businessId: string }> }
 ) {
   try {
+    const adminAuth = await requireAdmin(request);
+
+    if (!adminAuth.ok) {
+      return adminAuth.response;
+    }
+
     const { businessId } = await params;
     const body = await request.json();
     const status = body?.status;
