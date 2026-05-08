@@ -1,4 +1,5 @@
 import AdminClientsTable from "@/features/admin/AdminClientsTable";
+import AdminLogoutButton from "@/features/admin/AdminLogoutButton";
 import type { AdminBusinessOverview } from "@/features/admin/types";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
@@ -29,12 +30,12 @@ export default async function AdminClientesPage() {
       owner_email: row.owner_email,
       owner_whatsapp: row.owner_whatsapp,
       owner_name: row.owner_name,
-commercial_email: row.commercial_email,
-commercial_whatsapp: row.commercial_whatsapp,
-ciudad: row.ciudad ?? null,
-provincia: row.provincia ?? null,
-pais: row.pais ?? null,
-commercial_notes: row.commercial_notes,
+      commercial_email: row.commercial_email,
+      commercial_whatsapp: row.commercial_whatsapp,
+      ciudad: row.ciudad ?? null,
+      provincia: row.provincia ?? null,
+      pais: row.pais ?? null,
+      commercial_notes: row.commercial_notes,
       last_contact_at: row.last_contact_at,
       trial_started_at: row.trial_started_at,
       trial_ends_at: row.trial_ends_at,
@@ -51,5 +52,48 @@ commercial_notes: row.commercial_notes,
       users_count: Number(row.users_count ?? 0),
     })) ?? [];
 
-  return <AdminClientsTable rows={rows} />;
+  return (
+    <main style={{ padding: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 16,
+          marginBottom: 18,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <p
+            style={{
+              margin: "0 0 6px",
+              color: "#64748b",
+              fontSize: 13,
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: ".08em",
+            }}
+          >
+            Consola administrador
+          </p>
+
+          <h1
+            style={{
+              margin: 0,
+              color: "#0f172a",
+              fontSize: 28,
+              lineHeight: 1.1,
+            }}
+          >
+            Clientes JasoDatos
+          </h1>
+        </div>
+
+        <AdminLogoutButton />
+      </div>
+
+      <AdminClientsTable rows={rows} />
+    </main>
+  );
 }
