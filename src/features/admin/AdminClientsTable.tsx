@@ -178,7 +178,56 @@ function getValidityInfo(row: AdminBusinessOverview) {
     status: days <= 3 ? ("warning" as const) : ("ok" as const),
   };
 }
+function getNextCommercialAction(row: AdminBusinessOverview) {
+  const validity = getValidityInfo(row);
 
+  if (row.status === "inactive") {
+    return {
+      label: "Reactivar",
+      tone: "green" as const,
+    };
+  }
+
+  if (row.status === "suspended") {
+    return {
+      label: "Revisar estado",
+      tone: "red" as const,
+    };
+  }
+
+  if (row.status === "trial" && validity.status === "danger") {
+    return {
+      label: "Contactar / archivar",
+      tone: "red" as const,
+    };
+  }
+
+  if (validity.daysLabel === "Hoy") {
+    return {
+      label: "Contactar renovación",
+      tone: "orange" as const,
+    };
+  }
+
+  if (validity.status === "warning") {
+    return {
+      label: "Dar seguimiento",
+      tone: "orange" as const,
+    };
+  }
+
+  if (validity.status === "neutral") {
+    return {
+      label: "Revisar vigencia",
+      tone: "blue" as const,
+    };
+  }
+
+  return {
+    label: "Operación normal",
+    tone: "blue" as const,
+  };
+}
 function validityPillStyle(status: "ok" | "warning" | "danger" | "neutral"): CSSProperties {
   if (status === "danger") {
     return { background: "rgba(239,68,68,0.12)", color: "#B91C1C" };
@@ -193,6 +242,39 @@ function validityPillStyle(status: "ok" | "warning" | "danger" | "neutral"): CSS
   }
 
   return { background: "rgba(100,116,139,0.14)", color: "#475569" };
+}
+function nextActionPillStyle(
+  tone: "green" | "red" | "orange" | "blue"
+): React.CSSProperties {
+  if (tone === "green") {
+    return {
+      background: "#DCFCE7",
+      color: "#166534",
+      border: "1px solid #86EFAC",
+    };
+  }
+
+  if (tone === "red") {
+    return {
+      background: "#FEE2E2",
+      color: "#991B1B",
+      border: "1px solid #FCA5A5",
+    };
+  }
+
+  if (tone === "orange") {
+    return {
+      background: "#FFEDD5",
+      color: "#9A3412",
+      border: "1px solid #FDBA74",
+    };
+  }
+
+  return {
+    background: "#DBEAFE",
+    color: "#1D4ED8",
+    border: "1px solid #93C5FD",
+  };
 }
 function getOptionalText(row: AdminBusinessOverview, key: string) {
   const value = (row as unknown as Record<string, unknown>)[key];
@@ -314,8 +396,9 @@ const colWidths = {
   facturacion: { width: 95, maxWidth: 95 },
   vigencia: { width: 130, maxWidth: 130 },
   dias: { width: 110, maxWidth: 110 },
-  actividad: { width: 110, maxWidth: 110 },
-  accion: { width: 145, maxWidth: 145 },
+actividad: { width: 120, maxWidth: 120 },
+proximaAccion: { width: 145, maxWidth: 145 },
+accion: { width: 135, maxWidth: 135 },
 };
 const filteredRows = useMemo(() => {
   const term = searchTerm.trim().toLowerCase();
@@ -887,7 +970,7 @@ async function reactivateBusiness(row: AdminBusinessOverview) {
   style={{
     ...styles.table,
     width: "100%",
-    minWidth: 1460,
+    minWidth: 1605,
     borderCollapse: "separate",
     borderSpacing: 0,
     tableLayout: "fixed",
@@ -1063,6 +1146,22 @@ async function reactivateBusiness(row: AdminBusinessOverview) {
 
 <td style={{ ...styles.td, ...tdCompact, ...colWidths.actividad }}>
   {row.last_seen_at || "-"}
+</td>
+
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.proximaAccion }}>
+  <span
+    style={{
+      ...styles.statusPill,
+      ...nextActionPillStyle(getNextCommercialAction(row).tone),
+      fontSize: 10.5,
+      padding: "5px 8px",
+      whiteSpace: "normal",
+      textAlign: "center",
+      lineHeight: 1.15,
+    }}
+  >
+    {getNextCommercialAction(row).label}
+  </span>
 </td>
 
 <td style={{ ...styles.td, ...tdCompact, ...colWidths.accion, ...styles.stickyActionTd }}>
