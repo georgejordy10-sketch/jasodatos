@@ -321,8 +321,10 @@ const filteredRows = useMemo(() => {
   const term = searchTerm.trim().toLowerCase();
 
   return tableRows.filter((row) => {
-    const matchesStatus =
-      statusFilter === "all" ? true : row.status === statusFilter;
+const matchesStatus =
+  statusFilter === "all"
+    ? row.status !== "inactive"
+    : row.status === statusFilter;
 
     const values = [
       row.business_name,
@@ -585,15 +587,19 @@ async function renewPlan(row: AdminBusinessOverview) {
   }
 }
 async function archiveVisibleTrialBusinesses() {
-  const trialRows = filteredRows.filter((row) => row.status === "trial");
+const trialRows = filteredRows.filter((row) => {
+  const validity = getValidityInfo(row);
+
+  return row.status === "trial" && validity.status === "danger";
+});
 
   if (trialRows.length === 0) {
-    setNotice("No hay pruebas visibles para archivar.");
+    setNotice("No hay pruebas vencidas visibles para archivar.");
     return;
   }
 
   const confirmed = window.confirm(
-    `Se archivarán ${trialRows.length} pruebas visibles. Esta acción marcará los negocios como inactivos y su facturación como cancelada.`
+    `Se archivarán ${trialRows.length} pruebas vencidas visibles. Esta acción marcará los negocios como inactivos y su facturación como cancelada.`
   );
 
   if (!confirmed) return;
@@ -652,12 +658,12 @@ async function archiveVisibleTrialBusinesses() {
       )
     );
 
-    setNotice(`Se archivaron ${trialRows.length} pruebas visibles.`);
+  setNotice(`Se archivaron ${trialRows.length} pruebas vencidas visibles.`);
   } catch (error) {
     const message =
       error instanceof Error
         ? error.message
-        : "No se pudieron archivar las pruebas visibles.";
+        : "No se pudieron archivar las pruebas vencidas visibles.";
 
     setNotice(message);
   } finally {
@@ -724,6 +730,71 @@ async function archiveBusiness(row: AdminBusinessOverview) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "No se pudo archivar el negocio.";
+    setNotice(message);
+  } finally {
+    setSavingId(null);
+  }
+}
+async function reactivateBusiness(row: AdminBusinessOverview) {
+  const confirmed = window.confirm(
+    `¿Seguro que deseas reactivar el negocio "${row.business_name}"? El cliente volverá a estado activo y su facturación se marcará como activa.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setSavingId(row.id);
+    setNotice("");
+
+    const response = await fetch(`/api/admin/businesses/${row.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        status: "active",
+      }),
+    });
+
+    const raw = await response.text();
+
+    let result: {
+      ok?: boolean;
+      status?: AdminBusinessOverview["status"];
+      billing_status?: AdminBusinessOverview["billing_status"];
+      error?: string;
+    } = {};
+
+    if (raw) {
+      try {
+        result = JSON.parse(raw);
+      } catch {
+        throw new Error(raw || "La API devolvió una respuesta inválida.");
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error || `No se pudo reactivar el negocio (${response.status}).`
+      );
+    }
+
+    setTableRows((prev) =>
+      prev.map((item) =>
+        item.id === row.id
+          ? {
+              ...item,
+              status: result.status ?? "active",
+              billing_status: result.billing_status ?? "active",
+            }
+          : item
+      )
+    );
+
+    setNotice(`Negocio reactivado: ${row.business_name}.`);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "No se pudo reactivar el negocio.";
     setNotice(message);
   } finally {
     setSavingId(null);
@@ -1063,14 +1134,25 @@ async function archiveBusiness(row: AdminBusinessOverview) {
 >
   Editar contacto
 </button>
-<button
-  type="button"
-  style={styles.dangerActionButton}
-  onClick={() => archiveBusiness(row)}
-  disabled={savingId === row.id || row.status === "inactive"}
->
-  {row.status === "inactive" ? "Archivado" : "Archivar negocio"}
-</button>
+{row.status === "inactive" ? (
+  <button
+    type="button"
+    style={styles.reactivateActionButton}
+    onClick={() => reactivateBusiness(row)}
+    disabled={savingId === row.id}
+  >
+    {savingId === row.id ? "Reactivando..." : "Reactivar negocio"}
+  </button>
+) : (
+  <button
+    type="button"
+    style={styles.dangerActionButton}
+    onClick={() => archiveBusiness(row)}
+    disabled={savingId === row.id}
+  >
+    {savingId === row.id ? "Archivando..." : "Archivar negocio"}
+  </button>
+)}
                     </div>
                   </td>
                 </tr>
@@ -1503,7 +1585,17 @@ dangerActionButton: {
   fontWeight: 900,
   cursor: "pointer",
 },
-
+reactivateActionButton: {
+  width: "100%",
+  borderRadius: 10,
+  padding: "8px 8px",
+  fontSize: 11,
+  fontWeight: 900,
+  cursor: "pointer",
+  border: "1px solid #22C55E",
+  background: "#DCFCE7",
+  color: "#166534",
+},
 exportButton: {
   minHeight: 44,
   borderRadius: 14,
