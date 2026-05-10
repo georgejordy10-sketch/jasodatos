@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
 import type { AdminBusinessOverview } from "./types";
-
+import AdminLogoutButton from "@/features/admin/AdminLogoutButton";
 type Props = {
   rows: AdminBusinessOverview[];
 };
@@ -251,6 +251,42 @@ function getNextCommercialAction(row: AdminBusinessOverview) {
     tone: "blue" as const,
   };
 }
+function getCommercialPriority(row: AdminBusinessOverview) {
+  const nextAction = getNextCommercialAction(row).label;
+  const validity = getValidityInfo(row);
+
+  if (
+    row.status === "suspended" ||
+    nextAction === "Contactar renovación" ||
+    nextAction === "Contactar / archivar" ||
+    validity.status === "danger"
+  ) {
+    return {
+      label: "Alta",
+      tone: "red" as const,
+      rank: 1,
+    };
+  }
+
+  if (
+    nextAction === "Dar seguimiento" ||
+    nextAction === "Revisar vigencia" ||
+    validity.status === "warning" ||
+    validity.status === "neutral"
+  ) {
+    return {
+      label: "Media",
+      tone: "orange" as const,
+      rank: 2,
+    };
+  }
+
+  return {
+    label: "Baja",
+    tone: "green" as const,
+    rank: 3,
+  };
+}
 function getLatestCommercialNote(notes?: string | null) {
   if (!notes || !notes.trim()) return "";
 
@@ -311,6 +347,29 @@ function nextActionPillStyle(
     background: "#DBEAFE",
     color: "#1D4ED8",
     border: "1px solid #93C5FD",
+  };
+}
+function priorityPillStyle(tone: "red" | "orange" | "green"): React.CSSProperties {
+  if (tone === "red") {
+    return {
+      background: "#FEE2E2",
+      color: "#991B1B",
+      border: "1px solid #FCA5A5",
+    };
+  }
+
+  if (tone === "orange") {
+    return {
+      background: "#FFEDD5",
+      color: "#9A3412",
+      border: "1px solid #FDBA74",
+    };
+  }
+
+  return {
+    background: "#DCFCE7",
+    color: "#166534",
+    border: "1px solid #86EFAC",
   };
 }
 function getOptionalText(row: AdminBusinessOverview, key: string) {
@@ -383,6 +442,8 @@ function downloadTextFile(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 export default function AdminClientsTable({ rows }: Props) {
+    const topScrollRef = useRef<HTMLDivElement | null>(null);
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const [tableRows, setTableRows] = useState(rows);
 
   const [draftPlans, setDraftPlans] = useState<Record<string, Plan>>(
@@ -391,13 +452,14 @@ export default function AdminClientsTable({ rows }: Props) {
 
   const [savingId, setSavingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<
     "all" | AdminBusinessOverview["status"]
   >("all");
 
   const [nextActionFilter, setNextActionFilter] = useState<string>("all");
-
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [notice, setNotice] = useState<string>("");
   const [editingCrmRow, setEditingCrmRow] =
     useState<AdminBusinessOverview | null>(null);
@@ -408,7 +470,10 @@ export default function AdminClientsTable({ rows }: Props) {
     () => tableRows.reduce((acc, row) => acc + row.users_count, 0),
     [tableRows]
   );
-
+  const selectedBusiness = useMemo(
+  () => tableRows.find((row) => row.id === selectedBusinessId) ?? null,
+  [tableRows, selectedBusinessId]
+);
   const thCompact: React.CSSProperties = {
     padding: "10px 10px",
     fontSize: 12,
@@ -416,7 +481,7 @@ export default function AdminClientsTable({ rows }: Props) {
     letterSpacing: "-0.01em",
     whiteSpace: "nowrap",
   };
-
+  const TABLE_MIN_WIDTH = 2100;
   const tdCompact: React.CSSProperties = {
     padding: "10px 10px",
     fontSize: 12,
@@ -441,8 +506,9 @@ export default function AdminClientsTable({ rows }: Props) {
     vigencia: { width: 130, maxWidth: 130 },
     dias: { width: 110, maxWidth: 110 },
     actividad: { width: 120, maxWidth: 120 },
+    prioridad: { width: 90, maxWidth: 90 },
     proximaAccion: { width: 130, maxWidth: 130 },
-    accion: { width: 135, maxWidth: 135 },
+    accion: { width: 120, maxWidth: 120 },
   };
 const filteredRows = useMemo(() => {
   const term = searchTerm.trim().toLowerCase();
@@ -454,10 +520,11 @@ const filteredRows = useMemo(() => {
         : row.status === statusFilter;
 
     const nextAction = getNextCommercialAction(row).label;
-
+    const priority = getCommercialPriority(row).label;
     const matchesNextAction =
       nextActionFilter === "all" ? true : nextAction === nextActionFilter;
-
+    const matchesPriority =
+  priorityFilter === "all" ? true : priority === priorityFilter;
     const values = [
       row.business_name,
       row.slug,
@@ -474,6 +541,7 @@ const filteredRows = useMemo(() => {
       row.billing_status,
       row.signup_source,
       nextAction,
+      priority,
     ];
 
     const matchesSearch =
@@ -484,9 +552,9 @@ const filteredRows = useMemo(() => {
           .includes(term)
       );
 
-    return matchesStatus && matchesNextAction && matchesSearch;
+    return matchesStatus && matchesNextAction && matchesPriority && matchesSearch;
   });
-}, [tableRows, searchTerm, statusFilter, nextActionFilter]);
+}, [tableRows, searchTerm, statusFilter, nextActionFilter, priorityFilter]);
 async function exportClients() {
   const ExcelJS = await import("exceljs");
 
@@ -518,6 +586,7 @@ async function exportClients() {
     { header: "Fin periodo", key: "current_period_ends_at", width: 18 },
     { header: "Vigencia", key: "vigencia", width: 28 },
     { header: "Días restantes", key: "dias_restantes", width: 16 },
+    { header: "Prioridad", key: "prioridad", width: 14 },
     { header: "Próxima acción", key: "proxima_accion", width: 26 },
     { header: "Última actividad", key: "last_seen_at", width: 24 },
     { header: "Último contacto", key: "last_contact_at", width: 18 },
@@ -553,6 +622,7 @@ async function exportClients() {
       current_period_ends_at: row.current_period_ends_at || "",
       vigencia: validity.label,
       dias_restantes: validity.daysLabel,
+      prioridad: getCommercialPriority(row).label,
       proxima_accion: nextAction.label,
       last_seen_at: row.last_seen_at || "",
       last_contact_at: row.last_contact_at || "",
@@ -1218,29 +1288,30 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
     setSavingId(null);
   }
 }
-  return (
-    <section style={styles.page}>
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>Matriz de clientes</h1>
-          <p style={styles.subtitle}>
-            Administra clientes, planes, estado de cuenta y usuarios del negocio.
-          </p>
-        </div>
+function syncHorizontalScroll(source: "top" | "table") {
+  const top = topScrollRef.current;
+  const table = tableScrollRef.current;
 
-        <div style={styles.headerStats}>
-          <div style={styles.statCard}>
-            <span style={styles.statLabel}>Clientes</span>
-            <strong style={styles.statValue}>{tableRows.length}</strong>
-          </div>
+  if (!top || !table) return;
 
-          <div style={styles.statCard}>
-            <span style={styles.statLabel}>Usuarios totales</span>
-            <strong style={styles.statValue}>{totalUsers}</strong>
-          </div>
-        </div>
-      </div>
+  if (source === "top") {
+    table.scrollLeft = top.scrollLeft;
+  } else {
+    top.scrollLeft = table.scrollLeft;
+  }
+}
+return (
+  <section style={styles.page}>
+   <div style={styles.header}>
+  <div style={styles.headerText}>
+    <h1 style={styles.title}>Matriz de clientes JasoDatos</h1>
+    <p style={styles.subtitle}>
+      Administra clientes, planes, estado de cuenta y usuarios del negocio.
+    </p>
+  </div>
 
+  <AdminLogoutButton />
+</div>
       <div style={styles.toolbar}>
         <div style={styles.searchBox}>
           <span style={styles.searchLabel}>Buscar cliente</span>
@@ -1269,6 +1340,22 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
 
 <select
   style={styles.statusFilterSelect}
+  value={statusFilter}
+  onChange={(event) =>
+    setStatusFilter(
+      event.target.value as "all" | AdminBusinessOverview["status"]
+    )
+  }
+>
+  <option value="all">Todos los estados</option>
+  <option value="trial">Pruebas</option>
+  <option value="active">Activos</option>
+  <option value="suspended">Suspendidos</option>
+  <option value="inactive">Archivados</option>
+</select>
+
+<select
+  style={styles.statusFilterSelect}
   value={nextActionFilter}
   onChange={(event) => setNextActionFilter(event.target.value)}
 >
@@ -1283,7 +1370,28 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
   <option value="Gestionado hoy">Gestionado hoy</option>
 </select>
 
+<select
+  style={styles.statusFilterSelect}
+  value={priorityFilter}
+  onChange={(event) => setPriorityFilter(event.target.value)}
+>
+  <option value="all">Todas las prioridades</option>
+  <option value="Alta">Alta</option>
+  <option value="Media">Media</option>
+  <option value="Baja">Baja</option>
+</select>
+
 <div style={styles.toolbarActions}>
+  <div style={styles.miniMetric}>
+    <span style={styles.miniMetricLabel}>Clientes</span>
+    <strong style={styles.miniMetricValue}>{tableRows.length}</strong>
+  </div>
+
+  <div style={styles.miniMetric}>
+    <span style={styles.miniMetricLabel}>Usuarios totales</span>
+    <strong style={styles.miniMetricValue}>{totalUsers}</strong>
+  </div>
+
   <div style={styles.searchCounter}>
     {filteredRows.length} de {tableRows.length} clientes
   </div>
@@ -1310,19 +1418,170 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
 </div>
 
       </div>
+{selectedBusiness ? (
+  <div style={styles.selectedActionPanel}>
+    <div style={styles.selectedActionInfo}>
+      <span style={styles.selectedActionEyebrow}>Negocio seleccionado</span>
+      <strong style={styles.selectedActionTitle}>
+        {selectedBusiness.business_name}
+      </strong>
+      <span style={styles.selectedActionMeta}>
+        Plan: {planLabel(selectedBusiness.plan)} · Estado:{" "}
+        {clientStatusLabel(selectedBusiness.status)} · Próxima acción:{" "}
+        {getNextCommercialAction(selectedBusiness).label}
+      </span>
+    </div>
 
-{notice ? <div style={styles.notice}>{notice}</div> : null}
+    <div style={styles.selectedActionControls}>
+      <select
+        style={styles.panelSelect}
+        value={draftPlans[selectedBusiness.id] ?? selectedBusiness.plan}
+        onChange={(event) =>
+          setDraftPlans((prev) => ({
+            ...prev,
+            [selectedBusiness.id]: event.target.value as Plan,
+          }))
+        }
+      >
+        <option value="basic">Basic</option>
+        <option value="pro">Pro</option>
+        <option value="ultra">Ultra</option>
+      </select>
 
-<div style={styles.tableHint}>
-  Desliza horizontalmente para ver toda la información del cliente.
+      <button
+        type="button"
+        style={styles.panelPrimaryButton}
+        onClick={() => savePlan(selectedBusiness.id)}
+        disabled={savingId === selectedBusiness.id}
+      >
+        {savingId === selectedBusiness.id ? "Guardando..." : "Cambiar plan"}
+      </button>
+
+      <button
+        type="button"
+        style={styles.panelSecondaryButton}
+        onClick={() => renewPlan(selectedBusiness)}
+        disabled={savingId === selectedBusiness.id}
+      >
+        Renovar 30 días
+      </button>
+
+      <button
+        type="button"
+        style={styles.panelSecondaryButton}
+        onClick={() =>
+          window.open(
+            `/api/businesses/by-slug/${selectedBusiness.slug}/plan`,
+            "_blank",
+            "noopener,noreferrer"
+          )
+        }
+      >
+        Validar plan
+      </button>
+
+      <button
+        type="button"
+        style={styles.panelSecondaryButton}
+        onClick={async () => {
+          const appUrl = `${window.location.origin}/cargas?business=${selectedBusiness.slug}`;
+
+          try {
+            await navigator.clipboard.writeText(appUrl);
+            setNotice(`Enlace de app copiado para ${selectedBusiness.business_name}.`);
+          } catch {
+            setNotice(`Enlace de app: ${appUrl}`);
+          }
+        }}
+      >
+        Copiar enlace app
+      </button>
+
+      <button
+        type="button"
+        style={styles.panelSecondaryButton}
+        onClick={() => openCrmEditor(selectedBusiness)}
+      >
+        Editar contacto
+      </button>
+
+      <button
+        type="button"
+        style={styles.panelSecondaryButton}
+        onClick={() => markContactedToday(selectedBusiness)}
+        disabled={savingId === selectedBusiness.id}
+      >
+        Contactado hoy
+      </button>
+
+      <button
+        type="button"
+        style={styles.panelSecondaryButton}
+        onClick={() => addQuickCommercialNote(selectedBusiness)}
+        disabled={savingId === selectedBusiness.id}
+        title={
+          hasCommercialNotes(selectedBusiness.commercial_notes)
+            ? `Última nota:\n${getLatestCommercialNote(
+                selectedBusiness.commercial_notes
+              )}`
+            : "Sin notas comerciales registradas"
+        }
+      >
+        Nota rápida
+      </button>
+
+      {selectedBusiness.status === "inactive" ? (
+        <button
+          type="button"
+          style={styles.panelReactivateButton}
+          onClick={() => reactivateBusiness(selectedBusiness)}
+          disabled={savingId === selectedBusiness.id}
+        >
+          Reactivar
+        </button>
+      ) : (
+        <button
+          type="button"
+          style={styles.panelDangerButton}
+          onClick={() => archiveBusiness(selectedBusiness)}
+          disabled={savingId === selectedBusiness.id}
+        >
+          Archivar
+        </button>
+      )}
+
+      <button
+        type="button"
+        style={styles.panelGhostButton}
+        onClick={() => setSelectedBusinessId(null)}
+      >
+        Limpiar selección
+      </button>
+    </div>
+  </div>
+) : null}
+{notice ? (
+  <div style={styles.compactNotice}>
+    {notice}
+  </div>
+) : null}
+<div
+  ref={topScrollRef}
+  style={styles.topHorizontalScroll}
+  onScroll={() => syncHorizontalScroll("top")}
+>
+  <div style={{ width: TABLE_MIN_WIDTH, height: 1 }} />
 </div>
-
-<div style={styles.tableShell}>
+<div
+  ref={tableScrollRef}
+  style={styles.tableShell}
+  onScroll={() => syncHorizontalScroll("table")}
+>
 <table
   style={{
     ...styles.table,
     width: "100%",
-    minWidth: 1705,
+    minWidth: TABLE_MIN_WIDTH,
     borderCollapse: "separate",
     borderSpacing: 0,
     tableLayout: "fixed",
@@ -1349,7 +1608,7 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
           Correo comercial
         </th>
         <th style={{ ...styles.th, ...thCompact, ...colWidths.whatsapp }}>
-          WhatsApp comercial
+          WhatsApp
         </th>
         <th style={{ ...styles.th, ...thCompact, ...colWidths.origen }}>
           Origen
@@ -1370,6 +1629,10 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
   Última actividad
 </th>
 
+<th style={{ ...styles.th, ...thCompact, ...colWidths.prioridad }}>
+  Prioridad
+</th>
+
 <th style={{ ...styles.th, ...thCompact, ...colWidths.proximaAccion }}>
   Próxima acción
 </th>
@@ -1382,7 +1645,7 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
     ...styles.stickyActionTh,
   }}
 >
-  Acción
+  Seleccionar
 </th>
       </tr>
     </thead>
@@ -1390,7 +1653,7 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
     <tbody>
       {filteredRows.length === 0 ? (
         <tr>
-                <td style={styles.emptyCell} colSpan={14}>
+                <td style={styles.emptyCell} colSpan={16}>
                   No se encontraron clientes con ese criterio.
                 </td>
               </tr>
@@ -1514,6 +1777,19 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
   {row.last_seen_at || "-"}
 </td>
 
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.prioridad }}>
+  <span
+    style={{
+      ...styles.statusPill,
+      ...priorityPillStyle(getCommercialPriority(row).tone),
+      fontSize: 10.5,
+      padding: "5px 8px",
+    }}
+  >
+    {getCommercialPriority(row).label}
+  </span>
+</td>
+
 <td style={{ ...styles.td, ...tdCompact, ...colWidths.proximaAccion }}>
   <span
     style={{
@@ -1529,118 +1805,26 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
     {getNextCommercialAction(row).label}
   </span>
 </td>
-
-<td style={{ ...styles.td, ...tdCompact, ...colWidths.accion, ...styles.stickyActionTd }}>
-  <div style={styles.actionCell}>
-                      <select
-                        style={styles.planSelect}
-                        value={draftPlans[row.id] ?? row.plan}
-                        onChange={(event) =>
-                          setDraftPlans((prev) => ({
-                            ...prev,
-                            [row.id]: event.target.value as Plan,
-                          }))
-                        }
-                      >
-                        <option value="basic">Basic</option>
-                        <option value="pro">Pro</option>
-                        <option value="ultra">Ultra</option>
-                      </select>
-
-                      <button
-                        type="button"
-                        style={styles.saveButton}
-                        onClick={() => savePlan(row.id)}
-                        disabled={savingId === row.id}
-                      >
-                        {savingId === row.id ? "Guardando..." : "Cambiar plan"}
-                      </button>
-                     <button
-  type="button"
-  style={styles.secondaryActionButton}
-  onClick={() => renewPlan(row)}
-  disabled={savingId === row.id}
->
-  Renovar 30 días
-</button>
-                      <button
-                        type="button"
-                        style={styles.secondaryActionButton}
-                        onClick={() =>
-                          window.open(
-                            `/api/businesses/by-slug/${row.slug}/plan`,
-                            "_blank",
-                            "noopener,noreferrer"
-                          )
-                        }
-                      >
-                        Validar plan
-                      </button>
-<button
-  type="button"
-  style={styles.secondaryActionButton}
-  onClick={async () => {
-    const appUrl = `${window.location.origin}/cargas?business=${row.slug}`;
-
-    try {
-      await navigator.clipboard.writeText(appUrl);
-      setNotice(`Enlace de app copiado para ${row.business_name}.`);
-    } catch {
-      setNotice(`Enlace de app: ${appUrl}`);
-    }
+<td
+  style={{
+    ...styles.td,
+    ...tdCompact,
+    ...colWidths.accion,
+    ...styles.stickyActionTd,
   }}
 >
-  Copiar enlace app
-</button>
-<button
-  type="button"
-  style={styles.secondaryActionButton}
-  onClick={() => openCrmEditor(row)}
->
-  Editar contacto
-</button>
-<button
-  type="button"
-  style={styles.secondaryActionButton}
-  onClick={() => markContactedToday(row)}
-  disabled={savingId === row.id}
->
-  {savingId === row.id ? "Marcando..." : "Contactado hoy"}
-</button>
-<button
-  type="button"
-  style={styles.secondaryActionButton}
-  onClick={() => addQuickCommercialNote(row)}
-  disabled={savingId === row.id}
-  title={
-    hasCommercialNotes(row.commercial_notes)
-      ? `Última nota:\n${getLatestCommercialNote(row.commercial_notes)}`
-      : "Sin notas comerciales registradas"
-  }
->
-  {savingId === row.id ? "Guardando..." : "Nota rápida"}
-</button>
-{row.status === "inactive" ? (
   <button
     type="button"
-    style={styles.reactivateActionButton}
-    onClick={() => reactivateBusiness(row)}
-    disabled={savingId === row.id}
+    style={
+      selectedBusinessId === row.id
+        ? styles.selectedRowButton
+        : styles.selectRowButton
+    }
+    onClick={() => setSelectedBusinessId(row.id)}
   >
-    {savingId === row.id ? "Reactivando..." : "Reactivar negocio"}
+    {selectedBusinessId === row.id ? "Seleccionado" : "Gestionar"}
   </button>
-) : (
-  <button
-    type="button"
-    style={styles.dangerActionButton}
-    onClick={() => archiveBusiness(row)}
-    disabled={savingId === row.id}
-  >
-    {savingId === row.id ? "Archivando..." : "Archivar negocio"}
-  </button>
-)}
-                    </div>
-                  </td>
+</td>
                 </tr>
               ))
             )}
@@ -1830,34 +2014,37 @@ async function addQuickCommercialNote(row: AdminBusinessOverview) {
 }
 
 const styles: Record<string, CSSProperties> = {
-  page: {
-    display: "grid",
-    gap: 18,
-    padding: 18,
-    background: "linear-gradient(180deg, #EEF2FF 0%, #E8EDFF 100%)",
-    minHeight: "100vh",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 16,
-    flexWrap: "wrap",
-  },
-  title: {
-    margin: 0,
-    fontSize: 30,
-    fontWeight: 800,
-    color: "#1E2670",
-    letterSpacing: "-0.01em",
-  },
-  subtitle: {
-    margin: "6px 0 0 0",
-    color: "#475569",
-    fontSize: 14,
-    lineHeight: 1.5,
-    fontWeight: 600,
-  },
+page: {
+  width: "100%",
+},
+
+header: {
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: 12,
+  marginBottom: 8,
+  flexWrap: "wrap",
+},
+headerText: {
+  marginBottom: 0,
+},
+
+title: {
+  margin: 0,
+  color: "#172554",
+  fontSize: 24,
+  lineHeight: 1,
+  fontWeight: 950,
+},
+
+subtitle: {
+  margin: "4px 0 0",
+  color: "#334155",
+  fontSize: 12,
+  fontWeight: 700,
+  lineHeight: 1.15,
+},
   headerStats: {
     display: "flex",
     gap: 12,
@@ -1883,13 +2070,14 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 800,
     color: "#0F172A",
   },
-  toolbar: {
-    display: "flex",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    gap: 16,
-    flexWrap: "wrap",
-  },
+toolbar: {
+  display: "flex",
+  alignItems: "flex-end",
+  gap: 10,
+  flexWrap: "wrap",
+  marginTop: 8,
+  marginBottom: 18,
+},
   searchBox: {
     display: "grid",
     gap: 6,
@@ -2242,8 +2430,8 @@ stickyActionTh: {
   top: 0,
   right: 0,
   zIndex: 6,
-  width: 175,
-  maxWidth: 175,
+  width: 120,
+  maxWidth: 120,
   background: "#F8FAFC",
   boxShadow: "-10px 0 18px rgba(15,23,42,0.08)",
 },
@@ -2251,8 +2439,8 @@ stickyActionTd: {
   position: "sticky",
   right: 0,
   zIndex: 2,
-  width: 175,
-  maxWidth: 175,
+  width: 120,
+  maxWidth: 120,
   background: "#FFFFFF",
   boxShadow: "-10px 0 18px rgba(15,23,42,0.08)",
 },
@@ -2293,5 +2481,200 @@ noteBadge: {
   fontSize: 10.5,
   fontWeight: 900,
   lineHeight: 1,
+},
+topHorizontalScroll: {
+  width: "100%",
+  overflowX: "auto",
+  overflowY: "hidden",
+  height: 20,
+  marginBottom: 10,
+  borderRadius: 999,
+  background: "#E2E8F0",
+  scrollbarGutter: "stable",
+},
+miniMetric: {
+  minHeight: 42,
+  padding: "6px 14px",
+  borderRadius: 14,
+  background: "#FFFFFF",
+  border: "1px solid #E2E8F0",
+  boxShadow: "0 10px 24px rgba(15,23,42,0.06)",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  gap: 2,
+  whiteSpace: "nowrap",
+},
+
+miniMetricLabel: {
+  color: "#64748B",
+  fontSize: 11,
+  fontWeight: 800,
+  lineHeight: 1,
+},
+
+miniMetricValue: {
+  color: "#020617",
+  fontSize: 18,
+  fontWeight: 950,
+  lineHeight: 1,
+},
+selectRowButton: {
+  width: "100%",
+  borderRadius: 10,
+  padding: "8px 8px",
+  fontSize: 11,
+  fontWeight: 900,
+  cursor: "pointer",
+  border: "1px solid #93C5FD",
+  background: "#EFF6FF",
+  color: "#1D4ED8",
+},
+
+selectedRowButton: {
+  width: "100%",
+  borderRadius: 10,
+  padding: "8px 8px",
+  fontSize: 11,
+  fontWeight: 900,
+  cursor: "pointer",
+  border: "1px solid #22C55E",
+  background: "#DCFCE7",
+  color: "#166534",
+},
+
+selectedActionPanel: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  flexWrap: "wrap",
+  padding: "10px 12px",
+  margin: "74px 0 10px",
+  borderRadius: 16,
+  border: "1px solid #C7D2FE",
+  background: "linear-gradient(135deg, #EEF2FF 0%, #F8FAFC 100%)",
+  boxShadow: "0 12px 28px rgba(79,70,229,0.10)",
+},
+
+selectedActionInfo: {
+  display: "flex",
+  flexDirection: "column",
+  gap: 3,
+  minWidth: 220,
+},
+
+selectedActionEyebrow: {
+  color: "#64748B",
+  fontSize: 10,
+  fontWeight: 900,
+  textTransform: "uppercase",
+  letterSpacing: ".08em",
+},
+
+selectedActionTitle: {
+  color: "#0F172A",
+  fontSize: 16,
+  fontWeight: 950,
+  lineHeight: 1.1,
+},
+
+selectedActionMeta: {
+  color: "#475569",
+  fontSize: 12,
+  fontWeight: 700,
+},
+
+selectedActionControls: {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  flexWrap: "wrap",
+},
+
+panelSelect: {
+  height: 34,
+  minWidth: 100,
+  borderRadius: 10,
+  border: "1px solid #CBD5E1",
+  background: "#FFFFFF",
+  color: "#0F172A",
+  fontSize: 12,
+  fontWeight: 800,
+  padding: "0 10px",
+},
+
+panelPrimaryButton: {
+  height: 34,
+  border: 0,
+  borderRadius: 10,
+  padding: "0 12px",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)",
+  color: "#FFFFFF",
+},
+
+panelSecondaryButton: {
+  height: 34,
+  borderRadius: 10,
+  padding: "0 12px",
+  fontSize: 12,
+  fontWeight: 850,
+  cursor: "pointer",
+  border: "1px solid #93C5FD",
+  background: "#EFF6FF",
+  color: "#1D4ED8",
+},
+
+panelDangerButton: {
+  height: 34,
+  borderRadius: 10,
+  padding: "0 12px",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  border: "1px solid #FCA5A5",
+  background: "#FEF2F2",
+  color: "#B91C1C",
+},
+
+panelReactivateButton: {
+  height: 34,
+  borderRadius: 10,
+  padding: "0 12px",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  border: "1px solid #22C55E",
+  background: "#DCFCE7",
+  color: "#166534",
+},
+
+panelGhostButton: {
+  height: 34,
+  borderRadius: 10,
+  padding: "0 12px",
+  fontSize: 12,
+  fontWeight: 850,
+  cursor: "pointer",
+  border: "1px solid #CBD5E1",
+  background: "#FFFFFF",
+  color: "#475569",
+},
+compactNotice: {
+  display: "inline-flex",
+  alignItems: "center",
+  width: "fit-content",
+  maxWidth: "100%",
+  margin: "6px 0 8px",
+  padding: "8px 12px",
+  borderRadius: 12,
+  background: "#ECFDF5",
+  border: "1px solid #A7F3D0",
+  color: "#065F46",
+  fontSize: 12,
+  fontWeight: 850,
 },
 };

@@ -1,5 +1,4 @@
 import AdminClientsTable from "@/features/admin/AdminClientsTable";
-import AdminLogoutButton from "@/features/admin/AdminLogoutButton";
 import type { AdminBusinessOverview } from "@/features/admin/types";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
@@ -52,47 +51,8 @@ export default async function AdminClientesPage() {
       users_count: Number(row.users_count ?? 0),
     })) ?? [];
 
-  return (
-    <main style={{ padding: "16px 12px 24px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-          marginBottom: 18,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <p
-            style={{
-              margin: "0 0 6px",
-              color: "#64748b",
-              fontSize: 13,
-              fontWeight: 800,
-              textTransform: "uppercase",
-              letterSpacing: ".08em",
-            }}
-          >
-            Consola administrador
-          </p>
-
-          <h1
-            style={{
-              margin: 0,
-              color: "#0f172a",
-              fontSize: 28,
-              lineHeight: 1.1,
-            }}
-          >
-            Clientes JasoDatos
-          </h1>
-        </div>
-
-        <AdminLogoutButton />
-      </div>
-
+    return (
+    <main style={{ padding: "8px 8px 16px" }}>
       <AdminClientsTable rows={rows} />
     </main>
   );
