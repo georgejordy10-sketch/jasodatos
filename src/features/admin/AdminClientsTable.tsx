@@ -178,8 +178,24 @@ function getValidityInfo(row: AdminBusinessOverview) {
     status: days <= 3 ? ("warning" as const) : ("ok" as const),
   };
 }
+function isContactedToday(row: AdminBusinessOverview) {
+  if (!row.last_contact_at) return false;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const lastContact = String(row.last_contact_at).slice(0, 10);
+
+  return lastContact === today;
+}
+
 function getNextCommercialAction(row: AdminBusinessOverview) {
   const validity = getValidityInfo(row);
+
+  if (isContactedToday(row)) {
+    return {
+      label: "Gestionado hoy",
+      tone: "green" as const,
+    };
+  }
 
   if (row.status === "inactive") {
     return {
@@ -457,13 +473,140 @@ const filteredRows = useMemo(() => {
     return matchesStatus && matchesNextAction && matchesSearch;
   });
 }, [tableRows, searchTerm, statusFilter, nextActionFilter]);
-  function exportClients() {
-    const csv = buildClientsCsv(filteredRows);
-    const today = new Date().toISOString().slice(0, 10);
+async function exportClients() {
+  const ExcelJS = await import("exceljs");
 
-    downloadTextFile(csv, `jasodatos_contactos_clientes_${today}.csv`);
-    setNotice(`Archivo exportado con ${filteredRows.length} clientes.`);
-  }
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "JasoDatos";
+  workbook.created = new Date();
+
+  const worksheet = workbook.addWorksheet("Clientes");
+
+  worksheet.columns = [
+    { header: "Negocio", key: "business_name", width: 24 },
+    { header: "Slug", key: "slug", width: 22 },
+    { header: "Plan", key: "plan", width: 14 },
+    { header: "Estado", key: "status", width: 16 },
+    { header: "Facturación", key: "billing_status", width: 18 },
+    { header: "Responsable", key: "owner_name", width: 24 },
+    { header: "Correo comercial", key: "commercial_email", width: 34 },
+    { header: "WhatsApp comercial", key: "commercial_whatsapp", width: 20 },
+    { header: "Correo dueño", key: "owner_email", width: 34 },
+    { header: "WhatsApp dueño", key: "owner_whatsapp", width: 20 },
+    { header: "Ciudad", key: "ciudad", width: 18 },
+    { header: "Provincia", key: "provincia", width: 18 },
+    { header: "País", key: "pais", width: 16 },
+    { header: "Origen", key: "signup_source", width: 18 },
+    { header: "Usuarios", key: "users_count", width: 12 },
+    { header: "Inicio prueba", key: "trial_started_at", width: 18 },
+    { header: "Fin prueba", key: "trial_ends_at", width: 18 },
+    { header: "Inicio periodo", key: "current_period_starts_at", width: 18 },
+    { header: "Fin periodo", key: "current_period_ends_at", width: 18 },
+    { header: "Vigencia", key: "vigencia", width: 28 },
+    { header: "Días restantes", key: "dias_restantes", width: 16 },
+    { header: "Próxima acción", key: "proxima_accion", width: 26 },
+    { header: "Última actividad", key: "last_seen_at", width: 24 },
+    { header: "Último contacto", key: "last_contact_at", width: 18 },
+    { header: "Notas comerciales", key: "commercial_notes", width: 45 },
+  ];
+
+  filteredRows.forEach((row) => {
+    const validity = getValidityInfo(row);
+    const nextAction = getNextCommercialAction(row);
+
+    worksheet.addRow({
+      business_name: row.business_name || "",
+      slug: row.slug || "",
+      plan: planLabel(row.plan),
+      status: clientStatusLabel(row.status),
+      billing_status: billingLabel(row.billing_status),
+      owner_name: row.owner_name || "",
+      commercial_email: row.commercial_email || "",
+      commercial_whatsapp: row.commercial_whatsapp || "",
+      owner_email: row.owner_email || "",
+      owner_whatsapp: row.owner_whatsapp || "",
+      ciudad: row.ciudad || "",
+      provincia: row.provincia || "",
+      pais: row.pais || "",
+      signup_source:
+        row.signup_source === "landing_trial"
+          ? "Registro web"
+          : row.signup_source || "",
+      users_count: row.users_count ?? 0,
+      trial_started_at: row.trial_started_at || "",
+      trial_ends_at: row.trial_ends_at || "",
+      current_period_starts_at: row.current_period_starts_at || "",
+      current_period_ends_at: row.current_period_ends_at || "",
+      vigencia: validity.label,
+      dias_restantes: validity.daysLabel,
+      proxima_accion: nextAction.label,
+      last_seen_at: row.last_seen_at || "",
+      last_contact_at: row.last_contact_at || "",
+      commercial_notes: row.commercial_notes || "",
+    });
+  });
+
+  worksheet.views = [{ state: "frozen", ySplit: 1 }];
+  worksheet.autoFilter = {
+    from: "A1",
+    to: "Y1",
+  };
+
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+  headerRow.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF1E3A8A" },
+  };
+  headerRow.alignment = {
+    vertical: "middle",
+    horizontal: "center",
+    wrapText: true,
+  };
+
+  worksheet.eachRow((row, rowNumber) => {
+    row.eachCell((cell) => {
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFE2E8F0" } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: rowNumber === 1 ? "center" : "left",
+        wrapText: true,
+      };
+    });
+  });
+
+  worksheet.getColumn("users_count").alignment = {
+    vertical: "middle",
+    horizontal: "center",
+  };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  const today = new Date().toISOString().slice(0, 10);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `jasodatos_clientes_${today}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+
+  setNotice(`Archivo Excel exportado con ${filteredRows.length} clientes.`);
+}
 function openCrmEditor(row: AdminBusinessOverview) {
   setEditingCrmRow(row);
   setCrmDraft({
@@ -905,6 +1048,74 @@ async function reactivateBusiness(row: AdminBusinessOverview) {
     setSavingId(null);
   }
 }
+async function markContactedToday(row: AdminBusinessOverview) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  try {
+    setSavingId(row.id);
+    setNotice("");
+
+    const response = await fetch(`/api/admin/businesses/${row.id}/crm`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        owner_name: row.owner_name || "",
+        commercial_email: row.commercial_email || row.owner_email || "",
+        commercial_whatsapp: row.commercial_whatsapp || row.owner_whatsapp || "",
+        ciudad: row.ciudad || "",
+        provincia: row.provincia || "",
+        pais: row.pais || "",
+        commercial_notes: row.commercial_notes || "",
+        last_contact_at: today,
+      }),
+    });
+
+    const raw = await response.text();
+
+    let result: {
+      ok?: boolean;
+      business?: Partial<AdminBusinessOverview>;
+      error?: string;
+    } = {};
+
+    if (raw) {
+      try {
+        result = JSON.parse(raw);
+      } catch {
+        throw new Error(raw || "La API devolvió una respuesta inválida.");
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error || `No se pudo marcar el contacto (${response.status}).`
+      );
+    }
+
+    setTableRows((prev) =>
+      prev.map((item) =>
+        item.id === row.id
+          ? {
+              ...item,
+              last_contact_at: today,
+            }
+          : item
+      )
+    );
+
+    setNotice(`Contacto marcado hoy para ${row.business_name}.`);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo marcar el contacto.";
+    setNotice(message);
+  } finally {
+    setSavingId(null);
+  }
+}
   return (
     <section style={styles.page}>
       <div style={styles.header}>
@@ -967,6 +1178,7 @@ async function reactivateBusiness(row: AdminBusinessOverview) {
   <option value="Reactivar">Reactivar</option>
   <option value="Revisar vigencia">Revisar vigencia</option>
   <option value="Operación normal">Operación normal</option>
+  <option value="Gestionado hoy">Gestionado hoy</option>
 </select>
 
 <div style={styles.toolbarActions}>
@@ -991,7 +1203,7 @@ async function reactivateBusiness(row: AdminBusinessOverview) {
     onClick={exportClients}
     disabled={filteredRows.length === 0}
   >
-    Exportar contactos
+    Exportar contactos a Excel    
   </button>
 </div>
 
@@ -1275,6 +1487,14 @@ async function reactivateBusiness(row: AdminBusinessOverview) {
   onClick={() => openCrmEditor(row)}
 >
   Editar contacto
+</button>
+<button
+  type="button"
+  style={styles.secondaryActionButton}
+  onClick={() => markContactedToday(row)}
+  disabled={savingId === row.id}
+>
+  {savingId === row.id ? "Marcando..." : "Contactado hoy"}
 </button>
 {row.status === "inactive" ? (
   <button
@@ -1613,10 +1833,13 @@ table: {
   tableLayout: "fixed",
 },
 th: {
+  position: "sticky",
+  top: 0,
+  zIndex: 4,
   padding: "10px 10px",
   fontSize: 12,
-  fontWeight: 800,
-  color: "#334155",
+  fontWeight: 900,
+  color: "#0f172a",
   background: "#F8FAFC",
   borderBottom: "1px solid #E2E8F0",
   textAlign: "left",
@@ -1892,14 +2115,14 @@ locationMeta: {
 },
 stickyActionTh: {
   position: "sticky",
+  top: 0,
   right: 0,
-  zIndex: 3,
+  zIndex: 6,
   width: 175,
   maxWidth: 175,
   background: "#F8FAFC",
   boxShadow: "-10px 0 18px rgba(15,23,42,0.08)",
 },
-
 stickyActionTd: {
   position: "sticky",
   right: 0,
