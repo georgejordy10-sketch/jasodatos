@@ -251,6 +251,20 @@ function getNextCommercialAction(row: AdminBusinessOverview) {
     tone: "blue" as const,
   };
 }
+function getLatestCommercialNote(notes?: string | null) {
+  if (!notes || !notes.trim()) return "";
+
+  const lines = notes
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  return lines.at(-1) || notes.trim();
+}
+
+function hasCommercialNotes(notes?: string | null) {
+  return Boolean(notes && notes.trim());
+}
 function validityPillStyle(status: "ok" | "warning" | "danger" | "neutral"): CSSProperties {
   if (status === "danger") {
     return { background: "rgba(239,68,68,0.12)", color: "#B91C1C" };
@@ -1116,6 +1130,94 @@ async function markContactedToday(row: AdminBusinessOverview) {
     setSavingId(null);
   }
 }
+async function addQuickCommercialNote(row: AdminBusinessOverview) {
+  const note = window.prompt(
+    `Agregar nota comercial para "${row.business_name}":`,
+    ""
+  );
+
+  if (note === null) return;
+
+  const cleanNote = note.trim();
+
+  if (!cleanNote) {
+    setNotice("La nota rápida no puede estar vacía.");
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const previousNotes = row.commercial_notes?.trim();
+  const nextNotes = previousNotes
+    ? `${previousNotes}\n${today}: ${cleanNote}`
+    : `${today}: ${cleanNote}`;
+
+  try {
+    setSavingId(row.id);
+    setNotice("");
+
+    const response = await fetch(`/api/admin/businesses/${row.id}/crm`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        owner_name: row.owner_name || "",
+        commercial_email: row.commercial_email || row.owner_email || "",
+        commercial_whatsapp: row.commercial_whatsapp || row.owner_whatsapp || "",
+        ciudad: row.ciudad || "",
+        provincia: row.provincia || "",
+        pais: row.pais || "",
+        commercial_notes: nextNotes,
+        last_contact_at: today,
+      }),
+    });
+
+    const raw = await response.text();
+
+    let result: {
+      ok?: boolean;
+      business?: Partial<AdminBusinessOverview>;
+      error?: string;
+    } = {};
+
+    if (raw) {
+      try {
+        result = JSON.parse(raw);
+      } catch {
+        throw new Error(raw || "La API devolvió una respuesta inválida.");
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error || `No se pudo guardar la nota rápida (${response.status}).`
+      );
+    }
+
+    setTableRows((prev) =>
+      prev.map((item) =>
+        item.id === row.id
+          ? {
+              ...item,
+              commercial_notes: nextNotes,
+              last_contact_at: today,
+            }
+          : item
+      )
+    );
+
+    setNotice(`Nota rápida guardada para ${row.business_name}.`);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo guardar la nota rápida.";
+    setNotice(message);
+  } finally {
+    setSavingId(null);
+  }
+}
   return (
     <section style={styles.page}>
       <div style={styles.header}>
@@ -1295,10 +1397,19 @@ async function markContactedToday(row: AdminBusinessOverview) {
             ) : (
               filteredRows.map((row) => (
                 <tr key={row.id}>
-                  <td style={{ ...styles.td, ...tdCompact, ...colWidths.negocio }}>
-                    <div style={styles.businessName}>{row.business_name}</div>
-                    <div style={styles.businessSlug}>{row.slug}</div>
-                  </td>
+<td style={{ ...styles.td, ...tdCompact, ...colWidths.negocio }}>
+  <div style={styles.businessName}>{row.business_name}</div>
+  <div style={styles.businessSlug}>{row.slug}</div>
+
+  {hasCommercialNotes(row.commercial_notes) ? (
+    <span
+      style={styles.noteBadge}
+      title={getLatestCommercialNote(row.commercial_notes)}
+    >
+      📝 Con nota
+    </span>
+  ) : null}
+</td>
 
                   <td style={{ ...styles.td, ...tdCompact, ...colWidths.plan }}>
                     <span
@@ -1495,6 +1606,19 @@ async function markContactedToday(row: AdminBusinessOverview) {
   disabled={savingId === row.id}
 >
   {savingId === row.id ? "Marcando..." : "Contactado hoy"}
+</button>
+<button
+  type="button"
+  style={styles.secondaryActionButton}
+  onClick={() => addQuickCommercialNote(row)}
+  disabled={savingId === row.id}
+  title={
+    hasCommercialNotes(row.commercial_notes)
+      ? `Última nota:\n${getLatestCommercialNote(row.commercial_notes)}`
+      : "Sin notas comerciales registradas"
+  }
+>
+  {savingId === row.id ? "Guardando..." : "Nota rápida"}
 </button>
 {row.status === "inactive" ? (
   <button
@@ -2155,5 +2279,19 @@ bulkArchiveButton: {
   fontWeight: 900,
   cursor: "pointer",
   whiteSpace: "nowrap",
+},
+noteBadge: {
+  display: "inline-flex",
+  alignItems: "center",
+  width: "fit-content",
+  marginTop: 6,
+  padding: "4px 8px",
+  borderRadius: 999,
+  background: "#EEF2FF",
+  color: "#3730A3",
+  border: "1px solid #C7D2FE",
+  fontSize: 10.5,
+  fontWeight: 900,
+  lineHeight: 1,
 },
 };
