@@ -287,6 +287,26 @@ function getCommercialPriority(row: AdminBusinessOverview) {
     rank: 3,
   };
 }
+function confirmCriticalBusinessAction(
+  row: AdminBusinessOverview,
+  actionLabel: string,
+  extraLines: string[] = []
+) {
+  const message = [
+    `Negocio: ${row.business_name}`,
+    `Slug: ${row.slug}`,
+    `Plan actual: ${planLabel(row.plan)}`,
+    `Estado actual: ${clientStatusLabel(row.status)}`,
+    `Facturación: ${billingLabel(row.billing_status)}`,
+    "",
+    `Acción: ${actionLabel}`,
+    ...extraLines,
+    "",
+    "¿Deseas continuar?",
+  ].join("\n");
+
+  return window.confirm(message);
+}
 function getLatestCommercialNote(notes?: string | null) {
   if (!notes || !notes.trim()) return "";
 
@@ -844,7 +864,20 @@ async function savePlan(businessId: string) {
   const plan = draftPlans[businessId];
 
   if (!plan) return;
+  const business = tableRows.find((row) => row.id === businessId);
 
+if (!business) {
+  setNotice("No se encontró el negocio seleccionado.");
+  return;
+}
+
+const confirmed = confirmCriticalBusinessAction(
+  business,
+  "Cambiar plan",
+  [`Nuevo plan: ${planLabel(plan)}`]
+);
+
+if (!confirmed) return;
   try {
     setSavingId(businessId);
     setNotice("");
@@ -899,6 +932,12 @@ async function savePlan(businessId: string) {
   }
 }
 async function renewPlan(row: AdminBusinessOverview) {
+  const confirmed = confirmCriticalBusinessAction(row, "Renovar plan por 30 días", [
+  "Se extenderá la vigencia del cliente por 30 días.",
+  "El estado pasará a activo si la operación se completa correctamente.",
+]);
+
+if (!confirmed) return;
   const plan = draftPlans[row.id] ?? row.plan;
 
   try {
@@ -1056,11 +1095,12 @@ const trialRows = filteredRows.filter((row) => {
   }
 }
 async function archiveBusiness(row: AdminBusinessOverview) {
-  const confirmed = window.confirm(
-    `¿Seguro que deseas archivar el negocio "${row.business_name}"? El cliente quedará inactivo y su facturación se marcará como cancelada.`
-  );
+const confirmed = confirmCriticalBusinessAction(row, "Archivar negocio", [
+  "El cliente quedará inactivo.",
+  "La facturación se marcará como cancelada.",
+]);
 
-  if (!confirmed) return;
+if (!confirmed) return;
 
   try {
     setSavingId(row.id);
@@ -1121,11 +1161,12 @@ async function archiveBusiness(row: AdminBusinessOverview) {
   }
 }
 async function reactivateBusiness(row: AdminBusinessOverview) {
-  const confirmed = window.confirm(
-    `¿Seguro que deseas reactivar el negocio "${row.business_name}"? El cliente volverá a estado activo y su facturación se marcará como activa.`
-  );
+const confirmed = confirmCriticalBusinessAction(row, "Reactivar negocio", [
+  "El cliente volverá a estado activo.",
+  "La facturación se marcará como activa.",
+]);
 
-  if (!confirmed) return;
+if (!confirmed) return;
 
   try {
     setSavingId(row.id);
