@@ -202,6 +202,13 @@ function getNextCommercialAction(row: AdminBusinessOverview) {
     };
   }
 
+  if (validity.status === "danger") {
+    return {
+      label: "Contactar renovación",
+      tone: "red" as const,
+    };
+  }
+
   if (validity.daysLabel === "Hoy") {
     return {
       label: "Contactar renovación",
@@ -397,7 +404,7 @@ const colWidths = {
   vigencia: { width: 130, maxWidth: 130 },
   dias: { width: 110, maxWidth: 110 },
 actividad: { width: 120, maxWidth: 120 },
-proximaAccion: { width: 145, maxWidth: 145 },
+proximaAccion: { width: 130, maxWidth: 130 },
 accion: { width: 135, maxWidth: 135 },
 };
 const filteredRows = useMemo(() => {
@@ -970,7 +977,7 @@ async function reactivateBusiness(row: AdminBusinessOverview) {
   style={{
     ...styles.table,
     width: "100%",
-    minWidth: 1605,
+    minWidth: 1705,
     borderCollapse: "separate",
     borderSpacing: 0,
     tableLayout: "fixed",
@@ -1014,19 +1021,24 @@ async function reactivateBusiness(row: AdminBusinessOverview) {
         <th style={{ ...styles.th, ...thCompact, ...colWidths.dias }}>
           Días restantes
         </th>
-        <th style={{ ...styles.th, ...thCompact, ...colWidths.actividad }}>
-          Última actividad
-        </th>
-        <th
-          style={{
-            ...styles.th,
-            ...thCompact,
-            ...colWidths.accion,
-            ...styles.stickyActionTh,
-          }}
-        >
-          Acción
-        </th>
+<th style={{ ...styles.th, ...thCompact, ...colWidths.actividad }}>
+  Última actividad
+</th>
+
+<th style={{ ...styles.th, ...thCompact, ...colWidths.proximaAccion }}>
+  Próxima acción
+</th>
+
+<th
+  style={{
+    ...styles.th,
+    ...thCompact,
+    ...colWidths.accion,
+    ...styles.stickyActionTh,
+  }}
+>
+  Acción
+</th>
       </tr>
     </thead>
 
@@ -1627,10 +1639,12 @@ statusPill: {
   overflow: "hidden",
   textOverflow: "ellipsis",
 },
- actionCell: {
-  display: "grid",
+actionCell: {
+  display: "flex",
+  flexDirection: "column",
   gap: 6,
-  alignItems: "start",
+  minWidth: 0,
+  alignItems: "center",
 },
   toolbarActions: {
   display: "flex",
@@ -1639,53 +1653,56 @@ statusPill: {
   flexWrap: "wrap",
 },
 planSelect: {
-  minHeight: 32,
-  padding: "0 10px",
+  width: "92%",
+  height: 34,
   borderRadius: 10,
-  border: "1px solid #CBD5E1",
-  background: "#FFFFFF",
-  color: "#0F172A",
-  fontSize: 12,
+  border: "1px solid #cbd5e1",
+  background: "#ffffff",
+  color: "#0f172a",
+  fontSize: 11,
   fontWeight: 800,
+  padding: "0 8px",
+  outline: "none",
 },
 
 saveButton: {
-  minHeight: 32,
-  padding: "0 10px",
+  width: "92%",
+  border: 0,
   borderRadius: 10,
-  border: "1px solid #4F46E5",
-  background: "#4F46E5",
-  color: "#FFFFFF",
-  fontSize: 12,
+  padding: "8px 8px",
+  fontSize: 11,
   fontWeight: 900,
   cursor: "pointer",
+  background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+  color: "#ffffff",
+  boxShadow: "0 10px 24px rgba(79, 70, 229, 0.22)",
 },
 
 secondaryActionButton: {
-  minHeight: 32,
-  padding: "0 10px",
+  width: "92%",
   borderRadius: 10,
-  border: "1px solid #93C5FD",
-  background: "#EFF6FF",
-  color: "#1D4ED8",
-  fontSize: 12,
-  fontWeight: 900,
+  padding: "8px 8px",
+  fontSize: 11,
+  fontWeight: 800,
   cursor: "pointer",
+  border: "1px solid #93c5fd",
+  background: "#eff6ff",
+  color: "#1d4ed8",
 },
 
 dangerActionButton: {
-  minHeight: 32,
-  padding: "0 10px",
+  width: "92%",
   borderRadius: 10,
-  border: "1px solid #FCA5A5",
-  background: "#FEF2F2",
-  color: "#B91C1C",
-  fontSize: 12,
-  fontWeight: 900,
+  padding: "8px 8px",
+  fontSize: 11,
+  fontWeight: 800,
   cursor: "pointer",
+  border: "1px solid #fca5a5",
+  background: "#fef2f2",
+  color: "#b91c1c",
 },
 reactivateActionButton: {
-  width: "100%",
+  width: "92%",
   borderRadius: 10,
   padding: "8px 8px",
   fontSize: 11,
@@ -1845,7 +1862,9 @@ locationMeta: {
 stickyActionTh: {
   position: "sticky",
   right: 0,
-  zIndex: 4,
+  zIndex: 3,
+  width: 175,
+  maxWidth: 175,
   background: "#F8FAFC",
   boxShadow: "-10px 0 18px rgba(15,23,42,0.08)",
 },
@@ -1853,7 +1872,9 @@ stickyActionTh: {
 stickyActionTd: {
   position: "sticky",
   right: 0,
-  zIndex: 3,
+  zIndex: 2,
+  width: 175,
+  maxWidth: 175,
   background: "#FFFFFF",
   boxShadow: "-10px 0 18px rgba(15,23,42,0.08)",
 },

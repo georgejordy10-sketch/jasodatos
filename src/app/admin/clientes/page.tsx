@@ -53,7 +53,7 @@ export default async function AdminClientesPage() {
     })) ?? [];
 
   return (
-    <main style={{ padding: 24 }}>
+    <main style={{ padding: "16px 12px 24px" }}>
       <div
         style={{
           display: "flex",
