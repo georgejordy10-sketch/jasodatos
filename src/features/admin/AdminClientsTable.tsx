@@ -354,67 +354,79 @@ function downloadTextFile(content: string, filename: string) {
 }
 export default function AdminClientsTable({ rows }: Props) {
   const [tableRows, setTableRows] = useState(rows);
+
   const [draftPlans, setDraftPlans] = useState<Record<string, Plan>>(
     Object.fromEntries(rows.map((row) => [row.id, row.plan]))
   );
+
   const [savingId, setSavingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
   const [statusFilter, setStatusFilter] = useState<
-  "all" | AdminBusinessOverview["status"]
->("all");
+    "all" | AdminBusinessOverview["status"]
+  >("all");
+
+  const [nextActionFilter, setNextActionFilter] = useState<string>("all");
+
   const [notice, setNotice] = useState<string>("");
   const [editingCrmRow, setEditingCrmRow] =
-  useState<AdminBusinessOverview | null>(null);
-const [crmDraft, setCrmDraft] = useState<CrmDraft | null>(null);
-const [savingCrmId, setSavingCrmId] = useState<string | null>(null);
+    useState<AdminBusinessOverview | null>(null);
+  const [crmDraft, setCrmDraft] = useState<CrmDraft | null>(null);
+  const [savingCrmId, setSavingCrmId] = useState<string | null>(null);
 
   const totalUsers = useMemo(
     () => tableRows.reduce((acc, row) => acc + row.users_count, 0),
     [tableRows]
   );
 
-const thCompact: React.CSSProperties = {
-  padding: "10px 10px",
-  fontSize: 12,
-  lineHeight: 1.15,
-  letterSpacing: "-0.01em",
-  whiteSpace: "nowrap",
-};
+  const thCompact: React.CSSProperties = {
+    padding: "10px 10px",
+    fontSize: 12,
+    lineHeight: 1.15,
+    letterSpacing: "-0.01em",
+    whiteSpace: "nowrap",
+  };
 
-const tdCompact: React.CSSProperties = {
-  padding: "10px 10px",
-  fontSize: 12,
-  lineHeight: 1.2,
-  verticalAlign: "middle",
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-const colWidths = {
-  negocio: { width: 135, maxWidth: 135 },
-  plan: { width: 70, maxWidth: 70 },
-  estado: { width: 90, maxWidth: 90 },
-  usuarios: { width: 68, maxWidth: 68, textAlign: "center" as const },
-  responsable: { width: 145, maxWidth: 145 },
-  correo: { width: 210, maxWidth: 210 },
-  whatsapp: { width: 130, maxWidth: 130 },
-  origen: { width: 95, maxWidth: 95 },
-  ubicacion: { width: 120, maxWidth: 120 },
-  facturacion: { width: 95, maxWidth: 95 },
-  vigencia: { width: 130, maxWidth: 130 },
-  dias: { width: 110, maxWidth: 110 },
-actividad: { width: 120, maxWidth: 120 },
-proximaAccion: { width: 130, maxWidth: 130 },
-accion: { width: 135, maxWidth: 135 },
-};
+  const tdCompact: React.CSSProperties = {
+    padding: "10px 10px",
+    fontSize: 12,
+    lineHeight: 1.2,
+    verticalAlign: "middle",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  };
+
+  const colWidths = {
+    negocio: { width: 135, maxWidth: 135 },
+    plan: { width: 70, maxWidth: 70 },
+    estado: { width: 90, maxWidth: 90 },
+    usuarios: { width: 68, maxWidth: 68, textAlign: "center" as const },
+    responsable: { width: 145, maxWidth: 145 },
+    correo: { width: 210, maxWidth: 210 },
+    whatsapp: { width: 130, maxWidth: 130 },
+    origen: { width: 95, maxWidth: 95 },
+    ubicacion: { width: 120, maxWidth: 120 },
+    facturacion: { width: 95, maxWidth: 95 },
+    vigencia: { width: 130, maxWidth: 130 },
+    dias: { width: 110, maxWidth: 110 },
+    actividad: { width: 120, maxWidth: 120 },
+    proximaAccion: { width: 130, maxWidth: 130 },
+    accion: { width: 135, maxWidth: 135 },
+  };
 const filteredRows = useMemo(() => {
   const term = searchTerm.trim().toLowerCase();
 
   return tableRows.filter((row) => {
-const matchesStatus =
-  statusFilter === "all"
-    ? row.status !== "inactive"
-    : row.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all"
+        ? row.status !== "inactive"
+        : row.status === statusFilter;
+
+    const nextAction = getNextCommercialAction(row).label;
+
+    const matchesNextAction =
+      nextActionFilter === "all" ? true : nextAction === nextActionFilter;
 
     const values = [
       row.business_name,
@@ -431,17 +443,20 @@ const matchesStatus =
       row.status,
       row.billing_status,
       row.signup_source,
+      nextAction,
     ];
 
-    const matchesSearch = !term
-      ? true
-      : values.some((value) =>
-          String(value ?? "").toLowerCase().includes(term)
-        );
+    const matchesSearch =
+      !term ||
+      values.some((value) =>
+        String(value ?? "")
+          .toLowerCase()
+          .includes(term)
+      );
 
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesNextAction && matchesSearch;
   });
-}, [tableRows, searchTerm, statusFilter]);
+}, [tableRows, searchTerm, statusFilter, nextActionFilter]);
   function exportClients() {
     const csv = buildClientsCsv(filteredRows);
     const today = new Date().toISOString().slice(0, 10);
@@ -932,12 +947,28 @@ async function reactivateBusiness(row: AdminBusinessOverview) {
       )
     }
   >
-    <option value="all">Todos los estados</option>
-    <option value="trial">Pruebas</option>
-    <option value="active">Activos</option>
-    <option value="suspended">Suspendidos</option>
-    <option value="inactive">Archivados</option>
-  </select>
+  <option value="all">Todos los estados</option>
+  <option value="trial">Pruebas</option>
+  <option value="active">Activos</option>
+  <option value="suspended">Suspendidos</option>
+  <option value="inactive">Archivados</option>
+</select>
+
+<select
+  style={styles.statusFilterSelect}
+  value={nextActionFilter}
+  onChange={(event) => setNextActionFilter(event.target.value)}
+>
+  <option value="all">Todas las acciones</option>
+  <option value="Contactar renovación">Contactar renovación</option>
+  <option value="Contactar / archivar">Contactar / archivar</option>
+  <option value="Dar seguimiento">Dar seguimiento</option>
+  <option value="Revisar estado">Revisar estado</option>
+  <option value="Reactivar">Reactivar</option>
+  <option value="Revisar vigencia">Revisar vigencia</option>
+  <option value="Operación normal">Operación normal</option>
+</select>
+
 <div style={styles.toolbarActions}>
   <div style={styles.searchCounter}>
     {filteredRows.length} de {tableRows.length} clientes
