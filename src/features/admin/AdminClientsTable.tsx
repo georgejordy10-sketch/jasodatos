@@ -513,7 +513,7 @@ export default function AdminClientsTable({ rows }: Props) {
 const filteredRows = useMemo(() => {
   const term = searchTerm.trim().toLowerCase();
 
-  return tableRows.filter((row) => {
+  const filtered = tableRows.filter((row) => {
     const matchesStatus =
       statusFilter === "all"
         ? row.status !== "inactive"
@@ -521,10 +521,13 @@ const filteredRows = useMemo(() => {
 
     const nextAction = getNextCommercialAction(row).label;
     const priority = getCommercialPriority(row).label;
+
     const matchesNextAction =
       nextActionFilter === "all" ? true : nextAction === nextActionFilter;
+
     const matchesPriority =
-  priorityFilter === "all" ? true : priority === priorityFilter;
+      priorityFilter === "all" ? true : priority === priorityFilter;
+
     const values = [
       row.business_name,
       row.slug,
@@ -542,6 +545,7 @@ const filteredRows = useMemo(() => {
       row.signup_source,
       nextAction,
       priority,
+      row.commercial_notes,
     ];
 
     const matchesSearch =
@@ -553,6 +557,55 @@ const filteredRows = useMemo(() => {
       );
 
     return matchesStatus && matchesNextAction && matchesPriority && matchesSearch;
+  });
+
+  return filtered.sort((a, b) => {
+    const priorityA = getCommercialPriority(a).rank;
+    const priorityB = getCommercialPriority(b).rank;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    const validityA = getValidityInfo(a);
+    const validityB = getValidityInfo(b);
+
+    const urgencyRank = {
+      danger: 1,
+      warning: 2,
+      neutral: 3,
+      ok: 4,
+    } as const;
+
+    const urgencyA = urgencyRank[validityA.status];
+    const urgencyB = urgencyRank[validityB.status];
+
+    if (urgencyA !== urgencyB) {
+      return urgencyA - urgencyB;
+    }
+
+    const daysA =
+      getDaysRemaining(
+        a.status === "trial" || a.billing_status === "trial"
+          ? a.trial_ends_at
+          : a.current_period_ends_at
+      ) ?? 9999;
+
+    const daysB =
+      getDaysRemaining(
+        b.status === "trial" || b.billing_status === "trial"
+          ? b.trial_ends_at
+          : b.current_period_ends_at
+      ) ?? 9999;
+
+    if (daysA !== daysB) {
+      return daysA - daysB;
+    }
+
+    return String(a.business_name || "").localeCompare(
+      String(b.business_name || ""),
+      "es"
+    );
   });
 }, [tableRows, searchTerm, statusFilter, nextActionFilter, priorityFilter]);
 async function exportClients() {
@@ -2130,9 +2183,9 @@ tableShell: {
   width: "100%",
   maxWidth: "100%",
   maxHeight: "calc(100vh - 260px)",
-  overflowX: "auto",
+  overflowX: "hidden",
   overflowY: "auto",
-  paddingBottom: 12,
+  paddingBottom: 0,
   borderRadius: 18,
   border: "1px solid rgba(226,232,240,0.95)",
   background: "#ffffff",
