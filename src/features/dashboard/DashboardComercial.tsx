@@ -85,7 +85,7 @@ const COMPARISON_METRIC_OPTIONS: {
   { key: "precioPromedio", label: "Precio promedio" },
   { key: "costoPromedio", label: "Costo promedio" },
   { key: "margenEstimado", label: "Margen estimado" },
-  { key: "stock", label: "Stock" },
+  { key: "stock", label: "Inventario" },
   { key: "rotacion", label: "rotación" },
   { key: "diasCobertura", label: "días de cobertura" },
   { key: "rentabilidadPct", label: "Rentabilidad %" },
@@ -477,7 +477,7 @@ function buildStockRisk(
       const diasCobertura = stock <= 0 ? 0 : Math.max(1, Math.round(stock / 5));
 
       let estado = "Óptimo";
-      if (stock <= 0) estado = "Sin stock";
+      if (stock <= 0) estado = "Sin inventario";
       else if (stock <= criticalThreshold) estado = "Crítico";
       else if (stock < minimo) estado = "En riesgo";
 
@@ -535,7 +535,7 @@ function buildJasoBotInsights(
       mensajePrincipal: "No hay suficiente información para generar recomendaciones comerciales.",
       insights: [
         "Carga un archivo para activar recomendaciones.",
-        "JasoBot analizar ventas, canales y stock.",
+        "JasoBot analiza ventas, canales e inventario.",
         "Podrs detectar productos lderes y riesgos.",
         "Tambin sugerir acciones comerciales.",
       ],
@@ -588,7 +588,7 @@ function buildJasoBotInsights(
   if (productosCriticos.length > 0) {
     const critico = productosCriticos[0].producto;
     tipoPromo = "liquidacion";
-    promoWhatsApp = `Buen día. Oferta rápida: ${critico} con precio especial por liquidación de stock. Disponible hasta agotar existencias. Responde QUIERO para reservar.`;
+    promoWhatsApp = `Buen día. Oferta rápida: ${critico} con precio especial por liquidación de inventario. Disponible hasta agotar existencias. Responde QUIERO para reservar.`;
   } else if (lowSucursal && topProducto) {
     const top = topProducto[0];
     tipoPromo = "impulso_sucursal";
@@ -617,7 +617,7 @@ function buildJasoBotInsights(
   }
 
   if (productosCriticos.length > 0) {
-    recomendaciones.push(`Liquida stock: ${productosCriticos[0].producto}`);
+    recomendaciones.push(`Liquida inventario: ${productosCriticos[0].producto}`);
   }
 
   if (lowSucursal) {
@@ -636,7 +636,7 @@ if (topCanal && topCanal[0]) {
   let mensajePrincipal = `Prioriza ${nombreProductoTop} como producto ancla y ejectalo primero en ${nombreSucursalTop} para acelerar ventas en ${nombreCanalTop}.`;
 
   if (tipoPromo === "liquidación" && productosCriticos.length > 0) {
-    mensajePrincipal = `Detectamos presión de inventario en ${productosCriticos[0].producto}. La mejor jugada ahora es activar una salida comercial rápida antes de que el stock siga perdiendo tracción.`;
+    mensajePrincipal = `Detectamos presión de inventario en ${productosCriticos[0].producto}. La mejor jugada ahora es activar una salida comercial rápida antes de que el inventario siga perdiendo tracción.`;
   } else if (tipoPromo === "impulso_sucursal") {
     mensajePrincipal = `Existe una oportunidad clara para recuperar desempeño en ${nombreSucursalBaja}. Activa una promoción enfocada con ${nombreProductoTop} para levantar conversión en esa sucursal.`;
   } else if (tipoPromo === "combo" && productosOrdenados.length > 1) {
@@ -1189,11 +1189,11 @@ const productComparisonInsight = useMemo(() => {
   }
 
   if (comparisonMetric === "stock") {
-    return `${leader.producto} tiene mayor stock disponible. Si su venta no acompaña ese inventario, conviene activar promoción antes de que se convierta en capital inmovilizado.`;
+    return `${leader.producto} tiene mayor inventario disponible. Si su venta no acompaña esa cantidad acumulada, conviene activar promoción antes de que se convierta en dinero detenido.`;
   }
 
   if (comparisonMetric === "rotacion") {
-    return `${leader.producto} rota más rápido. Es un producto fuerte para mantener disponibilidad y evitar quiebres de stock.`;
+    return `${leader.producto} rota más rápido. Es un producto fuerte para mantener disponibilidad y evitar quedarse sin unidades para vender.`;
   }
 
   if (comparisonMetric === "diasCobertura") {
@@ -1241,7 +1241,7 @@ const stockCritico = useMemo(() => {
   if (!hasStockData) return null;
 
   return stockRiskRows.filter(
-    (row) => row.estado === "Crtico" || row.estado === "Sin stock"
+    (row) => row.estado === "Crtico" || row.estado === "Sin inventario"
   ).length;
 }, [hasStockData, stockRiskRows]);
 
@@ -1344,7 +1344,7 @@ const metadataRows = [
     "Costo_Unitario",
     "Precio_Unitario",
     "Canal",
-    "Stock",
+    "Inventario",
   ];
 
   worksheet.addRow(headers);
@@ -1631,25 +1631,33 @@ const kpiItems = [
     value: formatMoney(ventasTotales, settings.locale, settings.currencyCode),
     badge: `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
     subtitle: "vs. Período anterior",
+    helpText:
+      "Aquí ves cuánto vendiste en el período seleccionado, según la información cargada en tu archivo.",
   },
   {
     title: "Unidades totales",
     value: formatInt(unidadesTotales),
     badge: `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
     subtitle: "vs. Período anterior",
+    helpText:
+      "Aquí ves cuántas unidades se vendieron en el período seleccionado.",
   },
   {
     title: "Producto más vendido",
     value: productoTop?.producto ?? "Sin datos",
     badge: `${porcentajeTop}%`,
     subtitle: "del total de ventas",
+    helpText:
+      "Aquí ves el producto que más aportó a tus ventas dentro de la información cargada.",
   },
   {
-    title: "Stock crítico",
+    title: "Inventario crítico",
     value: stockCritico === null ? "No Disponible" : formatInt(stockCritico),
     badge: "Reglas activas",
     subtitle: "Revisar inventario",
     accent: "danger" as const,
+    helpText:
+      "Aquí ves cuántos productos tienen pocas unidades disponibles y necesitan revisión.",
   },
 ];
 const jasoBot = useMemo(() => {
@@ -1769,7 +1777,7 @@ function openSalesWhatsapp() {
 />
 {businessLocationLabel ? (
   <div style={styles.businessLocationBar}>
-    <span style={styles.businessLocationLabel}>Ubicacin del negocio</span>
+    <span style={styles.businessLocationLabel}>Ubicación del negocio</span>
     <strong style={styles.businessLocationValue}>
       {businessLocationLabel}
     </strong>
@@ -1860,7 +1868,7 @@ function openSalesWhatsapp() {
   />
 ) : null}
 
-<KpiSection items={kpiItems} />
+<KpiSection items={kpiItems} isExportingPdf={isExportingPdf} />
 <AlertsSection alerts={alerts} isExportingPdf={isExportingPdf} />
 
 <SalesChartsSection
@@ -1885,13 +1893,13 @@ function openSalesWhatsapp() {
     <div>
       <div style={styles.productComparisonTitleRow}>
         <h3 style={styles.productComparisonTitle}>
-          Comparativo de productos seleccionados
+          Compara tus productos
         </h3>
       </div>
 
       <p style={styles.productComparisonSubtitle}>
 Compara productos por ventas, unidades, participación, precios, margen,
-stock, rotación, cobertura, rentabilidad y tendencia.
+inventario, rotación, cobertura, rentabilidad y tendencia.
       </p>
     </div>
 
@@ -2048,18 +2056,18 @@ stock, rotación, cobertura, rentabilidad y tendencia.
           <table style={styles.productComparisonTable}>
             <thead>
               <tr>
-                <th style={styles.productComparisonTh}>Producto</th>
-                <th style={styles.productComparisonTh}>Ventas</th>
-                <th style={styles.productComparisonTh}>Unidades</th>
-                <th style={styles.productComparisonTh}>Part.</th>
-                <th style={styles.productComparisonTh}>Precio prom.</th>
-                <th style={styles.productComparisonTh}>Costo prom.</th>
-                <th style={styles.productComparisonTh}>Margen</th>
-                <th style={styles.productComparisonTh}>Stock</th>
-                <th style={styles.productComparisonTh}>rotación</th>
-                <th style={styles.productComparisonTh}>Cobertura</th>
-                <th style={styles.productComparisonTh}>Rentab.</th>
-                <th style={styles.productComparisonTh}>Tendencia</th>
+              <th style={styles.productComparisonTh}>Producto</th>
+<th style={styles.productComparisonTh}>Ventas</th>
+<th style={styles.productComparisonTh}>Unidades vendidas</th>
+<th style={styles.productComparisonTh}>Participación en ventas</th>
+<th style={styles.productComparisonTh}>Precio promedio</th>
+<th style={styles.productComparisonTh}>Costo promedio</th>
+<th style={styles.productComparisonTh}>Ganancia estimada</th>
+<th style={styles.productComparisonTh}>Inventario disponible</th>
+<th style={styles.productComparisonTh}>Movimiento</th>
+<th style={styles.productComparisonTh}>Días disponibles</th>
+<th style={styles.productComparisonTh}>Rentabilidad</th>
+<th style={styles.productComparisonTh}>Cambio en ventas</th>
               </tr>
             </thead>
 
@@ -2127,7 +2135,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
 
               <tr>
                 <td style={styles.productComparisonTotalTd}>
-                  Total seleccionados
+                  Total de productos seleccionados
                 </td>
                 <td style={styles.productComparisonTotalTd}>
                   {formatMoney(
@@ -2198,7 +2206,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
   formatCompactMoney={formatCompactMoney}
   formatMoney={(value) => formatMoney(value, settings.locale, settings.currencyCode)}
   onOpenStockDetails={() => {
-  console.log("ABRIR MODAL STOCK");
+  console.log("ABRIR MODAL INVENTARIO");
   setDetailModal("stock");
 }}
   onOpenChannelDetails={() => {
@@ -2245,7 +2253,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
         <div style={styles.assistantGrid}>
           <div style={styles.assistantContent}>
             <div style={styles.assistantHeader}>
-              <span style={styles.assistantTitle}>JasoBot Comercial</span>
+              <span style={styles.assistantTitle}>Asistente comercial JasoBot</span>
 
               {!isExportingPdf ? (
                 <>
@@ -2310,7 +2318,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
               {jasoBot.mensajePrincipal}
               <br />
               <strong>
-                JasoDatos prepara la campaña. Tú eliges a qué cliente, grupo o lista enviarla.
+                JasoBot te propone una idea comercial. Tú decides si la usas, la ajustas o la envías a tus clientes.
               </strong>
             </div>
 
@@ -2349,7 +2357,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
                       style={styles.actionButton}
                       onClick={() => usarAccion(item)}
                     >
-                      Copiar campaña
+                      Copiar mensaje par campaña
                     </button>
                   ) : null}
                 </div>
@@ -2413,7 +2421,7 @@ stock, rotación, cobertura, rentabilidad y tendencia.
     </>
   ) : (
     <LockedFeatureCard
-      title="JasoBot Comercial"
+      title="Asistente comercial JasoBot"
       description="Recibe recomendaciones accionables, promociones sugeridas y apoyo de WhatsApp. Disponible desde el plan Pro."
       requiredPlan="pro"
       onOpenPlans={() => setPlansOpen(true)}
@@ -2525,7 +2533,7 @@ function DetailModal({
     type === "products"
       ? "Ranking completo de productos"
       : type === "stock"
-      ? "Detalle completo de stock en riesgo"
+      ? "Detalle completo de inventario en riesgo"
       : "Detalle de ventas por canal";
 
   const channelTotals = channelResult.channels.map((channel) => {
@@ -2595,7 +2603,7 @@ function DetailModal({
               <thead>
                 <tr>
                   <th style={detailStyles.th}>Producto</th>
-                  <th style={detailStyles.th}>Stock actual</th>
+                  <th style={detailStyles.th}>Inventario actual</th>
                   <th style={detailStyles.th}>Mnimo</th>
                   <th style={detailStyles.th}>Estado</th>
                   <th style={detailStyles.th}>días cobertura</th>
@@ -3361,75 +3369,77 @@ comparisonBarItem: {
 comparisonBarValue: {
   color: "#FFFFFF",
   fontSize: 12,
-  fontWeight: 900,
-  textShadow: "0 2px 8px rgba(0,0,0,0.25)",
+  fontWeight: 600,
+  lineHeight: 1.1,
 },
 
 comparisonBar: {
   width: 54,
-  borderRadius: "14px 14px 5px 5px",
+  borderRadius: "2px 2px 0 0",
   boxShadow: "0 14px 28px rgba(0,0,0,0.24)",
 },
 
 comparisonBarLabel: {
-  color: "#EAF2FF",
+  color: "#FFFFFF",
   fontSize: 11,
-  fontWeight: 800,
+  fontWeight: 600,
+  lineHeight: 1.15,
   textAlign: "center",
-  lineHeight: 1.2,
-  maxWidth: 118,
 },
 
 productComparisonTableBox: {
   borderRadius: 18,
-  border: "1px solid rgba(255,255,255,0.12)",
+  border: "1px solid rgba(255,255,255,0.14)",
   background:
-    "linear-gradient(180deg, rgba(15,23,42,0.24) 0%, rgba(15,23,42,0.10) 100%)",
+    "linear-gradient(180deg, rgba(15,23,42,0.22) 0%, rgba(15,23,42,0.08) 100%)",
   padding: 16,
   display: "grid",
   gap: 12,
   minWidth: 0,
+  overflow: "hidden",
 },
 
 productComparisonTableScroll: {
   overflowX: "auto",
   maxWidth: "100%",
 },
-
 productComparisonTable: {
   width: "100%",
-  minWidth: 1220,
-  borderCollapse: "separate",
-  borderSpacing: 0,
+  minWidth: 1250,
+  borderCollapse: "collapse",
+  background: "transparent",
 },
 
 productComparisonTh: {
-  color: "#DCE6FF",
-  fontSize: 12,
-  fontWeight: 900,
+  padding: "10px 12px",
   textAlign: "left",
-  padding: "10px 10px",
-  borderBottom: "1px solid rgba(255,255,255,0.14)",
-  whiteSpace: "nowrap",
+  color: "#FFFFFF",
+  fontSize: 11,
+  fontWeight: 650,
+  lineHeight: 1.2,
+  letterSpacing: "0.01em",
+  background: "rgba(255,255,255,0.06)",
+  borderBottom: "1px solid rgba(255,255,255,0.18)",
+  whiteSpace: "normal",
 },
 
 productComparisonTd: {
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(255,255,255,0.16)",
   color: "#FFFFFF",
   fontSize: 12,
-  fontWeight: 700,
-  padding: "11px 10px",
-  borderBottom: "1px solid rgba(255,255,255,0.08)",
+  fontWeight: 500,
+  lineHeight: 1.25,
   verticalAlign: "middle",
-  whiteSpace: "nowrap",
 },
-
 productComparisonTotalTd: {
+  padding: "12px",
   color: "#FFFFFF",
-  fontSize: 13,
-  fontWeight: 900,
-  padding: "13px 10px",
-  borderTop: "1px solid rgba(255,255,255,0.18)",
-  whiteSpace: "nowrap",
+  fontSize: 12,
+  fontWeight: 750,
+  borderTop: "1px solid rgba(255,255,255,0.20)",
+  borderBottom: "1px solid rgba(255,255,255,0.16)",
+  background: "rgba(255,255,255,0.04)",
 },
 
 productInsightBox: {
@@ -3477,13 +3487,16 @@ insightText: {
   lineHeight: 1.45,
 },
 productCellInline: {
-  display: "flex",
+  display: "inline-flex",
   alignItems: "center",
-  gap: "10px",
+  gap: 8,
 },
 
 productCellText: {
-  display: "inline-block",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 600,
+  lineHeight: 1.25,
 },
 
 productDot: {

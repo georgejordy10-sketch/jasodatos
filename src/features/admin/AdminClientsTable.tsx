@@ -321,6 +321,68 @@ function getLatestCommercialNote(notes?: string | null) {
 function hasCommercialNotes(notes?: string | null) {
   return Boolean(notes && notes.trim());
 }
+function appendCommercialAuditNote(
+  currentNotes: string | null | undefined,
+  message: string
+) {
+  const today = new Date().toISOString().slice(0, 10);
+  const cleanCurrentNotes = currentNotes?.trim();
+
+  const auditLine = `${today}: ${message}`;
+
+  return cleanCurrentNotes ? `${cleanCurrentNotes}\n${auditLine}` : auditLine;
+}
+async function updateCommercialAuditNote(
+  row: AdminBusinessOverview,
+  auditMessage: string
+) {
+  const today = new Date().toISOString().slice(0, 10);
+  const nextNotes = appendCommercialAuditNote(row.commercial_notes, auditMessage);
+
+  const response = await fetch(`/api/admin/businesses/${row.id}/crm`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      owner_name: row.owner_name || "",
+      commercial_email: row.commercial_email || row.owner_email || "",
+      commercial_whatsapp: row.commercial_whatsapp || row.owner_whatsapp || "",
+      ciudad: row.ciudad || "",
+      provincia: row.provincia || "",
+      pais: row.pais || "",
+      commercial_notes: nextNotes,
+      last_contact_at: today,
+    }),
+  });
+
+  const raw = await response.text();
+
+  let result: {
+    ok?: boolean;
+    business?: Partial<AdminBusinessOverview>;
+    error?: string;
+  } = {};
+
+  if (raw) {
+    try {
+      result = JSON.parse(raw);
+    } catch {
+      throw new Error(raw || "La API devolvió una respuesta inválida.");
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      result?.error || `No se pudo guardar auditoría comercial (${response.status}).`
+    );
+  }
+
+  return {
+    nextNotes,
+    lastContactAt: today,
+  };
+}
 function validityPillStyle(status: "ok" | "warning" | "danger" | "neutral"): CSSProperties {
   if (status === "danger") {
     return { background: "rgba(239,68,68,0.12)", color: "#B91C1C" };
@@ -905,24 +967,31 @@ if (!confirmed) return;
       }
     }
 
-    if (!response.ok) {
-      throw new Error(
-        result?.error || `No se pudo actualizar el plan (${response.status}).`
-      );
-    }
+if (!response.ok) {
+  throw new Error(
+    result?.error || `No se pudo actualizar el plan (${response.status}).`
+  );
+}
 
-    setTableRows((prev) =>
-      prev.map((row) =>
-        row.id === businessId
-          ? {
-              ...row,
-              plan,
-            }
-          : row
-      )
-    );
+const audit = await updateCommercialAuditNote(
+  business,
+  `Plan cambiado de ${planLabel(business.plan)} a ${planLabel(plan)}.`
+);
 
-    setNotice("Plan actualizado correctamente.");
+setTableRows((prev) =>
+  prev.map((row) =>
+    row.id === businessId
+      ? {
+          ...row,
+          plan,
+          commercial_notes: audit.nextNotes,
+          last_contact_at: audit.lastContactAt,
+        }
+      : row
+  )
+);
+
+setNotice("Plan actualizado correctamente.");
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "No se pudo actualizar el plan.";
@@ -980,26 +1049,29 @@ if (!confirmed) return;
         result?.error || `No se pudo renovar el plan (${response.status}).`
       );
     }
-
-    setTableRows((prev) =>
-      prev.map((item) =>
-        item.id === row.id
-          ? {
-              ...item,
-              plan,
-              status: result.status ?? "active",
-              billing_status: result.billing_status ?? "active",
-              trial_ends_at: null,
-              current_period_starts_at:
-                result.current_period_starts_at ??
-                new Date().toISOString(),
-              current_period_ends_at:
-                result.current_period_ends_at ??
-                item.current_period_ends_at,
-            }
-          : item
-      )
-    );
+    const audit = await updateCommercialAuditNote(
+  row,
+  "Plan renovado por 30 días."
+);
+setTableRows((prev) =>
+  prev.map((item) =>
+    item.id === row.id
+      ? {
+          ...item,
+          plan,
+          status: result.status ?? "active",
+          billing_status: result.billing_status ?? "active",
+          trial_ends_at: null,
+          current_period_starts_at:
+            result.current_period_starts_at ?? new Date().toISOString(),
+          current_period_ends_at:
+            result.current_period_ends_at ?? item.current_period_ends_at,
+          commercial_notes: audit.nextNotes,
+          last_contact_at: audit.lastContactAt,
+        }
+      : item
+  )
+);
 
     setNotice(`Plan renovado por 30 días para ${row.business_name}.`);
   } catch (error) {
@@ -1138,19 +1210,21 @@ if (!confirmed) return;
         result?.error || `No se pudo archivar el negocio (${response.status}).`
       );
     }
+const audit = await updateCommercialAuditNote(row, "Negocio archivado.");
 
-    setTableRows((prev) =>
-      prev.map((item) =>
-        item.id === row.id
-          ? {
-              ...item,
-              status: result.status ?? "inactive",
-              billing_status: result.billing_status ?? "canceled",
-            }
-          : item
-      )
-    );
-
+setTableRows((prev) =>
+  prev.map((item) =>
+    item.id === row.id
+      ? {
+          ...item,
+          status: result.status ?? "inactive",
+          billing_status: result.billing_status ?? "canceled",
+          commercial_notes: audit.nextNotes,
+          last_contact_at: audit.lastContactAt,
+        }
+      : item
+  )
+);
     setNotice(`Negocio archivado: ${row.business_name}.`);
   } catch (error) {
     const message =
@@ -1204,19 +1278,20 @@ if (!confirmed) return;
         result?.error || `No se pudo reactivar el negocio (${response.status}).`
       );
     }
-
-    setTableRows((prev) =>
-      prev.map((item) =>
-        item.id === row.id
-          ? {
-              ...item,
-              status: result.status ?? "active",
-              billing_status: result.billing_status ?? "active",
-            }
-          : item
-      )
-    );
-
+    const audit = await updateCommercialAuditNote(row, "Negocio reactivado.");
+setTableRows((prev) =>
+  prev.map((item) =>
+    item.id === row.id
+      ? {
+          ...item,
+          status: result.status ?? "active",
+          billing_status: result.billing_status ?? "active",
+          commercial_notes: audit.nextNotes,
+          last_contact_at: audit.lastContactAt,
+        }
+      : item
+  )
+);
     setNotice(`Negocio reactivado: ${row.business_name}.`);
   } catch (error) {
     const message =

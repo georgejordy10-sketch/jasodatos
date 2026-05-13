@@ -91,8 +91,8 @@ onOpenChannelDetails,
     <section style={styles.secondaryCharts}>
       <div id="stock-en-riesgo" style={{ scrollMarginTop: 120 }}>
       <Card
-        title={`Stock en riesgo • Regla: mínimo ${defaultStockMin} unidades`}
-        subtitle="Productos con inventario comprometido según el umbral configurado"
+        title={`Productos con pocas unidades • Mínimo configurado: ${defaultStockMin}`}
+        subtitle="Aquí ves qué productos necesitan revisión porque podrían quedarse sin unidades para vender."
         action={
   <button
     type="button"

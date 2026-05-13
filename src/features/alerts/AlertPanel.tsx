@@ -99,10 +99,10 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
     <section style={styles.card}>
       <div style={styles.header}>
         <div style={styles.headerCopy}>
-          <h2 style={styles.title}>Alertas del negocio</h2>
-          <p style={styles.subtitle}>
-            prioridades ejecutivas detectadas automáticamente a partir del período filtrado
-          </p>
+<h2 style={styles.title}>Alertas del negocio</h2>
+<p style={styles.subtitle}>
+  JasoDatos revisa tus datos y te muestra lo que necesita atención.
+</p>
         </div>
 
         <div style={styles.counterWrap}>
@@ -124,7 +124,7 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
 
       {alerts.length === 0 ? (
         <div style={styles.emptyState}>
-          No se detectaron alertas relevantes con los filtros actuales.
+          No encontramos puntos urgentes por revisar con los filtros actuales.
         </div>
       ) : (
         <div style={styles.grid}>

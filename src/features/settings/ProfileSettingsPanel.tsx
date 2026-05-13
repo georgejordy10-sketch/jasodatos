@@ -414,7 +414,13 @@ export default function ProfileSettingsPanel({
             <h3 style={styles.cardTitle}>Reglas comerciales</h3>
 
             <label style={styles.label}>
-              <span>Stock mínimo por defecto</span>
+              <span>Te alerto cuando existan menos de estas unidades</span>
+<small style={styles.helpText}>
+  Ejemplo: si escribes 20, JasoDatos te alertará cuando un producto tenga menos de 20 unidades disponibles.
+</small>
+              <small style={styles.helpText}>
+  Define desde cuántas unidades un producto empieza a considerarse bajo en inventario.
+</small>
               <input
                 type="number"
                 style={styles.compactNumberInput}
@@ -426,7 +432,13 @@ export default function ProfileSettingsPanel({
             </label>
 
             <label style={styles.label}>
-              <span>Caída de ventas - alerta media (%)</span>
+              <span>Te alerto si las ventas bajan (%)</span>
+<small style={styles.helpText}>
+  Ejemplo: si escribes 8, JasoDatos mostrará una alerta cuando las ventas bajen cerca del 8% frente al período anterior.
+</small>
+              <small style={styles.helpText}>
+  Activa una alerta cuando las ventas bajan de forma moderada frente al período anterior.
+</small>
               <input
                 type="number"
                 style={styles.compactNumberInput}
@@ -438,7 +450,13 @@ export default function ProfileSettingsPanel({
             </label>
 
             <label style={styles.label}>
-              <span>Caída de ventas - alerta alta (%)</span>
+              <span>Te alerto con urgencia si las ventas bajan (%)</span>
+<small style={styles.helpText}>
+  Ejemplo: si escribes 15, JasoDatos marcará una alerta más fuerte cuando la baja de ventas necesite revisión inmediata.
+</small>
+              <small style={styles.helpText}>
+  Activa una alerta más fuerte cuando la caída de ventas requiere revisión inmediata.
+</small>
               <input
                 type="number"
                 style={styles.compactNumberInput}
@@ -751,4 +769,12 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 900,
     cursor: "pointer",
   },
+  helpText: {
+  display: "block",
+  marginTop: 6,
+  color: "rgba(226,232,240,0.78)",
+  fontSize: 12,
+  fontWeight: 500,
+  lineHeight: 1.35,
+},
 };

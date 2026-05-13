@@ -87,7 +87,11 @@ export default function SalesChartsSection({
   return (
     <section style={styles.mainCharts}>
       <div id="tendencia-ventas" style={{ height: "100%" }}>
-        <Card title="Tendencia de ventas" subtitle="Ventas filtradas por fecha" fullHeight>
+        <Card
+  title="Cómo se mueven tus ventas"
+  subtitle="Te muestra si tus ventas suben, bajan o se mantienen en el período seleccionado."
+  fullHeight
+>
           <div style={styles.chartTopBar}>
             <div style={styles.customLegend}>
               <div style={styles.customLegendItem}>
