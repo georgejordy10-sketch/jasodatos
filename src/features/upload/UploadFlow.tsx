@@ -262,7 +262,74 @@ function updateMapping(sourceColumn: string, targetField: string) {
   function getCurrentTargetField(sourceColumn: string): string {
     return confirmedMappings.find((m) => m.sourceColumn === sourceColumn)?.targetField ?? "";
   }
+function getColumnExamples(sourceColumn: string) {
+  if (!initialData?.rawRows?.length) return "-";
 
+  const examples = initialData.rawRows
+    .map((row) => row[sourceColumn])
+    .filter(
+      (value) =>
+        value !== undefined &&
+        value !== null &&
+        String(value).trim() !== ""
+    )
+    .slice(0, 3)
+    .map((value) => String(value).trim());
+
+  return examples.length > 0 ? examples.join(" · ") : "-";
+}
+
+function getMappingStatus(
+  sourceColumn: string,
+  suggestedTargetField: string | null | undefined,
+  confidence: number | null | undefined
+) {
+  const currentTargetField = getCurrentTargetField(sourceColumn);
+
+if (!currentTargetField) {
+  return {
+    label: "No necesario",
+    style: {
+      background: "#F1F5F9",
+      color: "#475569",
+      border: "1px solid #CBD5E1",
+    },
+  };
+}
+
+  if (isManualMapping(sourceColumn, suggestedTargetField)) {
+    return {
+      label: "Ajustado",
+      style: {
+        background: "#DBEAFE",
+        color: "#1D4ED8",
+        border: "1px solid #93C5FD",
+      },
+    };
+  }
+
+  const value = Number(confidence ?? 0);
+
+  if (value >= 0.75) {
+    return {
+      label: "Listo",
+      style: {
+        background: "#DCFCE7",
+        color: "#166534",
+        border: "1px solid #86EFAC",
+      },
+    };
+  }
+
+  return {
+    label: "Revisar",
+    style: {
+      background: "#FEF3C7",
+      color: "#92400E",
+      border: "1px solid #FCD34D",
+    },
+  };
+}
   function handleProcess() {
     if (!initialData) {
       setError("Primero debes leer el archivo.");
@@ -451,7 +518,7 @@ style={{
             gap: 12,
           }}
         >
-          <h3 style={{ margin: 0, fontSize: 24, color: "#111827" }}>
+<h3 style={{ margin: 0, fontSize: 24, color: "#111827" }}>
   Revisión de columnas
 </h3>
 
@@ -472,12 +539,12 @@ style={{
   </div>
 
   <div style={infoCardStyle}>
-    <span style={infoLabelStyle}>Columnas detectadas</span>
+    <span style={infoLabelStyle}>Datos encontrados en tu archivo</span>
     <strong style={infoValueStyle}>{initialData.columns.length}</strong>
   </div>
 
   <div style={infoCardStyle}>
-    <span style={infoLabelStyle}>Filas detectadas</span>
+    <span style={infoLabelStyle}>Registros encontrados</span>
     <strong style={infoValueStyle}>{initialData.rawRows.length}</strong>
   </div>
 </div>
@@ -553,9 +620,9 @@ style={{
             lineHeight: 1.5,
           }}
         >
-          <strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
-            Recomendación:
-          </strong>{" "}
+<strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
+  Qué te sugerimos:
+</strong>{" "}
           {qualityReport.recommendation}
         </div>
       </div>
@@ -593,16 +660,16 @@ style={{
         gap: 10,
       }}
     >
-      {[
-        { label: "Filas detectadas", value: qualityReport.totalRows },
-        { label: "Filas vacías", value: qualityReport.emptyRows },
-        { label: "Filas duplicadas", value: qualityReport.duplicateRows },
-        { label: "Columnas mapeadas", value: qualityReport.mappedColumns },
-        {
-          label: "Columnas no mapeadas",
-          value: qualityReport.unmappedColumns.length,
-        },
-      ].map((item) => (
+{[
+  { label: "Registros encontrados", value: qualityReport.totalRows },
+  { label: "Registros vacíos", value: qualityReport.emptyRows },
+  { label: "Registros repetidos", value: qualityReport.duplicateRows },
+  { label: "Datos reconocidos por JasoDatos", value: qualityReport.mappedColumns },
+  {
+    label: "Datos por revisar",
+    value: qualityReport.unmappedColumns.length,
+  },
+].map((item) => (
         <div
           key={item.label}
           style={{
@@ -647,7 +714,7 @@ style={{
         }}
       >
         <strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
-          Columnas no mapeadas
+          Datos que JasoDatos no reconoció automáticamente
         </strong>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -682,7 +749,7 @@ style={{
         }}
       >
         <strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
-          Observaciones detectadas
+          Cosas que debes revisar antes de continuar
         </strong>
 
         <ul
@@ -710,49 +777,96 @@ style={{
                 fontSize: 14,
               }}
             >
-              <thead>
-                <tr>
-                  <th style={thStyle}>Columna detectada</th>
-                  <th style={thStyle}>Campo sugerido</th>
-                  <th style={thStyle}>Confianza</th>
-                  <th style={thStyle}>Motivo</th>
-                </tr>
-              </thead>
+<thead>
+  <tr>
+    <th style={thStyle}>Dato encontrado</th>
+    <th style={thStyle}>Usar como</th>
+    <th style={thStyle}>Datos leídos de tu archivo</th>
+    <th style={thStyle}>Confianza</th>
+    <th style={thStyle}>Estado</th>
+  </tr>
+</thead>
               <tbody>
-{initialData.mappingCandidates.map((candidate) => (
-  <tr key={candidate.sourceColumn}>
-    <td style={tdStyle}>{formatColumnLabel(candidate.sourceColumn)}</td>
-    <td style={tdStyle}>
-      <select
-                        value={getCurrentTargetField(candidate.sourceColumn)}
-                        onChange={(e) => updateMapping(candidate.sourceColumn, e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: 8,
-                          borderRadius: 8,
-                          border: "1px solid #d1d5db",
-                        }}
-                      >
-                        <option value="">No usar en el análisis</option>
-                        {selectedProfile.fields.map((field) => (
-                         <option key={field.key} value={field.key}>
-  {field.label}
-</option>
-                        ))}
-                      </select>
-                    </td>
-<td style={tdStyle}>
-  {isManualMapping(candidate.sourceColumn, candidate.targetField)
-    ? "Manual"
-    : formatConfidenceLabel(candidate.confidence, candidate.sourceColumn)}
-</td>
-<td style={tdStyle}>
-  {isManualMapping(candidate.sourceColumn, candidate.targetField)
-    ? "Campo ajustado manualmente."
-    : formatReasonLabel(candidate.reason, candidate.sourceColumn)}
-</td>
-                  </tr>
-                ))}
+{initialData.mappingCandidates.map((candidate) => {
+  const currentTargetField = getCurrentTargetField(candidate.sourceColumn);
+
+  const mappingStatus = getMappingStatus(
+    candidate.sourceColumn,
+    candidate.targetField,
+    candidate.confidence
+  );
+
+  return (
+    <tr key={candidate.sourceColumn}>
+      <td style={tdStyle}>
+        <strong style={{ color: "#0f172a" }}>
+          {formatColumnLabel(candidate.sourceColumn)}
+        </strong>
+      </td>
+
+      <td style={tdStyle}>
+        <select
+          value={currentTargetField}
+          onChange={(e) =>
+            updateMapping(candidate.sourceColumn, e.target.value)
+          }
+          style={{
+            width: "100%",
+            padding: 8,
+            borderRadius: 8,
+            border: "1px solid #d1d5db",
+          }}
+        >
+          <option value="">No necesario para el análisis</option>
+          {selectedProfile.fields.map((field) => (
+            <option key={field.key} value={field.key}>
+              {field.label}
+            </option>
+          ))}
+        </select>
+      </td>
+
+      <td style={tdStyle}>
+        <span style={{ color: "#475569", fontSize: 13 }}>
+          {getColumnExamples(candidate.sourceColumn)}
+        </span>
+      </td>
+
+      <td style={tdStyle}>
+        {isManualMapping(candidate.sourceColumn, candidate.targetField)
+          ? "Ajustado manualmente"
+          : formatConfidenceLabel(
+              candidate.confidence,
+              candidate.sourceColumn
+            )}
+      </td>
+
+      <td style={tdStyle}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            width: "fit-content",
+            padding: "5px 9px",
+            borderRadius: 999,
+            fontSize: 12,
+            fontWeight: 800,
+            ...mappingStatus.style,
+          }}
+title={
+  mappingStatus.label === "No necesario"
+    ? "Esta columna quedará fuera del dashboard porque no es necesaria para el análisis principal."
+    : isManualMapping(candidate.sourceColumn, candidate.targetField)
+    ? "Este dato fue ajustado manualmente."
+    : formatReasonLabel(candidate.reason, candidate.sourceColumn)
+}
+        >
+          {mappingStatus.label}
+        </span>
+      </td>
+    </tr>
+  );
+})}
               </tbody>
             </table>
           </div>
@@ -788,7 +902,7 @@ style={{
   >
     {qualityReport?.status === "blocked"
       ? "Corrige calidad del archivo"
-      : "Procesar archivo"}
+      : "Procesar y crear dashboard"}
   </button>
 </div>
         </div>
