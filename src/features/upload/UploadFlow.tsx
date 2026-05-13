@@ -262,6 +262,16 @@ function updateMapping(sourceColumn: string, targetField: string) {
   function getCurrentTargetField(sourceColumn: string): string {
     return confirmedMappings.find((m) => m.sourceColumn === sourceColumn)?.targetField ?? "";
   }
+ function openInventoryHelpWhatsapp() {
+  const message =
+    "Hola, quiero usar JasoDatos pero todavía no tengo mi inventario ordenado. ¿Me pueden ayudar a crear una base inicial para cargar mis productos?";
+
+  const whatsappUrl = `https://wa.me/593997945350?text=${encodeURIComponent(
+    message
+  )}`;
+
+  window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+} 
 function getColumnExamples(sourceColumn: string) {
   if (!initialData?.rawRows?.length) return "-";
 
@@ -389,35 +399,71 @@ function resetFlow() {
           gap: 12,
         }}
       >
-        <h2 style={{ margin: 0 }}>Carga inteligente de archivos</h2>
+      <h2 style={uploadTitleStyle}>Empecemos el análisis de tus datos</h2>
 
-        <div style={{ display: "grid", gap: 8 }}>
-          <label htmlFor="file">Archivo</label>
-<input
-  ref={fileInputRef}
-  id="file"
-  type="file"
-  accept=".csv,.xlsx,.xls"
-onChange={(e) => {
-  const nextFile = e.target.files?.[0] ?? null;
+{!initialData ? (
+  <div style={uploadHeroStyle}>
+    <div style={uploadHeroTextStyle}>
+<strong style={uploadHeroTitleStyle}>
+  Sube tu archivo o solicita ayuda a JasoDatos para crearlo y organizarlo.
+</strong>
 
-  setFile(nextFile);
-  setLoading(false);
-  setError("");
-  setInitialData(null);
-  setConfirmedMappings([]);
-  setProcessedData(null);
-  setQualityReport(null);
-  setHasDataConsent(false);
-}}
-          />
-          {file ? (
-            <small style={{ color: "#374151" }}>
-              Archivo seleccionado: <strong>{file.name}</strong>
-            </small>
-          ) : null}
-        <label
-style={{
+      <p style={uploadHeroDescriptionStyle}>
+        Selecciona un archivo CSV o Excel para que JasoDatos revise tus datos y
+        prepare el análisis de tu negocio.
+      </p>
+    </div>
+
+    <div style={uploadActionsStyle}>
+      <label htmlFor="file" style={selectFileButtonStyle}>
+        Tengo un archivo para subir
+      </label>
+
+      <button
+        type="button"
+        onClick={openInventoryHelpWhatsapp}
+        style={inventoryHelpButtonStyle}
+      >
+        No tengo inventario, necesito ayuda
+      </button>
+    </div>
+
+    <input
+      ref={fileInputRef}
+      id="file"
+      type="file"
+      accept=".csv,.xlsx,.xls"
+      onChange={(e) => {
+        const nextFile = e.target.files?.[0] ?? null;
+
+        setFile(nextFile);
+        setLoading(false);
+        setError("");
+        setInitialData(null);
+        setConfirmedMappings([]);
+        setProcessedData(null);
+        setQualityReport(null);
+        setHasDataConsent(false);
+      }}
+      style={{ display: "none" }}
+    />
+
+    {file ? (
+      <div style={selectedFileStyle}>
+        Archivo seleccionado: <strong>{file.name}</strong>
+      </div>
+    ) : (
+      <div style={selectedFileMutedStyle}>
+        Aún no has seleccionado un archivo.
+      </div>
+    )}
+  </div>
+) : null}
+
+{!initialData ? (
+  <>
+    <label
+      style={{
   display: "flex",
   alignItems: "flex-start",
   gap: 10,
@@ -459,7 +505,6 @@ style={{
   </a>
 </span>
 </label>
-        </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
 <button
   type="button"
@@ -491,9 +536,11 @@ style={{
           >
             Reiniciar
           </button>
-        </div>
+</div>
+  </>
+) : null}
 
-        {error ? (
+{error ? (
           <div
             style={{
               background: "#fef2f2",
@@ -519,7 +566,7 @@ style={{
           }}
         >
 <h3 style={{ margin: 0, fontSize: 24, color: "#111827" }}>
-  Revisión de columnas
+  Revisa cómo JasoDatos entendió tu archivo
 </h3>
 
 <p style={{ margin: 0, color: "#475569", fontSize: 14 }}>
@@ -991,7 +1038,51 @@ const infoCardStyle: React.CSSProperties = {
   padding: 12,
   background: "linear-gradient(135deg, #ffffff 0%, #f8faff 100%)",
 };
+const inventoryHelpCardStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 16,
+  flexWrap: "wrap",
+  padding: 18,
+  borderRadius: 18,
+  border: "1px solid #bfdbfe",
+  background: "linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%)",
+  boxShadow: "0 12px 30px rgba(37, 99, 235, 0.10)",
+};
 
+const inventoryHelpTitleStyle: React.CSSProperties = {
+  color: "#172554",
+  fontSize: 18,
+  fontWeight: 900,
+  lineHeight: 1.15,
+};
+
+const inventoryHelpTextStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#334155",
+  fontSize: 14,
+  fontWeight: 600,
+  lineHeight: 1.5,
+  maxWidth: 720,
+};
+
+const inventoryHelpButtonStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 44,
+  border: 0,
+  borderRadius: 14,
+  padding: "0 18px",
+  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
+  color: "#ffffff",
+  fontSize: 14,
+  fontWeight: 900,
+  cursor: "pointer",
+  boxShadow: "0 12px 28px rgba(22, 163, 74, 0.22)",
+  whiteSpace: "nowrap",
+};
 const infoLabelStyle: React.CSSProperties = {
   color: "#64748b",
   fontSize: 12,
@@ -1001,4 +1092,91 @@ const infoValueStyle: React.CSSProperties = {
   color: "#0f172a",
   fontSize: 15,
   overflowWrap: "anywhere",
+  };
+
+const uploadTitleStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#1d4ed8",
+  fontSize: 46,
+  fontWeight: 900,
+  lineHeight: 1.1,
+};
+
+const uploadHeroStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) auto",
+  gap: 16,
+  alignItems: "center",
+  padding: 18,
+  borderRadius: 20,
+  border: "1px solid #bfdbfe",
+  background: "linear-gradient(135deg, #eff6ff 0%, #eef2ff 55%, #f8fafc 100%)",
+  boxShadow: "0 14px 36px rgba(37, 99, 235, 0.10)",
+};
+
+const uploadHeroTextStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 6,
+};
+
+const uploadHeroTitleStyle: React.CSSProperties = {
+  color: "#1d4ed8",
+  fontSize: 19,
+  fontWeight: 900,
+  lineHeight: 1.15,
+};
+
+const uploadHeroDescriptionStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#334155",
+  fontSize: 14,
+  fontWeight: 600,
+  lineHeight: 1.45,
+  maxWidth: 760,
+};
+
+const uploadActionsStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: 10,
+  flexWrap: "wrap",
+};
+
+const selectFileButtonStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 44,
+  borderRadius: 14,
+  padding: "0 18px",
+  background: "linear-gradient(135deg, #2563EB 0%, #4F46E5 100%)",
+  color: "#ffffff",
+  fontSize: 14,
+  fontWeight: 900,
+  cursor: "pointer",
+  boxShadow: "0 12px 28px rgba(37, 99, 235, 0.24)",
+  border: "1px solid rgba(255,255,255,0.20)",
+};
+
+const selectedFileStyle: React.CSSProperties = {
+  gridColumn: "1 / -1",
+  padding: "10px 12px",
+  borderRadius: 14,
+  background: "#ffffff",
+  border: "1px solid #dbeafe",
+  color: "#1e293b",
+  fontSize: 13,
+  fontWeight: 650,
+};
+
+const selectedFileMutedStyle: React.CSSProperties = {
+  gridColumn: "1 / -1",
+  padding: "10px 12px",
+  borderRadius: 14,
+  background: "rgba(255,255,255,0.70)",
+  border: "1px dashed #bfdbfe",
+  color: "#64748b",
+  fontSize: 13,
+  fontWeight: 650,
 };
