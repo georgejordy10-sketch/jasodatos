@@ -108,11 +108,11 @@ onOpenChannelDetails,
           <table style={styles.tableCompact}>
             <thead>
               <tr>
-                <th style={styles.thCompact}>Producto</th>
-                <th style={styles.thCompact}>Stock actual</th>
-                <th style={styles.thCompact}>Mínimo</th>
-                <th style={styles.thCompact}>Estado</th>
-                <th style={styles.thCompact}>Días cobertura</th>
+               <th style={styles.thCompact}>Producto</th>
+<th style={styles.thCompact}>Unidades disponibles</th>
+<th style={styles.thCompact}>Mínimo esperado</th>
+<th style={styles.thCompact}>Situación</th>
+<th style={styles.thCompact}>Días estimados</th>
               </tr>
             </thead>
             <tbody>
@@ -129,7 +129,7 @@ onOpenChannelDetails,
                         color: "#CBD5E1",
                       }}
                     >
-                      Sin stock cargado
+                      Sin inventario cargado
                     </span>
                   </td>
                   <td style={styles.tdCompact}>-</td>
@@ -145,7 +145,7 @@ onOpenChannelDetails,
                         style={{
                           ...styles.stockStatusBar,
                           background:
-                            row.estado === "Crítico" || row.estado === "Sin stock"
+                            row.estado === "Crítico" || row.estado === "Sin inventario"
                               ? "rgba(126, 34, 54, 0.55)"
                               : row.estado === "En riesgo"
                               ? "rgba(120, 53, 15, 0.55)"
@@ -156,13 +156,13 @@ onOpenChannelDetails,
                           style={{
                             ...styles.stockStatusFill,
                             width:
-                              row.estado === "Crítico" || row.estado === "Sin stock"
+                              row.estado === "Crítico" || row.estado === "Sin inventario"
                                 ? "64%"
                                 : row.estado === "En riesgo"
                                 ? "78%"
                                 : "58%",
                             background:
-                              row.estado === "Crítico" || row.estado === "Sin stock"
+                              row.estado === "Crítico" || row.estado === "Sin inventario"
                                 ? "linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)"
                                 : row.estado === "En riesgo"
                                 ? "linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)"
@@ -173,7 +173,7 @@ onOpenChannelDetails,
                           style={{
                             ...styles.stockStatusText,
                             color:
-                              row.estado === "Crítico" || row.estado === "Sin stock"
+                              row.estado === "Crítico" || row.estado === "Sin inventario"
                                 ? "#ffe4e6"
                                 : row.estado === "En riesgo"
                                 ? "#fff7ed"

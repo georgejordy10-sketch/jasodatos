@@ -1241,7 +1241,7 @@ const stockCritico = useMemo(() => {
   if (!hasStockData) return null;
 
   return stockRiskRows.filter(
-    (row) => row.estado === "Crtico" || row.estado === "Sin inventario"
+    (row) => row.estado === "Crítico" || row.estado === "Sin inventario"
   ).length;
 }, [hasStockData, stockRiskRows]);
 
@@ -2619,7 +2619,7 @@ function DetailModal({
                     <td style={detailStyles.td}>{row.estado}</td>
                     <td style={detailStyles.td}>{row.diasCobertura} días</td>
                     <td style={detailStyles.td}>
-                      {row.estado === "Crtico"
+                      {row.estado === "Crítico"
                         ? "Priorizar revisin y salida comercial."
                         : row.estado === "En riesgo"
                         ? "Monitorear reposición y rotación."
