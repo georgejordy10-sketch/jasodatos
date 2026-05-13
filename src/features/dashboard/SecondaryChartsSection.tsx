@@ -135,8 +135,8 @@ onOpenChannelDetails,
                   <td style={styles.tdCompact}>-</td>
                 </tr>
               ) : (
-                stockRiskRows.map((row) => (
-                  <tr key={row.producto}>
+                stockRiskRows.map((row, index) => (
+  <tr key={`${row.producto}-${index}`}>
                     <td style={styles.tdCompact}>{row.producto}</td>
                     <td style={styles.tdCompact}>{row.stock}</td>
                     <td style={styles.tdCompact}>{row.minimo}</td>

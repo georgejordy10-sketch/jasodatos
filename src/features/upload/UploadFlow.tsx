@@ -309,7 +309,7 @@ if (!currentTargetField) {
 
   if (isManualMapping(sourceColumn, suggestedTargetField)) {
     return {
-      label: "Ajustado",
+      label: "Cambiado",
       style: {
         background: "#DBEAFE",
         color: "#1D4ED8",
@@ -519,7 +519,7 @@ function resetFlow() {
     cursor: loading || !file || !hasDataConsent ? "not-allowed" : "pointer",
   }}
 >
-  {loading ? "Leyendo..." : "Leer archivo"}
+  {loading ? "Revisando..." : "Revisar archivo"}
 </button>
 
           <button
@@ -829,7 +829,7 @@ function resetFlow() {
     <th style={thStyle}>Dato encontrado</th>
     <th style={thStyle}>Usar como</th>
     <th style={thStyle}>Datos leídos de tu archivo</th>
-    <th style={thStyle}>Confianza</th>
+    <th style={thStyle}>Seguridad</th>
     <th style={thStyle}>Estado</th>
   </tr>
 </thead>
@@ -881,7 +881,7 @@ function resetFlow() {
 
       <td style={tdStyle}>
         {isManualMapping(candidate.sourceColumn, candidate.targetField)
-          ? "Ajustado manualmente"
+          ? "Cambiado por ti"
           : formatConfidenceLabel(
               candidate.confidence,
               candidate.sourceColumn
@@ -904,7 +904,7 @@ title={
   mappingStatus.label === "No necesario"
     ? "Esta columna quedará fuera del dashboard porque no es necesaria para el análisis principal."
     : isManualMapping(candidate.sourceColumn, candidate.targetField)
-    ? "Este dato fue ajustado manualmente."
+    ? "Tú cambiaste cómo JasoDatos debe leer este dato."
     : formatReasonLabel(candidate.reason, candidate.sourceColumn)
 }
         >
@@ -949,7 +949,7 @@ title={
   >
     {qualityReport?.status === "blocked"
       ? "Corrige calidad del archivo"
-      : "Procesar y crear dashboard"}
+      : "Crear dashboard"}
   </button>
 </div>
         </div>
