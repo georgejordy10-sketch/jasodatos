@@ -2562,7 +2562,7 @@ function DetailModal({
       <div style={detailStyles.modal}>
         <div style={detailStyles.header}>
           <div>
-            <p style={detailStyles.eyebrow}>Vista ampliada</p>
+            <p style={detailStyles.eyebrow}>Detalle del análisis</p>
             <h2 style={detailStyles.title}>{title}</h2>
           </div>
 
@@ -2578,7 +2578,7 @@ function DetailModal({
                 <tr>
                   <th style={detailStyles.th}>Producto</th>
                   <th style={detailStyles.th}>Ventas</th>
-                  <th style={detailStyles.th}>participación</th>
+                  <th style={detailStyles.th}>Participación en ventas</th>
                 </tr>
               </thead>
               <tbody>
@@ -2602,28 +2602,36 @@ function DetailModal({
             <table style={detailStyles.table}>
               <thead>
                 <tr>
-                  <th style={detailStyles.th}>Producto</th>
-                  <th style={detailStyles.th}>Inventario actual</th>
-                  <th style={detailStyles.th}>Mnimo</th>
-                  <th style={detailStyles.th}>Estado</th>
-                  <th style={detailStyles.th}>días cobertura</th>
-                  <th style={detailStyles.th}>Recomendacin</th>
+                 <th style={detailStyles.th}>Producto</th>
+<th style={detailStyles.th}>Unidades disponibles</th>
+<th style={detailStyles.th}>Mínimo esperado</th>
+<th style={detailStyles.th}>Situación</th>
+<th style={detailStyles.th}>Días estimados</th>
+<th style={detailStyles.th}>Qué hacer</th>
                 </tr>
               </thead>
               <tbody>
-                {stockRiskRows.map((row) => (
-                  <tr key={row.producto}>
+                {stockRiskRows.map((row, index) => (
+  <tr key={`${row.producto}-${index}`}>
                     <td style={detailStyles.td}>{row.producto}</td>
                     <td style={detailStyles.td}>{row.stock}</td>
                     <td style={detailStyles.td}>{row.minimo}</td>
-                    <td style={detailStyles.td}>{row.estado}</td>
+                    <td style={detailStyles.td}>
+  {row.estado === "Crítico"
+    ? "Inventario bajo"
+    : row.estado === "En riesgo"
+    ? "Revisar pronto"
+    : row.estado === "Sin inventario"
+    ? "Sin inventario"
+    : row.estado}
+</td>
                     <td style={detailStyles.td}>{row.diasCobertura} días</td>
                     <td style={detailStyles.td}>
-                      {row.estado === "Crítico"
-                        ? "Priorizar revisin y salida comercial."
-                        : row.estado === "En riesgo"
-                        ? "Monitorear reposición y rotación."
-                        : "Mantener seguimiento operativo."}
+{row.estado === "Crítico"
+  ? "Revisa este producto primero. Puede quedarse sin unidades para vender."
+  : row.estado === "En riesgo"
+  ? "Dale seguimiento y considera reponerlo pronto."
+  : "Mantén este producto en observación."}
                     </td>
                   </tr>
                 ))}
