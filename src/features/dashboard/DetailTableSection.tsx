@@ -109,7 +109,7 @@ export default function DetailTableSection({
                 <th style={styles.dataTh}>costo_unitario</th>
                 <th style={styles.dataTh}>precio_unitario</th>
                 <th style={styles.dataTh}>canal</th>
-                <th style={styles.dataTh}>stock</th>
+                <th style={styles.dataTh}>inventario</th>
               </tr>
             </thead>
 
