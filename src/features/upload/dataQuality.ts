@@ -27,7 +27,6 @@ export interface DataQualityReport {
 
 const REQUIRED_FIELDS = [
   "fecha",
-  "sucursal",
   "producto",
   "cantidad",
   "precio_unitario",

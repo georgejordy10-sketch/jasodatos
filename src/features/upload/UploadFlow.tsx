@@ -917,19 +917,38 @@ title={
               </tbody>
             </table>
           </div>
-
-         <div
+          <div
   style={{
     display: "flex",
     justifyContent: "flex-end",
+    gap: 10,
+    flexWrap: "wrap",
     paddingTop: 16,
     paddingBottom: 8,
   }}
 >
-<button
-  type="button"
-  onClick={handleProcess}
-  disabled={qualityReport?.status === "blocked"}
+{qualityReport?.status === "blocked" ? (
+  <button
+    type="button"
+    onClick={resetFlow}
+    style={{
+      padding: "12px 18px",
+      borderRadius: 12,
+      border: "1px solid #cbd5e1",
+      background: "#ffffff",
+      color: "#0f172a",
+      cursor: "pointer",
+      fontWeight: 800,
+    }}
+  >
+    Subir otro archivo
+  </button>
+) : null}
+
+  <button
+    type="button"
+    onClick={handleProcess}
+    disabled={qualityReport?.status === "blocked"}
     style={{
       padding: "12px 18px",
       borderRadius: 12,
@@ -948,7 +967,7 @@ title={
     }}
   >
     {qualityReport?.status === "blocked"
-      ? "Corrige calidad del archivo"
+      ? "Corrige el archivo para continuar"
       : "Crear dashboard"}
   </button>
 </div>

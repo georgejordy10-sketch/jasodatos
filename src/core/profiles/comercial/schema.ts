@@ -6,7 +6,7 @@ import type {
 
 const comercialFields: CanonicalFieldDefinition[] = [
   { key: "fecha", label: "Fecha", type: "date", required: true },
-  { key: "sucursal", label: "Sucursal / Local", type: "string", required: true },
+  { key: "sucursal", label: "Sucursal / Local", type: "string", required: false },
   { key: "producto", label: "Producto", type: "string", required: true },
   { key: "sku", label: "Código del producto", type: "string", required: false },
   { key: "categoria", label: "Categoría del producto", type: "string", required: false },
@@ -261,14 +261,16 @@ pais: [
   "country",
 ],
   },
-  requiredFieldKeys: ["fecha", "sucursal", "producto", "cantidad", "precio_unitario"],
+  requiredFieldKeys: ["fecha", "producto", "cantidad", "precio_unitario"],
   dateFieldKeys: ["fecha"],
   numericFieldKeys: ["cantidad", "precio_unitario", "costo_unitario", "stock"],
   validateRow: (row) => {
     const errors: string[] = [];
 
     if (!row.fecha) errors.push("Falta fecha.");
-    if (!row.sucursal) errors.push("Falta sucursal.");
+    if (!row.sucursal) {
+  row.sucursal = "Local principal";
+}
     if (!row.producto) errors.push("Falta producto.");
 
     const cantidad = toNumber(row.cantidad);

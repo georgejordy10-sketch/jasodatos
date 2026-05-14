@@ -516,13 +516,25 @@ function buildChannelData(rows: Record<string, unknown>[]) {
     byDateAndChannel.set(fecha, current);
   }
 
-  const data = [...byDateAndChannel.values()].sort((a, b) =>
-    String(a.fecha).localeCompare(String(b.fecha))
-  );
+  const channelList = [...channels];
+
+  const data = [...byDateAndChannel.values()]
+    .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))
+    .map((item) => {
+      const normalizedItem: Record<string, number | string> = {
+        fecha: String(item.fecha),
+      };
+
+      for (const channel of channelList) {
+        normalizedItem[channel] = toNumber(item[channel]);
+      }
+
+      return normalizedItem;
+    });
 
   return {
     data,
-    channels: [...channels],
+    channels: channelList,
     hasChannelData: validRows.length > 0,
   };
 }
@@ -907,6 +919,17 @@ const filteredRows = useMemo(() => {
   toDate,
   channelsEnabled,
 ]);
+const localCount = useMemo(() => {
+  const locals = new Set(
+    filteredRows
+      .map((row) => String(row.sucursal || "Local principal").trim())
+      .filter(Boolean)
+  );
+
+  return locals.size;
+}, [filteredRows]);
+
+const hasMultipleLocals = localCount > 1;
 const benchmarkRows = useMemo(() => {
   return processedData.validRows.filter((row) => {
     const producto = toText(row.producto, "Sin producto");
@@ -2214,34 +2237,35 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
   setDetailModal("channels");
 }}
 />
-{settings.showBenchmarking &&
-  (canUseBenchmarking ? (
+{settings.showBenchmarking && hasMultipleLocals ? (
+  canUseBenchmarking ? (
     <>
       {isExportingPdf ? <div style={styles.pdfSpacerBeforeBenchmarking} /> : null}
 
       <div id="benchmarking-sucursales">
-<div style={styles.modulePlanRow}>
-  {!isExportingPdf ? (
-    <ActivePlanBadge tone="pro">Incluido en PRO</ActivePlanBadge>
-  ) : null}
+        <div style={styles.modulePlanRow}>
+          {!isExportingPdf ? (
+            <ActivePlanBadge tone="pro">Incluido en PRO</ActivePlanBadge>
+          ) : null}
 
-  <span style={styles.modulePlanText}>
-    Comparativo comercial avanzado entre sucursales
-  </span>
-</div>
+          <span style={styles.modulePlanText}>
+            Comparativo entre locales detectados en tu archivo
+          </span>
+        </div>
 
-      <BenchmarkingSucursales rows={benchmarkRows} />
-       </div>
+        <BenchmarkingSucursales rows={benchmarkRows} />
+      </div>
     </>
   ) : (
     <LockedFeatureCard
-      title="desempeño entre sucursales"
-      description="Compara el desempeño comercial entre sucursales y detecta rezagos. Disponible desde el plan Pro."
+      title="Comparativo por local"
+      description="Detectamos varios locales en tu archivo. Puedes ver el análisis general; para comparar ventas, productos e inventario por local, activa un plan con desempeño entre sucursales."
       requiredPlan="pro"
       onOpenPlans={() => setPlansOpen(true)}
       onContactSales={openSalesWhatsapp}
     />
-  ))}
+  )
+) : null}
   {settings.showAssistant &&
   (canUseAssistant ? (
     <>

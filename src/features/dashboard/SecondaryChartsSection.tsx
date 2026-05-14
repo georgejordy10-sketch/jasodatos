@@ -72,7 +72,17 @@ function Card({
     </div>
   );
 }
+function getFriendlyChannelName(channel: string) {
+  const normalized = channel.trim();
 
+  const labels: Record<string, string> = {
+    tiendaFisica: "Tienda física",
+    ecommerce: "E-commerce",
+    mayorista: "Mayorista",
+  };
+
+  return labels[normalized] ?? normalized;
+}
 export default function SecondaryChartsSection({
   defaultStockMin,
   stockRiskRows,
@@ -208,8 +218,12 @@ onOpenChannelDetails,
 }
       >
         <div style={styles.channelBadgeRow}>
-          <span style={styles.channelBadge}>Medios de venta: {activeChannelsCount}/3</span>
-          <span style={styles.channelBadgeText}>{activeChannelsLabel}</span>
+          <span style={styles.channelBadge}>Medios encontrados: {channelResult.channels.length}</span>
+<span style={styles.channelBadgeText}>
+  {channelResult.channels.length > 0
+    ? channelResult.channels.map(getFriendlyChannelName).join(" · ")
+    : "Sin medios detectados"}
+</span>
         </div>
 
         {activeChannelsCount === 0 ? (
@@ -218,51 +232,107 @@ onOpenChannelDetails,
           </div>
         ) : !channelResult.hasChannelData ? (
           <div style={styles.channelEmptyState}>
-            El archivo filtrado no contiene una columna de canal mapeada.
+            No encontramos en tu archivo una columna que indique por dónde se realizó cada venta.
           </div>
         ) : (
-          <div style={{ width: "100%", height: 340 }}>
-            <ResponsiveContainer>
-              <AreaChart
-                data={channelResult.data}
-                margin={{ top: 22, right: 18, left: 24, bottom: 1 }}
-              >
-                <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-                <XAxis
-                  dataKey="fecha"
-                  stroke="#B9C2FF"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  dy={1}
-                />
-                <YAxis
-                  stroke="#B9C2FF"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={10}
-                  width={axisWidth}
-                  tickFormatter={(v) => formatCompactMoney(v)}
-                />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  formatter={(value) => formatMoney(Number(value ?? 0))}
-                />
-                <Legend verticalAlign="top" height={36} />
-                {channelResult.channels.map((channel, index) => (
-                  <Area
-                    key={channel}
-                    type="monotone"
-                    dataKey={channel}
-                    stackId="1"
-                    stroke={colors[index % colors.length]}
-                    fill={colors[index % colors.length]}
-                    fillOpacity={0.55}
-                  />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+        <div style={{ width: "100%", height: 340 }}>
+  <ResponsiveContainer>
+    <AreaChart
+      data={channelResult.data}
+      margin={{ top: 22, right: 18, left: 24, bottom: 1 }}
+    >
+      <defs>
+        {channelResult.channels.map((channel, index) => (
+          <linearGradient
+            key={`gradient-${channel}`}
+            id={`channelGradient-${index}`}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            <stop
+  offset="5%"
+  stopColor={colors[index % colors.length]}
+  stopOpacity={0.24}
+/>
+<stop
+  offset="55%"
+  stopColor={colors[index % colors.length]}
+  stopOpacity={0.10}
+/>
+<stop
+  offset="95%"
+  stopColor={colors[index % colors.length]}
+  stopOpacity={0.02}
+/>
+          </linearGradient>
+        ))}
+      </defs>
+
+      <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+
+      <XAxis
+        dataKey="fecha"
+        stroke="#B9C2FF"
+        tickLine={false}
+        axisLine={false}
+        tickMargin={8}
+        dy={1}
+      />
+
+      <YAxis
+        stroke="#B9C2FF"
+        tickLine={false}
+        axisLine={false}
+        tickMargin={10}
+        width={axisWidth}
+        tickFormatter={(v) => formatCompactMoney(v)}
+      />
+      <Tooltip
+  contentStyle={tooltipStyle}
+  formatter={(value, name) => [
+    formatMoney(Number(value ?? 0)),
+    getFriendlyChannelName(String(name)),
+  ]}
+/>
+      <Legend
+  verticalAlign="top"
+  height={34}
+  formatter={(value) => (
+    <span style={{ color: "#DDE4FF", fontSize: 12, fontWeight: 600 }}>
+      {getFriendlyChannelName(String(value))}
+    </span>
+  )}
+/>
+
+      {channelResult.channels.map((channel, index) => (
+       <Area
+  key={channel}
+  type="monotone"
+  dataKey={channel}
+  name={getFriendlyChannelName(channel)}
+  stroke={colors[index % colors.length]}
+  strokeWidth={2.2}
+  fill={`url(#channelGradient-${index})`}
+  fillOpacity={1}
+  dot={{
+    r: 2.5,
+    strokeWidth: 1.5,
+    fill: "#1f2a78",
+    stroke: colors[index % colors.length],
+  }}
+  activeDot={{
+    r: 5,
+    strokeWidth: 2,
+    fill: "#ffffff",
+    stroke: colors[index % colors.length],
+  }}
+/>
+      ))}
+    </AreaChart>
+  </ResponsiveContainer>
+</div>
         )}
       </Card>
     </section>
