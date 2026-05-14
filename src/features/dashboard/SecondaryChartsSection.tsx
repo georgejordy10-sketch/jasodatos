@@ -195,8 +195,8 @@ onOpenChannelDetails,
     </div>
 
       <Card
-        title="Ventas por canal"
-        subtitle="Distribución por fecha y canal"
+        title="Dónde se generan tus ventas"
+        subtitle="Identifica si tus ventas vienen de tienda física, WhatsApp, web u otros medios."
         action={
   <button
     type="button"
@@ -208,13 +208,13 @@ onOpenChannelDetails,
 }
       >
         <div style={styles.channelBadgeRow}>
-          <span style={styles.channelBadge}>Canales activos: {activeChannelsCount}/3</span>
+          <span style={styles.channelBadge}>Medios de venta: {activeChannelsCount}/3</span>
           <span style={styles.channelBadgeText}>{activeChannelsLabel}</span>
         </div>
 
         {activeChannelsCount === 0 ? (
           <div style={styles.channelEmptyState}>
-            No hay canales habilitados. Activa al menos uno desde Configuración del negocio.
+            Aún no has seleccionado tus medios de venta. Puedes hacerlo en Datos del negocio.
           </div>
         ) : !channelResult.hasChannelData ? (
           <div style={styles.channelEmptyState}>
