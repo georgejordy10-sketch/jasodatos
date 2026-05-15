@@ -663,7 +663,7 @@ function resetFlow() {
           </div>
         ) : null}
       </div>
-     {historyLoaded && !processedData && uploadHistory.length > 0 ? (
+      {historyLoaded && !processedData && uploadHistory.length > 0 ? (
   <div
     style={{
       border: "1px solid #dbeafe",
@@ -674,43 +674,102 @@ function resetFlow() {
       gap: 10,
     }}
   >
-    <div>
-      <strong style={{ color: "#1d4ed8", fontSize: 16 }}>
+    <div style={{ display: "grid", gap: 2 }}>
+      <strong style={{ color: "#1d4ed8", fontSize: 15 }}>
         Últimas cargas procesadas
       </strong>
-      <p style={{ margin: "4px 0 0", color: "#475569", fontSize: 13 }}>
-        Aquí puedes ver los últimos archivos que analizaste en este navegador.
+
+      <p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.35 }}>
+        Resumen local de tus últimos archivos analizados en este navegador.
       </p>
     </div>
 
     <div style={{ display: "grid", gap: 8 }}>
-      {uploadHistory.map((item) => (
+      {uploadHistory.slice(0, 3).map((item) => (
         <div
           key={item.id}
           style={{
             border: "1px solid #dbeafe",
-            borderRadius: 14,
-            padding: 12,
+            borderRadius: 12,
+            padding: "10px 12px",
             background: "#ffffff",
             display: "grid",
-            gap: 4,
+            gap: 6,
           }}
         >
-          <strong style={{ color: "#0f172a", fontSize: 14 }}>
-            {item.fileName}
-          </strong>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+            }}
+          >
+            <strong
+              style={{
+                color: "#0f172a",
+                fontSize: 13,
+                lineHeight: 1.2,
+                maxWidth: 360,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={item.fileName}
+            >
+              {item.fileName}
+            </strong>
 
-          <span style={{ color: "#64748b", fontSize: 12 }}>
-            {new Date(item.uploadedAt).toLocaleString("es-EC")}
-          </span>
+            <span style={{ color: "#64748b", fontSize: 11, whiteSpace: "nowrap" }}>
+              {new Date(item.uploadedAt).toLocaleString("es-EC")}
+            </span>
+          </div>
 
-          <span style={{ color: "#334155", fontSize: 13 }}>
-            {item.totalRows} registros · {item.productsCount} productos ·{" "}
-            {item.localsCount} local(es) · {item.channelsCount} medio(s)
-          </span>
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              flexWrap: "wrap",
+              color: "#334155",
+              fontSize: 12,
+              lineHeight: 1.3,
+            }}
+          >
+            <span>
+              <strong>{item.totalRows}</strong> registros
+            </span>
+            <span>
+              <strong>
+                {item.totalSales.toLocaleString("es-EC", {
+                  style: "currency",
+                  currency: "USD",
+                })}
+              </strong>{" "}
+              ventas
+            </span>
+            <span>
+              <strong>{item.totalUnits}</strong> unidades
+            </span>
+            <span>
+              <strong>{item.productsCount}</strong> productos
+            </span>
+            <span>
+              <strong>{item.localsCount}</strong> locales
+            </span>
+            <span>
+              <strong>{item.channelsCount}</strong> medios
+            </span>
+          </div>
         </div>
       ))}
     </div>
+
+    {uploadHistory.length > 3 ? (
+      <span style={{ color: "#64748b", fontSize: 11 }}>
+        Mostrando las 3 cargas más recientes de {uploadHistory.length} registradas.
+      </span>
+    ) : null}
   </div>
 ) : null}
       {initialData ? (
