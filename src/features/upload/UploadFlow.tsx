@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listProfiles } from "@/core/profiles/registry";
 import type { ProfileId } from "@/core/profiles/types";
 import DashboardComercial from "@/features/dashboard/DashboardComercial";
@@ -16,7 +16,66 @@ import {
   type DataQualityReport,
 } from "@/features/upload/dataQuality";
 export default function UploadFlow() {
+const UPLOAD_HISTORY_STORAGE_KEY = "jasodatos_upload_history_v1";
 
+type UploadHistoryItem = {
+  id: string;
+  fileName: string;
+  uploadedAt: string;
+  totalRows: number;
+  totalSales: number;
+  totalUnits: number;
+  productsCount: number;
+  localsCount: number;
+  channelsCount: number;
+};
+
+function toUploadNumber(value: unknown) {
+  const numberValue = Number(value ?? 0);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+}
+
+function buildUploadHistoryItem(
+  result: ProcessDatasetResult,
+  fileName: string
+): UploadHistoryItem {
+  const rows = result.validRows ?? [];
+
+  const products = new Set<string>();
+  const locals = new Set<string>();
+  const channels = new Set<string>();
+
+  let totalSales = 0;
+  let totalUnits = 0;
+
+  for (const row of rows) {
+    const producto = String(row.producto ?? "").trim();
+    const sucursal = String(row.sucursal ?? "Local principal").trim();
+    const canal = String(row.canal ?? "").trim();
+
+    const cantidad = toUploadNumber(row.cantidad);
+    const precio = toUploadNumber(row.precio_unitario);
+
+    totalUnits += cantidad;
+    totalSales += cantidad * precio;
+
+    if (producto) products.add(producto);
+    if (sucursal) locals.add(sucursal);
+    if (canal) channels.add(canal);
+  }
+
+  return {
+    id: `${Date.now()}-${fileName}`,
+    fileName,
+    uploadedAt: new Date().toISOString(),
+    totalRows: rows.length,
+    totalSales,
+    totalUnits,
+    productsCount: products.size,
+    localsCount: locals.size,
+    channelsCount: channels.size,
+  };
+}
   const profiles = useMemo(() => listProfiles(), []);
 const profileId: ProfileId = "comercial";
   const [file, setFile] = useState<File | null>(null);
@@ -27,6 +86,22 @@ const profileId: ProfileId = "comercial";
   const [initialData, setInitialData] = useState<ReadDatasetInitialResult | null>(null);
   const [confirmedMappings, setConfirmedMappings] = useState<ConfirmedMapping[]>([]);
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
+const [uploadHistory, setUploadHistory] = useState<UploadHistoryItem[]>([]);
+const [historyLoaded, setHistoryLoaded] = useState(false);
+useEffect(() => {
+  try {
+    const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
+    setUploadHistory(saved ? JSON.parse(saved) : []);
+  } catch {
+    setUploadHistory([]);
+  } finally {
+    setHistoryLoaded(true);
+  }
+}, []);
+const [lastUploadComparison, setLastUploadComparison] = useState<{
+  current: UploadHistoryItem;
+  previous: UploadHistoryItem;
+} | null>(null);
   const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
   const qualityTheme = qualityReport ? getQualitySummary(qualityReport) : null;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -340,6 +415,20 @@ if (!currentTargetField) {
     },
   };
 }
+function saveUploadHistory(item: UploadHistoryItem) {
+  setUploadHistory((current) => {
+    const next = [item, ...current].slice(0, 5);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        UPLOAD_HISTORY_STORAGE_KEY,
+        JSON.stringify(next)
+      );
+    }
+
+    return next;
+  });
+}
   function handleProcess() {
     if (!initialData) {
       setError("Primero debes leer el archivo.");
@@ -364,15 +453,35 @@ if (currentQualityReport.status === "blocked") {
 }
 
 const result = processDataset(
-      initialData.rawRows,
-      initialData.profileId,
-      confirmedMappings,
-      initialData.fileName
-    );
+  initialData.rawRows,
+  initialData.profileId,
+  confirmedMappings,
+  initialData.fileName
+);
 
-    setProcessedData(result);
+const historyItem = buildUploadHistoryItem(result, initialData.fileName);
+const previousUpload = uploadHistory[0] ?? null;
+
+if (previousUpload) {
+  setLastUploadComparison({
+    current: historyItem,
+    previous: previousUpload,
+  });
+} else {
+  setLastUploadComparison(null);
+}
+
+saveUploadHistory(historyItem);
+
+setProcessedData(result);
   }
+function calculatePercentChange(current: number, previous: number) {
+  if (previous === 0 && current === 0) return "0.0%";
+  if (previous === 0) return "+100.0%";
 
+  const change = ((current - previous) / previous) * 100;
+  return `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
+}
 function resetFlow() {
   setFile(null);
   setLoading(false);
@@ -554,7 +663,56 @@ function resetFlow() {
           </div>
         ) : null}
       </div>
+     {historyLoaded && !processedData && uploadHistory.length > 0 ? (
+  <div
+    style={{
+      border: "1px solid #dbeafe",
+      borderRadius: 16,
+      padding: 14,
+      background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
+      display: "grid",
+      gap: 10,
+    }}
+  >
+    <div>
+      <strong style={{ color: "#1d4ed8", fontSize: 16 }}>
+        Últimas cargas procesadas
+      </strong>
+      <p style={{ margin: "4px 0 0", color: "#475569", fontSize: 13 }}>
+        Aquí puedes ver los últimos archivos que analizaste en este navegador.
+      </p>
+    </div>
 
+    <div style={{ display: "grid", gap: 8 }}>
+      {uploadHistory.map((item) => (
+        <div
+          key={item.id}
+          style={{
+            border: "1px solid #dbeafe",
+            borderRadius: 14,
+            padding: 12,
+            background: "#ffffff",
+            display: "grid",
+            gap: 4,
+          }}
+        >
+          <strong style={{ color: "#0f172a", fontSize: 14 }}>
+            {item.fileName}
+          </strong>
+
+          <span style={{ color: "#64748b", fontSize: 12 }}>
+            {new Date(item.uploadedAt).toLocaleString("es-EC")}
+          </span>
+
+          <span style={{ color: "#334155", fontSize: 13 }}>
+            {item.totalRows} registros · {item.productsCount} productos ·{" "}
+            {item.localsCount} local(es) · {item.channelsCount} medio(s)
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+) : null}
       {initialData ? (
         <div
           style={{
@@ -1009,27 +1167,92 @@ title={
               <strong>Filas con errores:</strong> {processedData.rowIssues.length}
             </div>
           </div>
+           {processedData.rowIssues.length > 0 ? (
+  <div
+    style={{
+      background: "#fff7ed",
+      color: "#9a3412",
+      border: "1px solid #fed7aa",
+      borderRadius: 10,
+      padding: 12,
+    }}
+  >
+    Se detectaron errores en {processedData.rowIssues.length} filas.
+  </div>
+) : null}
 
-          {processedData.rowIssues.length > 0 ? (
-            <div
-              style={{
-                background: "#fff7ed",
-                color: "#9a3412",
-                border: "1px solid #fed7aa",
-                borderRadius: 10,
-                padding: 12,
-              }}
-            >
-              Se detectaron errores en {processedData.rowIssues.length} filas.
-            </div>
-          ) : null}
+{lastUploadComparison ? (
+  <div style={historyComparisonSectionStyle}>
+    <div style={historyComparisonHeaderStyle}>
+      <h3 style={historyComparisonTitleStyle}>
+        Comparación con la carga anterior
+      </h3>
+
+      <p style={historyComparisonSubtitleStyle}>
+        Comparamos este archivo con el último archivo procesado en este navegador.
+      </p>
+    </div>
+
+    <div style={historyComparisonGridStyle}>
+      <div style={historyComparisonCardStyle}>
+        <span style={historyComparisonLabelStyle}>Ventas</span>
+        <strong style={historyComparisonValueStyle}>
+          {calculatePercentChange(
+            lastUploadComparison.current.totalSales,
+            lastUploadComparison.previous.totalSales
+          )}
+        </strong>
+        <span style={historyComparisonFootStyle}>vs. carga anterior</span>
+      </div>
+
+      <div style={historyComparisonCardStyle}>
+        <span style={historyComparisonLabelStyle}>Unidades</span>
+        <strong style={historyComparisonValueStyle}>
+          {calculatePercentChange(
+            lastUploadComparison.current.totalUnits,
+            lastUploadComparison.previous.totalUnits
+          )}
+        </strong>
+        <span style={historyComparisonFootStyle}>vs. carga anterior</span>
+      </div>
+
+      <div style={historyComparisonCardStyle}>
+        <span style={historyComparisonLabelStyle}>Productos</span>
+        <strong style={historyComparisonValueStyle}>
+          {lastUploadComparison.current.productsCount -
+            lastUploadComparison.previous.productsCount >=
+          0
+            ? "+"
+            : ""}
+          {lastUploadComparison.current.productsCount -
+            lastUploadComparison.previous.productsCount}
+        </strong>
+        <span style={historyComparisonFootStyle}>diferencia detectada</span>
+      </div>
+
+      <div style={historyComparisonCardStyle}>
+        <span style={historyComparisonLabelStyle}>Locales</span>
+        <strong style={historyComparisonValueStyle}>
+          {lastUploadComparison.current.localsCount -
+            lastUploadComparison.previous.localsCount >=
+          0
+            ? "+"
+            : ""}
+          {lastUploadComparison.current.localsCount -
+            lastUploadComparison.previous.localsCount}
+        </strong>
+        <span style={historyComparisonFootStyle}>diferencia detectada</span>
+      </div>
+    </div>
+  </div>
+) : null}
 
 {processedData.analytics && processedData.profileId === "comercial" ? (
-<DashboardComercial
-  processedData={processedData}
-onClearFile={resetFlow}
-onSelectAnotherFile={resetFlow}
-/>
+  <DashboardComercial
+    processedData={processedData}
+    onClearFile={resetFlow}
+    onSelectAnotherFile={resetFlow}
+  />
 ) : null}
         </div>
       ) : null}
@@ -1198,4 +1421,77 @@ const selectedFileMutedStyle: React.CSSProperties = {
   color: "#64748b",
   fontSize: 13,
   fontWeight: 650,
+};
+const historyMetricLabelStyle: React.CSSProperties = {
+  color: "#64748b",
+  fontSize: 12,
+  fontWeight: 700,
+};
+
+const historyMetricValueStyle: React.CSSProperties = {
+  color: "#0f172a",
+  fontSize: 22,
+  fontWeight: 900,
+};
+
+const historyComparisonSectionStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 14,
+  marginTop: 8,
+};
+
+const historyComparisonHeaderStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 4,
+};
+
+const historyComparisonTitleStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#1D4ED8",
+  fontSize: 28,
+  fontWeight: 800,
+  lineHeight: 1.1,
+};
+
+const historyComparisonSubtitleStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#475569",
+  fontSize: 15,
+  lineHeight: 1.45,
+};
+
+const historyComparisonGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 12,
+};
+
+const historyComparisonCardStyle: React.CSSProperties = {
+  background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
+  color: "#FFFFFF",
+  borderRadius: 18,
+  padding: 20,
+  border: "1px solid rgba(255,255,255,0.12)",
+  boxShadow: "0 10px 20px rgba(17,24,39,0.10)",
+  display: "grid",
+  gap: 8,
+};
+
+const historyComparisonLabelStyle: React.CSSProperties = {
+  color: "#D3DAFF",
+  fontSize: 15,
+  fontWeight: 700,
+};
+
+const historyComparisonValueStyle: React.CSSProperties = {
+  color: "#FFFFFF",
+  fontSize: 26,
+  fontWeight: 800,
+  lineHeight: 1.1,
+};
+
+const historyComparisonFootStyle: React.CSSProperties = {
+  color: "#C0C9FF",
+  fontSize: 13,
+  fontWeight: 600,
 };
