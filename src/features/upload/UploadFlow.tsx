@@ -1239,16 +1239,15 @@ title={
     Se detectaron errores en {processedData.rowIssues.length} filas.
   </div>
 ) : null}
-
 {lastUploadComparison ? (
   <div style={historyComparisonSectionStyle}>
     <div style={historyComparisonHeaderStyle}>
       <h3 style={historyComparisonTitleStyle}>
-        Comparación con la carga anterior
+        Comparación rápida con la carga anterior
       </h3>
 
       <p style={historyComparisonSubtitleStyle}>
-        Comparamos este archivo con el último archivo procesado en este navegador.
+        Lectura comparativa local basada en el último archivo procesado en este navegador.
       </p>
     </div>
 
@@ -1261,7 +1260,13 @@ title={
             lastUploadComparison.previous.totalSales
           )}
         </strong>
-        <span style={historyComparisonFootStyle}>vs. carga anterior</span>
+        <span style={historyComparisonFootStyle}>
+          Actual:{" "}
+          {lastUploadComparison.current.totalSales.toLocaleString("es-EC", {
+            style: "currency",
+            currency: "USD",
+          })}
+        </span>
       </div>
 
       <div style={historyComparisonCardStyle}>
@@ -1272,7 +1277,9 @@ title={
             lastUploadComparison.previous.totalUnits
           )}
         </strong>
-        <span style={historyComparisonFootStyle}>vs. carga anterior</span>
+        <span style={historyComparisonFootStyle}>
+          Actual: {lastUploadComparison.current.totalUnits}
+        </span>
       </div>
 
       <div style={historyComparisonCardStyle}>
@@ -1286,7 +1293,9 @@ title={
           {lastUploadComparison.current.productsCount -
             lastUploadComparison.previous.productsCount}
         </strong>
-        <span style={historyComparisonFootStyle}>diferencia detectada</span>
+        <span style={historyComparisonFootStyle}>
+          Actual: {lastUploadComparison.current.productsCount}
+        </span>
       </div>
 
       <div style={historyComparisonCardStyle}>
@@ -1300,12 +1309,13 @@ title={
           {lastUploadComparison.current.localsCount -
             lastUploadComparison.previous.localsCount}
         </strong>
-        <span style={historyComparisonFootStyle}>diferencia detectada</span>
+        <span style={historyComparisonFootStyle}>
+          Actual: {lastUploadComparison.current.localsCount}
+        </span>
       </div>
     </div>
   </div>
 ) : null}
-
 {processedData.analytics && processedData.profileId === "comercial" ? (
   <DashboardComercial
     processedData={processedData}
@@ -1495,62 +1505,61 @@ const historyMetricValueStyle: React.CSSProperties = {
 
 const historyComparisonSectionStyle: React.CSSProperties = {
   display: "grid",
-  gap: 14,
-  marginTop: 8,
+  gap: 10,
+  marginTop: 4,
 };
 
 const historyComparisonHeaderStyle: React.CSSProperties = {
   display: "grid",
-  gap: 4,
+  gap: 2,
 };
 
 const historyComparisonTitleStyle: React.CSSProperties = {
   margin: 0,
   color: "#1D4ED8",
-  fontSize: 28,
+  fontSize: 20,
   fontWeight: 800,
-  lineHeight: 1.1,
+  lineHeight: 1.15,
 };
-
 const historyComparisonSubtitleStyle: React.CSSProperties = {
   margin: 0,
   color: "#475569",
-  fontSize: 15,
-  lineHeight: 1.45,
+  fontSize: 13,
+  lineHeight: 1.35,
 };
 
 const historyComparisonGridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: 12,
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: 10,
 };
 
 const historyComparisonCardStyle: React.CSSProperties = {
   background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
   color: "#FFFFFF",
-  borderRadius: 18,
-  padding: 20,
+  borderRadius: 14,
+  padding: 14,
   border: "1px solid rgba(255,255,255,0.12)",
-  boxShadow: "0 10px 20px rgba(17,24,39,0.10)",
+  boxShadow: "0 8px 18px rgba(17,24,39,0.10)",
   display: "grid",
-  gap: 8,
+  gap: 6,
 };
 
 const historyComparisonLabelStyle: React.CSSProperties = {
   color: "#D3DAFF",
-  fontSize: 15,
+  fontSize: 12,
   fontWeight: 700,
 };
 
 const historyComparisonValueStyle: React.CSSProperties = {
   color: "#FFFFFF",
-  fontSize: 26,
+  fontSize: 22,
   fontWeight: 800,
   lineHeight: 1.1,
 };
 
 const historyComparisonFootStyle: React.CSSProperties = {
   color: "#C0C9FF",
-  fontSize: 13,
+  fontSize: 12,
   fontWeight: 600,
 };
