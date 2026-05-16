@@ -17,7 +17,7 @@ import {
 } from "@/features/upload/dataQuality";
 export default function UploadFlow() {
 const UPLOAD_HISTORY_STORAGE_KEY = "jasodatos_upload_history_v1";
-type ComparisonMode = "previous" | "day" | "week" | "month";
+type ComparisonMode = "previous" | "day" | "week" | "month" | "year";
 type UploadHistoryItem = {
   id: string;
   fileName: string;
@@ -506,26 +506,29 @@ saveUploadHistory(historyItem);
 setProcessedData(result);
   }
 function getComparisonModeLabel(mode: ComparisonMode) {
-  const labels: Record<ComparisonMode, string> = {
-    previous: "Carga anterior",
-    day: "Día anterior",
-    week: "Semana anterior",
-    month: "Mes anterior",
-  };
+const labels: Record<ComparisonMode, string> = {
+  previous: "Carga anterior",
+  day: "Día anterior",
+  week: "Semana anterior",
+  month: "Mes anterior",
+  year: "Año anterior",
+};
 
   return labels[mode];
 }
 function getComparisonUnavailableMessage(mode: ComparisonMode) {
-  const messages: Record<ComparisonMode, string> = {
-    previous:
-      "Aún no hay una carga anterior disponible. Procesa al menos dos archivos para activar esta comparación.",
-    day:
-      "Para comparar contra el día anterior, carga al menos un archivo de una fecha previa.",
-    week:
-      "Para comparar contra la semana anterior, carga archivos en diferentes semanas o con varios días de diferencia.",
-    month:
-      "Para comparar contra el mes anterior, carga al menos un archivo de un mes previo.",
-  };
+const messages: Record<ComparisonMode, string> = {
+  previous:
+    "Aún no hay una carga anterior disponible. Procesa al menos dos archivos para activar esta comparación.",
+  day:
+    "Para comparar contra el día anterior, carga al menos un archivo de una fecha previa.",
+  week:
+    "Para comparar contra la semana anterior, carga archivos en diferentes semanas o con varios días de diferencia.",
+  month:
+    "Para comparar contra el mes anterior, carga al menos un archivo de un mes previo.",
+  year:
+    "Para comparar contra el año anterior, carga al menos un archivo de un año previo.",
+};
 
   return messages[mode];
 }
@@ -572,7 +575,7 @@ function findComparisonReference(
       }) ?? null
     );
   }
-
+if (mode === "month") {
   const previousMonth = new Date(currentDate);
   previousMonth.setMonth(previousMonth.getMonth() - 1);
 
@@ -585,6 +588,17 @@ function findComparisonReference(
       );
     }) ?? null
   );
+}
+
+const previousYear = new Date(currentDate);
+previousYear.setFullYear(previousYear.getFullYear() - 1);
+
+return (
+  previousItems.find((item) => {
+    const itemDate = new Date(item.uploadedAt);
+    return itemDate.getFullYear() === previousYear.getFullYear();
+  }) ?? null
+);
 }
 function calculatePercentChange(current: number, previous: number) {
   if (previous === 0 && current === 0) return "0.0%";
@@ -1371,7 +1385,7 @@ title={
                 <div style={historyComparisonModeStyle}>
                   <span style={historyComparisonModeLabelStyle}>Comparar con:</span>
 
-                  {(["previous", "day", "week", "month"] as ComparisonMode[]).map((mode) => (
+                  {(["previous", "day", "week", "month", "year"] as ComparisonMode[]).map((mode) => (
                     <button
                       key={mode}
                       type="button"
