@@ -449,6 +449,16 @@ function saveUploadHistory(item: UploadHistoryItem) {
     return next;
   });
 }
+function clearUploadHistory() {
+  try {
+    window.localStorage.removeItem(UPLOAD_HISTORY_STORAGE_KEY);
+  } catch {
+    // No hacemos nada si el navegador bloquea localStorage.
+  }
+
+  setUploadHistory([]);
+  setLastUploadComparison(null);
+}
   function handleProcess() {
     if (!initialData) {
       setError("Primero debes leer el archivo.");
@@ -871,6 +881,13 @@ function resetFlow() {
         Mostrando las 3 cargas más recientes de {uploadHistory.length} registradas.
       </span>
     ) : null}
+    <button
+  type="button"
+  onClick={clearUploadHistory}
+  style={clearHistoryButtonStyle}
+>
+  Limpiar historial local
+</button>
   </div>
 ) : null}
       {initialData ? (
@@ -1794,4 +1811,15 @@ const analysisWarningStyle: React.CSSProperties = {
   padding: 12,
   fontSize: 13,
   fontWeight: 600,
+};
+const clearHistoryButtonStyle: React.CSSProperties = {
+  width: "fit-content",
+  border: "1px solid #cbd5e1",
+  background: "#ffffff",
+  color: "#334155",
+  borderRadius: 999,
+  padding: "7px 12px",
+  fontSize: 12,
+  fontWeight: 800,
+  cursor: "pointer",
 };
