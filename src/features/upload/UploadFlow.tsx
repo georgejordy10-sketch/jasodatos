@@ -600,6 +600,57 @@ return (
   }) ?? null
 );
 }
+function getUploadDateLabel(uploadedAt: string) {
+  const uploadedDate = new Date(uploadedAt);
+  const today = new Date();
+
+  const startOfToday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+
+  const startOfUploadedDate = new Date(
+    uploadedDate.getFullYear(),
+    uploadedDate.getMonth(),
+    uploadedDate.getDate()
+  );
+
+  const diffInDays = Math.floor(
+    (startOfToday.getTime() - startOfUploadedDate.getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  if (diffInDays === 0) return "Hoy";
+  if (diffInDays === 1) return "Ayer";
+  if (diffInDays > 1 && diffInDays <= 7) return "Esta semana";
+
+  const isCurrentMonth =
+    uploadedDate.getFullYear() === today.getFullYear() &&
+    uploadedDate.getMonth() === today.getMonth();
+
+  if (isCurrentMonth) return "Este mes";
+
+  const previousMonth = new Date(today);
+  previousMonth.setMonth(previousMonth.getMonth() - 1);
+
+  const isPreviousMonth =
+    uploadedDate.getFullYear() === previousMonth.getFullYear() &&
+    uploadedDate.getMonth() === previousMonth.getMonth();
+
+  if (isPreviousMonth) return "Mes anterior";
+
+  const isPreviousYear =
+    uploadedDate.getFullYear() === today.getFullYear() - 1;
+
+  if (isPreviousYear) return "Año anterior";
+
+  return uploadedDate.toLocaleDateString("es-EC", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 function calculatePercentChange(current: number, previous: number) {
   if (previous === 0 && current === 0) return "0.0%";
   if (previous === 0) return "+100.0%";
@@ -846,9 +897,10 @@ function resetFlow() {
               {item.fileName}
             </strong>
 
-            <span style={{ color: "#64748b", fontSize: 11, whiteSpace: "nowrap" }}>
-              {new Date(item.uploadedAt).toLocaleString("es-EC")}
-            </span>
+<span style={uploadHistoryDateStyle}>
+  {getUploadDateLabel(item.uploadedAt)} ·{" "}
+  {new Date(item.uploadedAt).toLocaleString("es-EC")}
+</span>
           </div>
 
           <div
@@ -1888,4 +1940,10 @@ const dashboardLayerBackButtonStyle: React.CSSProperties = {
   cursor: "pointer",
   whiteSpace: "nowrap",
   boxShadow: "0 10px 24px rgba(79, 70, 229, 0.22)",
+};
+const uploadHistoryDateStyle: React.CSSProperties = {
+  color: "#64748b",
+  fontSize: 11,
+  whiteSpace: "nowrap",
+  fontWeight: 700,
 };
