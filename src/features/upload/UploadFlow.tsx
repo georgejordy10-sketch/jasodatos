@@ -17,7 +17,7 @@ import {
 } from "@/features/upload/dataQuality";
 export default function UploadFlow() {
 const UPLOAD_HISTORY_STORAGE_KEY = "jasodatos_upload_history_v1";
-
+type ComparisonMode = "previous" | "day" | "week" | "month";
 type UploadHistoryItem = {
   id: string;
   fileName: string;
@@ -102,6 +102,26 @@ const [lastUploadComparison, setLastUploadComparison] = useState<{
   current: UploadHistoryItem;
   previous: UploadHistoryItem;
 } | null>(null);
+const [comparisonMode, setComparisonMode] = useState<ComparisonMode>("previous");
+const selectedUploadComparison = useMemo<{
+  current: UploadHistoryItem;
+  previous: UploadHistoryItem;
+} | null>(() => {
+  if (!lastUploadComparison) return null;
+
+  const previous = findComparisonReference(
+    lastUploadComparison.current,
+    uploadHistory,
+    comparisonMode
+  );
+
+  if (!previous) return null;
+
+  return {
+    current: lastUploadComparison.current,
+    previous,
+  };
+}, [comparisonMode, lastUploadComparison, uploadHistory]);
   const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
   const qualityTheme = qualityReport ? getQualitySummary(qualityReport) : null;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -475,6 +495,74 @@ saveUploadHistory(historyItem);
 
 setProcessedData(result);
   }
+function getComparisonModeLabel(mode: ComparisonMode) {
+  const labels: Record<ComparisonMode, string> = {
+    previous: "Carga anterior",
+    day: "Día anterior",
+    week: "Semana anterior",
+    month: "Mes anterior",
+  };
+
+  return labels[mode];
+}
+
+function isSameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function findComparisonReference(
+  current: UploadHistoryItem,
+  history: UploadHistoryItem[],
+  mode: ComparisonMode
+) {
+  const previousItems = history.filter((item) => item.id !== current.id);
+
+  if (mode === "previous") {
+    return previousItems[0] ?? null;
+  }
+
+  const currentDate = new Date(current.uploadedAt);
+
+  if (mode === "day") {
+    const targetDate = new Date(currentDate);
+    targetDate.setDate(targetDate.getDate() - 1);
+
+    return (
+      previousItems.find((item) =>
+        isSameDay(new Date(item.uploadedAt), targetDate)
+      ) ?? null
+    );
+  }
+
+  if (mode === "week") {
+    const fromDate = new Date(currentDate);
+    fromDate.setDate(fromDate.getDate() - 7);
+
+    return (
+      previousItems.find((item) => {
+        const itemDate = new Date(item.uploadedAt);
+        return itemDate >= fromDate && itemDate < currentDate;
+      }) ?? null
+    );
+  }
+
+  const previousMonth = new Date(currentDate);
+  previousMonth.setMonth(previousMonth.getMonth() - 1);
+
+  return (
+    previousItems.find((item) => {
+      const itemDate = new Date(item.uploadedAt);
+      return (
+        itemDate.getFullYear() === previousMonth.getFullYear() &&
+        itemDate.getMonth() === previousMonth.getMonth()
+      );
+    }) ?? null
+  );
+}
 function calculatePercentChange(current: number, previous: number) {
   if (previous === 0 && current === 0) return "0.0%";
   if (previous === 0) return "+100.0%";
@@ -1134,60 +1222,78 @@ title={
               </tbody>
             </table>
           </div>
-          <div
-  style={{
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: 10,
-    flexWrap: "wrap",
-    paddingTop: 16,
-    paddingBottom: 8,
-  }}
->
-{qualityReport?.status === "blocked" ? (
-  <button
-    type="button"
-    onClick={resetFlow}
-    style={{
-      padding: "12px 18px",
-      borderRadius: 12,
-      border: "1px solid #cbd5e1",
-      background: "#ffffff",
-      color: "#0f172a",
-      cursor: "pointer",
-      fontWeight: 800,
-    }}
-  >
-    Subir otro archivo
-  </button>
-) : null}
+{qualityReport && !processedData ? (
+  <div style={analysisResultCompactStyle}>
+    <div>
+      <strong style={analysisResultTitleStyle}>Archivo validado</strong>
+      <p style={analysisResultTextStyle}>
+        JasoDatos revisó la estructura del archivo y preparó los datos para generar el dashboard.
+      </p>
+    </div>
 
-  <button
-    type="button"
-    onClick={handleProcess}
-    disabled={qualityReport?.status === "blocked"}
-    style={{
-      padding: "12px 18px",
-      borderRadius: 12,
-      border: "1px solid transparent",
-      background:
-        qualityReport?.status === "blocked"
-          ? "#9ca3af"
-          : "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
-      color: "#ffffff",
-      cursor: qualityReport?.status === "blocked" ? "not-allowed" : "pointer",
-      fontWeight: 800,
-      boxShadow:
-        qualityReport?.status === "blocked"
-          ? "none"
-          : "0 10px 24px rgba(79, 70, 229, 0.22)",
-    }}
-  >
-    {qualityReport?.status === "blocked"
-      ? "Corrige el archivo para continuar"
-      : "Crear dashboard"}
-  </button>
-</div>
+    <div style={analysisResultBadgesStyle}>
+      <span style={analysisResultBadgeStyle}>
+        {qualityReport.totalRows} filas válidas
+      </span>
+
+      <span style={analysisResultBadgeStyle}>0 errores</span>
+
+      <span style={analysisResultBadgeStyle}>
+        {qualityReport.unmappedColumns.length > 0
+          ? `${qualityReport.unmappedColumns.length} columnas no usadas: ${qualityReport.unmappedColumns
+              .map((column) => formatColumnLabel(column))
+              .join(", ")}`
+          : "Columnas completas"}
+      </span>
+    </div>
+
+    <div style={processActionsStyle}>
+      {qualityReport.status === "blocked" ? (
+        <button
+          type="button"
+          onClick={resetFlow}
+          style={{
+            padding: "12px 18px",
+            borderRadius: 12,
+            border: "1px solid #cbd5e1",
+            background: "#ffffff",
+            color: "#0f172a",
+            cursor: "pointer",
+            fontWeight: 800,
+          }}
+        >
+          Subir otro archivo
+        </button>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={handleProcess}
+        disabled={qualityReport.status === "blocked"}
+        style={{
+          padding: "12px 18px",
+          borderRadius: 12,
+          border: "1px solid transparent",
+          background:
+            qualityReport.status === "blocked"
+              ? "#9ca3af"
+              : "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
+          color: "#ffffff",
+          cursor: qualityReport.status === "blocked" ? "not-allowed" : "pointer",
+          fontWeight: 800,
+          boxShadow:
+            qualityReport.status === "blocked"
+              ? "none"
+              : "0 10px 24px rgba(79, 70, 229, 0.22)",
+        }}
+      >
+        {qualityReport.status === "blocked"
+          ? "Corrige el archivo para continuar"
+          : "Crear dashboard"}
+      </button>
+    </div>
+  </div>
+) : null}
         </div>
       ) : null}
 
@@ -1201,128 +1307,124 @@ title={
             gap: 12,
           }}
         >
-          <h3 style={{ margin: 0 }}>Resultado del análisis del archivo</h3>
-
-          <div style={{ display: "grid", gap: 6 }}>
-            <div>
-              <strong>Estructura válida:</strong> {processedData.isValidStructure ? "Sí" : "No"}
+          {processedData.rowIssues.length > 0 ? (
+            <div style={analysisWarningStyle}>
+              Se detectaron errores en {processedData.rowIssues.length} filas. Puedes revisar el archivo o continuar solo con las filas válidas.
             </div>
-            <div>
-              <strong>Campos obligatorios faltantes:</strong>{" "}
-              {processedData.missingRequiredFields.length > 0
-                ? processedData.missingRequiredFields.join(", ")
-                : "Ninguno"}
+          ) : null}
+
+          {lastUploadComparison ? (
+            <div style={historyComparisonSectionStyle}>
+              <div style={historyComparisonHeaderStyle}>
+                <h3 style={historyComparisonTitleStyle}>
+                  Comparación rápida con la carga anterior
+                </h3>
+
+                <p style={historyComparisonSubtitleStyle}>
+                  Lectura comparativa local basada en el último archivo procesado en este navegador.
+                </p>
+
+                <div style={historyComparisonModeStyle}>
+                  <span style={historyComparisonModeLabelStyle}>Comparar con:</span>
+
+                  {(["previous", "day", "week", "month"] as ComparisonMode[]).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setComparisonMode(mode)}
+                      style={{
+                        ...historyComparisonModeButtonStyle,
+                        ...(comparisonMode === mode
+                          ? historyComparisonModeButtonActiveStyle
+                          : null),
+                      }}
+                    >
+                      {getComparisonModeLabel(mode)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {selectedUploadComparison ? (
+                <div style={historyComparisonGridStyle}>
+                  <div style={historyComparisonCardStyle}>
+                    <span style={historyComparisonLabelStyle}>Ventas</span>
+                    <strong style={historyComparisonValueStyle}>
+                      {calculatePercentChange(
+                        selectedUploadComparison.current.totalSales,
+                        selectedUploadComparison.previous.totalSales
+                      )}
+                    </strong>
+                    <span style={historyComparisonFootStyle}>
+                      Actual:{" "}
+                      {selectedUploadComparison.current.totalSales.toLocaleString("es-EC", {
+                        style: "currency",
+                        currency: "USD",
+                      })}
+                    </span>
+                  </div>
+
+                  <div style={historyComparisonCardStyle}>
+                    <span style={historyComparisonLabelStyle}>Unidades</span>
+                    <strong style={historyComparisonValueStyle}>
+                      {calculatePercentChange(
+                        selectedUploadComparison.current.totalUnits,
+                        selectedUploadComparison.previous.totalUnits
+                      )}
+                    </strong>
+                    <span style={historyComparisonFootStyle}>
+                      Actual: {selectedUploadComparison.current.totalUnits}
+                    </span>
+                  </div>
+
+                  <div style={historyComparisonCardStyle}>
+                    <span style={historyComparisonLabelStyle}>Productos</span>
+                    <strong style={historyComparisonValueStyle}>
+                      {selectedUploadComparison.current.productsCount -
+                        selectedUploadComparison.previous.productsCount >=
+                      0
+                        ? "+"
+                        : ""}
+                      {selectedUploadComparison.current.productsCount -
+                        selectedUploadComparison.previous.productsCount}
+                    </strong>
+                    <span style={historyComparisonFootStyle}>
+                      Actual: {selectedUploadComparison.current.productsCount}
+                    </span>
+                  </div>
+
+                  <div style={historyComparisonCardStyle}>
+                    <span style={historyComparisonLabelStyle}>Locales</span>
+                    <strong style={historyComparisonValueStyle}>
+                      {selectedUploadComparison.current.localsCount -
+                        selectedUploadComparison.previous.localsCount >=
+                      0
+                        ? "+"
+                        : ""}
+                      {selectedUploadComparison.current.localsCount -
+                        selectedUploadComparison.previous.localsCount}
+                    </strong>
+                    <span style={historyComparisonFootStyle}>
+                      Actual: {selectedUploadComparison.current.localsCount}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+<div style={historyComparisonEmptyStyle}>
+  Aún no hay una carga histórica suficiente para comparar con{" "}
+  {getComparisonModeLabel(comparisonMode).toLowerCase()}. Cuando cargues archivos en diferentes fechas, JasoDatos podrá mostrar esta comparación.
+</div>
+              )}
             </div>
-            <div>
-              <strong>Columnas no mapeadas:</strong>{" "}
-              {processedData.unmappedColumns.length > 0
-                ? processedData.unmappedColumns.join(", ")
-                : "Ninguna"}
-            </div>
-            <div>
-              <strong>Filas válidas:</strong> {processedData.validRows.length}
-            </div>
-            <div>
-              <strong>Filas con errores:</strong> {processedData.rowIssues.length}
-            </div>
-          </div>
-           {processedData.rowIssues.length > 0 ? (
-  <div
-    style={{
-      background: "#fff7ed",
-      color: "#9a3412",
-      border: "1px solid #fed7aa",
-      borderRadius: 10,
-      padding: 12,
-    }}
-  >
-    Se detectaron errores en {processedData.rowIssues.length} filas.
-  </div>
-) : null}
-{lastUploadComparison ? (
-  <div style={historyComparisonSectionStyle}>
-    <div style={historyComparisonHeaderStyle}>
-      <h3 style={historyComparisonTitleStyle}>
-        Comparación rápida con la carga anterior
-      </h3>
+          ) : null}
 
-      <p style={historyComparisonSubtitleStyle}>
-        Lectura comparativa local basada en el último archivo procesado en este navegador.
-      </p>
-    </div>
-
-    <div style={historyComparisonGridStyle}>
-      <div style={historyComparisonCardStyle}>
-        <span style={historyComparisonLabelStyle}>Ventas</span>
-        <strong style={historyComparisonValueStyle}>
-          {calculatePercentChange(
-            lastUploadComparison.current.totalSales,
-            lastUploadComparison.previous.totalSales
-          )}
-        </strong>
-        <span style={historyComparisonFootStyle}>
-          Actual:{" "}
-          {lastUploadComparison.current.totalSales.toLocaleString("es-EC", {
-            style: "currency",
-            currency: "USD",
-          })}
-        </span>
-      </div>
-
-      <div style={historyComparisonCardStyle}>
-        <span style={historyComparisonLabelStyle}>Unidades</span>
-        <strong style={historyComparisonValueStyle}>
-          {calculatePercentChange(
-            lastUploadComparison.current.totalUnits,
-            lastUploadComparison.previous.totalUnits
-          )}
-        </strong>
-        <span style={historyComparisonFootStyle}>
-          Actual: {lastUploadComparison.current.totalUnits}
-        </span>
-      </div>
-
-      <div style={historyComparisonCardStyle}>
-        <span style={historyComparisonLabelStyle}>Productos</span>
-        <strong style={historyComparisonValueStyle}>
-          {lastUploadComparison.current.productsCount -
-            lastUploadComparison.previous.productsCount >=
-          0
-            ? "+"
-            : ""}
-          {lastUploadComparison.current.productsCount -
-            lastUploadComparison.previous.productsCount}
-        </strong>
-        <span style={historyComparisonFootStyle}>
-          Actual: {lastUploadComparison.current.productsCount}
-        </span>
-      </div>
-
-      <div style={historyComparisonCardStyle}>
-        <span style={historyComparisonLabelStyle}>Locales</span>
-        <strong style={historyComparisonValueStyle}>
-          {lastUploadComparison.current.localsCount -
-            lastUploadComparison.previous.localsCount >=
-          0
-            ? "+"
-            : ""}
-          {lastUploadComparison.current.localsCount -
-            lastUploadComparison.previous.localsCount}
-        </strong>
-        <span style={historyComparisonFootStyle}>
-          Actual: {lastUploadComparison.current.localsCount}
-        </span>
-      </div>
-    </div>
-  </div>
-) : null}
-{processedData.analytics && processedData.profileId === "comercial" ? (
-  <DashboardComercial
-    processedData={processedData}
-    onClearFile={resetFlow}
-    onSelectAnotherFile={resetFlow}
-  />
-) : null}
+          {processedData.analytics && processedData.profileId === "comercial" ? (
+            <DashboardComercial
+              processedData={processedData}
+              onClearFile={resetFlow}
+              onSelectAnotherFile={resetFlow}
+            />
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -1506,7 +1608,7 @@ const historyMetricValueStyle: React.CSSProperties = {
 const historyComparisonSectionStyle: React.CSSProperties = {
   display: "grid",
   gap: 10,
-  marginTop: 4,
+  margin: "12px 12px 4px",
 };
 
 const historyComparisonHeaderStyle: React.CSSProperties = {
@@ -1517,9 +1619,10 @@ const historyComparisonHeaderStyle: React.CSSProperties = {
 const historyComparisonTitleStyle: React.CSSProperties = {
   margin: 0,
   color: "#1D4ED8",
-  fontSize: 20,
-  fontWeight: 800,
+  fontSize: 30,
+  fontWeight: 900,
   lineHeight: 1.15,
+  letterSpacing: "-0.02em",
 };
 const historyComparisonSubtitleStyle: React.CSSProperties = {
   margin: 0,
@@ -1530,36 +1633,135 @@ const historyComparisonSubtitleStyle: React.CSSProperties = {
 
 const historyComparisonGridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: 10,
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 180px))",
+  gap: 8,
+  justifyContent: "start",
 };
 
 const historyComparisonCardStyle: React.CSSProperties = {
   background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
   color: "#FFFFFF",
-  borderRadius: 14,
-  padding: 14,
+  borderRadius: 12,
+  padding: "10px 12px",
   border: "1px solid rgba(255,255,255,0.12)",
-  boxShadow: "0 8px 18px rgba(17,24,39,0.10)",
+  boxShadow: "0 6px 14px rgba(17,24,39,0.10)",
   display: "grid",
-  gap: 6,
+  gap: 4,
+  minHeight: 70,
 };
-
 const historyComparisonLabelStyle: React.CSSProperties = {
   color: "#D3DAFF",
-  fontSize: 12,
+  fontSize: 11,
   fontWeight: 700,
 };
 
 const historyComparisonValueStyle: React.CSSProperties = {
   color: "#FFFFFF",
-  fontSize: 22,
+  fontSize: 18,
   fontWeight: 800,
-  lineHeight: 1.1,
+  lineHeight: 1,
 };
 
 const historyComparisonFootStyle: React.CSSProperties = {
   color: "#C0C9FF",
+  fontSize: 11,
+  fontWeight: 600,
+};
+const historyComparisonModeStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  flexWrap: "wrap",
+  marginTop: 4,
+};
+
+const historyComparisonModeLabelStyle: React.CSSProperties = {
+  color: "#475569",
   fontSize: 12,
+  fontWeight: 700,
+};
+
+const historyComparisonModeButtonStyle: React.CSSProperties = {
+  border: "1px solid #c7d2fe",
+  background: "#ffffff",
+  color: "#334155",
+  borderRadius: 999,
+  padding: "6px 10px",
+  fontSize: 12,
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const historyComparisonModeButtonActiveStyle: React.CSSProperties = {
+  background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
+  color: "#ffffff",
+  border: "1px solid transparent",
+};
+
+const historyComparisonEmptyStyle: React.CSSProperties = {
+  border: "1px dashed #c7d2fe",
+  borderRadius: 12,
+  padding: 12,
+  color: "#475569",
+  background: "#f8faff",
+  fontSize: 13,
+  fontWeight: 600,
+};
+
+const analysisResultCompactStyle: React.CSSProperties = {
+  border: "1px solid #dbeafe",
+  borderRadius: 16,
+  padding: 14,
+  background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
+  display: "grid",
+  gap: 10,
+};
+
+const analysisResultTitleStyle: React.CSSProperties = {
+  display: "block",
+  color: "#1d4ed8",
+  fontSize: 16,
+  fontWeight: 800,
+  lineHeight: 1.2,
+};
+
+const analysisResultTextStyle: React.CSSProperties = {
+  margin: "4px 0 0",
+  color: "#475569",
+  fontSize: 13,
+  lineHeight: 1.35,
+};
+
+const analysisResultBadgesStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  alignItems: "center",
+};
+
+const analysisResultBadgeStyle: React.CSSProperties = {
+  border: "1px solid #bfdbfe",
+  background: "#ffffff",
+  color: "#1e3a8a",
+  borderRadius: 999,
+  padding: "6px 10px",
+  fontSize: 12,
+  fontWeight: 800,
+  whiteSpace: "normal",
+};
+const processActionsStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "flex-start",
+  gap: 10,
+  flexWrap: "wrap",
+  paddingTop: 4,
+};
+const analysisWarningStyle: React.CSSProperties = {
+  background: "#fff7ed",
+  color: "#9a3412",
+  border: "1px solid #fed7aa",
+  borderRadius: 12,
+  padding: 12,
+  fontSize: 13,
   fontWeight: 600,
 };
