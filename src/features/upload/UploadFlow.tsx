@@ -505,7 +505,20 @@ function getComparisonModeLabel(mode: ComparisonMode) {
 
   return labels[mode];
 }
+function getComparisonUnavailableMessage(mode: ComparisonMode) {
+  const messages: Record<ComparisonMode, string> = {
+    previous:
+      "Aún no hay una carga anterior disponible. Procesa al menos dos archivos para activar esta comparación.",
+    day:
+      "Para comparar contra el día anterior, carga al menos un archivo de una fecha previa.",
+    week:
+      "Para comparar contra la semana anterior, carga archivos en diferentes semanas o con varios días de diferencia.",
+    month:
+      "Para comparar contra el mes anterior, carga al menos un archivo de un mes previo.",
+  };
 
+  return messages[mode];
+}
 function isSameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -1417,9 +1430,8 @@ title={
                   </div>
                 </div>
               ) : (
-<div style={historyComparisonEmptyStyle}>
-  Aún no hay una carga histórica suficiente para comparar con{" "}
-  {getComparisonModeLabel(comparisonMode).toLowerCase()}. Cuando cargues archivos en diferentes fechas, JasoDatos podrá mostrar esta comparación.
+                 <div style={historyComparisonEmptyStyle}>
+  {getComparisonUnavailableMessage(comparisonMode)}
 </div>
               )}
             </div>
