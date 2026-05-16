@@ -1323,7 +1323,14 @@ title={
                 <p style={historyComparisonSubtitleStyle}>
                   Lectura comparativa local basada en el último archivo procesado en este navegador.
                 </p>
-
+                {selectedUploadComparison ? (
+  <div style={historyComparisonReferenceStyle}>
+    Comparando contra:{" "}
+    <strong>{selectedUploadComparison.previous.fileName}</strong>
+    {" · "}
+    {new Date(selectedUploadComparison.previous.uploadedAt).toLocaleString("es-EC")}
+  </div>
+) : null}
                 <div style={historyComparisonModeStyle}>
                   <span style={historyComparisonModeLabelStyle}>Comparar con:</span>
 
@@ -1630,7 +1637,18 @@ const historyComparisonSubtitleStyle: React.CSSProperties = {
   fontSize: 13,
   lineHeight: 1.35,
 };
-
+const historyComparisonReferenceStyle: React.CSSProperties = {
+  color: "#334155",
+  fontSize: 12,
+  fontWeight: 600,
+  lineHeight: 1.35,
+  background: "#ffffff",
+  border: "1px solid #dbeafe",
+  borderRadius: 999,
+  padding: "6px 10px",
+  width: "fit-content",
+  maxWidth: "100%",
+};
 const historyComparisonGridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(150px, 180px))",
