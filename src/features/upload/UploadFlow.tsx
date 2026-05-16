@@ -890,7 +890,7 @@ function resetFlow() {
 </button>
   </div>
 ) : null}
-      {initialData ? (
+      {initialData && !processedData ? (
         <div
           style={{
             border: "1px solid #e5e7eb",
@@ -1326,17 +1326,24 @@ title={
 ) : null}
         </div>
       ) : null}
+        {processedData ? (
+  <div style={dashboardLayerStyle}>
+         <div style={dashboardLayerHeaderStyle}>
+  <div>
+    <strong style={dashboardLayerTitleStyle}>Dashboard generado</strong>
+    <p style={dashboardLayerSubtitleStyle}>
+      El archivo fue procesado correctamente. Ahora puedes revisar los indicadores comerciales del negocio.
+    </p>
+  </div>
 
-      {processedData ? (
-        <div
-          style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: 12,
-            padding: 16,
-            display: "grid",
-            gap: 12,
-          }}
-        >
+  <button
+    type="button"
+    onClick={resetFlow}
+    style={dashboardLayerBackButtonStyle}
+  >
+    Cargar otro archivo
+  </button>
+</div>
           {processedData.rowIssues.length > 0 ? (
             <div style={analysisWarningStyle}>
               Se detectaron errores en {processedData.rowIssues.length} filas. Puedes revisar el archivo o continuar solo con las filas válidas.
@@ -1546,7 +1553,7 @@ const infoValueStyle: React.CSSProperties = {
 const uploadTitleStyle: React.CSSProperties = {
   margin: 0,
   color: "#1d4ed8",
-  fontSize: 46,
+  fontSize: 40,
   fontWeight: 900,
   lineHeight: 1.1,
 };
@@ -1822,4 +1829,49 @@ const clearHistoryButtonStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 800,
   cursor: "pointer",
+};
+const dashboardLayerStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 16,
+};
+
+const dashboardLayerHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: 16,
+  flexWrap: "wrap",
+  border: "1px solid #dbeafe",
+  borderRadius: 18,
+  padding: 16,
+  background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
+};
+
+const dashboardLayerTitleStyle: React.CSSProperties = {
+  display: "block",
+  color: "#1d4ed8",
+  fontSize: 24,
+  fontWeight: 900,
+  lineHeight: 1.15,
+  letterSpacing: "-0.02em",
+};
+
+const dashboardLayerSubtitleStyle: React.CSSProperties = {
+  margin: "6px 0 0",
+  color: "#475569",
+  fontSize: 14,
+  lineHeight: 1.4,
+};
+
+const dashboardLayerBackButtonStyle: React.CSSProperties = {
+  border: "1px solid transparent",
+  background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
+  color: "#ffffff",
+  borderRadius: 999,
+  padding: "10px 14px",
+  fontSize: 13,
+  fontWeight: 800,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  boxShadow: "0 10px 24px rgba(79, 70, 229, 0.22)",
 };

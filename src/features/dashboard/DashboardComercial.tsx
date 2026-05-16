@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { ProcessDatasetResult } from "@/core/ingestion/readDataset";
 import BenchmarkingSucursales from "@/features/dashboard/BenchmarkingSucursales";
 import jsPDF from "jspdf";
@@ -703,8 +703,10 @@ export default function DashboardComercial({
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [selectedComparisonProducts, setSelectedComparisonProducts] = useState<string[]>([]);
-  const [comparisonMetric, setComparisonMetric] = useState<ComparisonMetric>("ventas");
+const [selectedComparisonProducts, setSelectedComparisonProducts] = useState<string[]>([]);
+const productComparisonRef = useRef<HTMLElement | null>(null);
+const [highlightProductComparison, setHighlightProductComparison] = useState(false);
+const [comparisonMetric, setComparisonMetric] = useState<ComparisonMetric>("ventas");
   const [pageSize, setPageSize] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -1238,7 +1240,18 @@ function startProductComparison() {
   const initialProducts = topProductos.slice(0, 5).map((item) => item.producto);
   setSelectedComparisonProducts(initialProducts);
 }
+function focusProductComparison() {
+  productComparisonRef.current?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
 
+  setHighlightProductComparison(true);
+
+  window.setTimeout(() => {
+    setHighlightProductComparison(false);
+  }, 2600);
+}
 function removeComparisonProduct(producto: string) {
   setSelectedComparisonProducts((current) =>
     current.filter((item) => item !== producto)
@@ -1906,12 +1919,21 @@ function openSalesWhatsapp() {
     formatMoney(value, settings.locale, settings.currencyCode)
   }
   isExportingPdf={isExportingPdf}
-  onCompareProducts={startProductComparison}
+  onCompareProducts={() => {
+  startProductComparison();
+  focusProductComparison();
+}}
   onOpenProductDetails={() => {
     setDetailModal("products");
   }}
 />
-<section style={styles.productComparisonCard}>
+<section
+  ref={productComparisonRef}
+  style={{
+    ...styles.productComparisonCard,
+    ...(highlightProductComparison ? styles.productComparisonHighlight : null),
+  }}
+>
   <div style={styles.productComparisonHeader}>
     <div>
       <div style={styles.productComparisonTitleRow}>
@@ -1996,7 +2018,10 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     <button
       type="button"
       style={styles.emptyActionButton}
-      onClick={startProductComparison}
+      onClick={() => {
+  startProductComparison();
+  focusProductComparison();
+}}
     >
       Comparar productos líderes
     </button>
@@ -3203,7 +3228,12 @@ productComparisonCard: {
   display: "grid",
   gap: 16,
 },
-
+productComparisonHighlight: {
+  outline: "5px solid rgba(34, 197, 94, 0.98)",
+  boxShadow:
+    "0 0 0 12px rgba(34, 197, 94, 0.22), 0 22px 52px rgba(15, 23, 42, 0.26)",
+  transition: "outline 260ms ease, box-shadow 260ms ease",
+},
 productComparisonHeader: {
   display: "flex",
   justifyContent: "space-between",
