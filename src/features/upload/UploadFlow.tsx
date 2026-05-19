@@ -558,11 +558,29 @@ function clearUploadHistory() {
   setLastUploadComparison(null);
   setHistoryLoaded(true);
 }
-  function handleProcess() {
-    if (!initialData) {
-      setError("Primero debes leer el archivo.");
-      return;
+
+async function refreshUploadHistory() {
+  setHistoryLoaded(false);
+
+  const loadedFromSupabase = await loadUploadHistoryFromSupabase();
+
+  if (!loadedFromSupabase) {
+    try {
+      const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
+      setUploadHistory(saved ? JSON.parse(saved) : []);
+    } catch {
+      setUploadHistory([]);
     }
+  }
+
+  setHistoryLoaded(true);
+}
+
+function handleProcess() {
+  if (!initialData) {
+    setError("Primero debes leer el archivo.");
+    return;
+  }
 
 setError("");
 
@@ -1076,14 +1094,14 @@ function resetFlow() {
 <div style={clearHistoryBoxStyle}>
   <button
     type="button"
-    onClick={clearUploadHistory}
+    onClick={refreshUploadHistory}
     style={clearHistoryButtonStyle}
   >
-    Ocultar historial de este navegador
+    Actualizar historial
   </button>
 
   <span style={clearHistoryHelpStyle}>
-    No elimina el historial guardado del negocio.
+    El historial se guarda por negocio y se sincroniza desde Supabase.
   </span>
 </div>
   </div>
