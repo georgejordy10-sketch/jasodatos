@@ -12,6 +12,11 @@ export type UploadHistoryItem = {
   channelsCount: number;
 };
 
+export type UploadComparisonReference = {
+  item: UploadHistoryItem;
+  source: "distinct_file" | "fallback_previous";
+};
+
 export const UPLOAD_HISTORY_STORAGE_KEY = "jasodatos_upload_history_v1";
 
 function toHistoryNumber(value: unknown) {
@@ -117,7 +122,7 @@ export function findComparisonReference(
   current: UploadHistoryItem,
   history: UploadHistoryItem[],
   mode: ComparisonMode
-) {
+): UploadComparisonReference | null {
   const currentFileName = current.fileName.trim().toLowerCase();
 
   const previousItems = history.filter((item) => {
@@ -129,7 +134,23 @@ export function findComparisonReference(
   const fallbackItems = history.filter((item) => item.id !== current.id);
 
   if (mode === "previous") {
-    return previousItems[0] ?? fallbackItems[0] ?? null;
+    const distinctReference = previousItems[0];
+
+    if (distinctReference) {
+      return {
+        item: distinctReference,
+        source: "distinct_file",
+      };
+    }
+
+    const fallbackReference = fallbackItems[0];
+
+    return fallbackReference
+      ? {
+          item: fallbackReference,
+          source: "fallback_previous",
+        }
+      : null;
   }
 
   const currentDate = new Date(current.uploadedAt);
@@ -138,49 +159,74 @@ export function findComparisonReference(
     const targetDate = new Date(currentDate);
     targetDate.setDate(targetDate.getDate() - 1);
 
-    return (
+    const reference =
       previousItems.find((item) =>
         isSameDay(new Date(item.uploadedAt), targetDate)
-      ) ?? null
-    );
+      ) ?? null;
+
+    return reference
+      ? {
+          item: reference,
+          source: "distinct_file",
+        }
+      : null;
   }
 
   if (mode === "week") {
     const fromDate = new Date(currentDate);
     fromDate.setDate(fromDate.getDate() - 7);
 
-    return (
+    const reference =
       previousItems.find((item) => {
         const itemDate = new Date(item.uploadedAt);
         return itemDate >= fromDate && itemDate < currentDate;
-      }) ?? null
-    );
+      }) ?? null;
+
+    return reference
+      ? {
+          item: reference,
+          source: "distinct_file",
+        }
+      : null;
   }
 
   if (mode === "month") {
     const previousMonth = new Date(currentDate);
     previousMonth.setMonth(previousMonth.getMonth() - 1);
 
-    return (
+    const reference =
       previousItems.find((item) => {
         const itemDate = new Date(item.uploadedAt);
+
         return (
           itemDate.getFullYear() === previousMonth.getFullYear() &&
           itemDate.getMonth() === previousMonth.getMonth()
         );
-      }) ?? null
-    );
+      }) ?? null;
+
+    return reference
+      ? {
+          item: reference,
+          source: "distinct_file",
+        }
+      : null;
   }
 
   const previousYear = new Date(currentDate);
   previousYear.setFullYear(previousYear.getFullYear() - 1);
 
-  return (
+  const reference =
     previousItems.find((item) => {
       const itemDate = new Date(item.uploadedAt);
       return itemDate.getFullYear() === previousYear.getFullYear();
-    }) ?? null
-  );
+    }) ?? null;
+
+  return reference
+    ? {
+        item: reference,
+        source: "distinct_file",
+      }
+    : null;
 }
 export function calculatePercentChange(current: number, previous: number) {
   if (previous === 0 && current === 0) return "0.0%";
