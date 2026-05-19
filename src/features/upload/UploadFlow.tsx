@@ -517,6 +517,7 @@ function clearUploadHistory() {
 
   setUploadHistory([]);
   setLastUploadComparison(null);
+  setHistoryLoaded(true);
 }
   function handleProcess() {
     if (!initialData) {
@@ -1034,13 +1035,19 @@ function resetFlow() {
         Mostrando las 3 cargas más recientes de {uploadHistory.length} registradas.
       </span>
     ) : null}
-    <button
-  type="button"
-  onClick={clearUploadHistory}
-  style={clearHistoryButtonStyle}
->
-  Limpiar historial local
-</button>
+<div style={clearHistoryBoxStyle}>
+  <button
+    type="button"
+    onClick={clearUploadHistory}
+    style={clearHistoryButtonStyle}
+  >
+    Ocultar historial de este navegador
+  </button>
+
+  <span style={clearHistoryHelpStyle}>
+    No elimina el historial guardado del negocio.
+  </span>
+</div>
   </div>
 ) : null}
       {initialData && !processedData ? (
@@ -1972,6 +1979,13 @@ const analysisWarningStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
+const clearHistoryBoxStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  flexWrap: "wrap",
+};
+
 const clearHistoryButtonStyle: React.CSSProperties = {
   width: "fit-content",
   border: "1px solid #cbd5e1",
@@ -1982,6 +1996,12 @@ const clearHistoryButtonStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 800,
   cursor: "pointer",
+};
+
+const clearHistoryHelpStyle: React.CSSProperties = {
+  color: "#64748b",
+  fontSize: 11,
+  fontWeight: 600,
 };
 const dashboardLayerStyle: React.CSSProperties = {
   display: "grid",
