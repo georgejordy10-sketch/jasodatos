@@ -63,31 +63,53 @@ export async function POST(request: Request, context: RouteContext) {
         { status: 404 }
       );
     }
+     const payload = {
+  business_id: business.id,
+  file_name: body.fileName,
+  uploaded_at: new Date().toISOString(),
+  total_rows: Math.round(toSafeNumber(body.totalRows)),
+  total_sales: toSafeNumber(body.totalSales),
+  total_units: toSafeNumber(body.totalUnits),
+  products_count: Math.round(toSafeNumber(body.productsCount)),
+  locals_count: Math.round(toSafeNumber(body.localsCount)),
+  channels_count: Math.round(toSafeNumber(body.channelsCount)),
+  metadata: body.metadata ?? {},
+  source: "upload_flow",
+};
 
-    const { data: uploadHistory, error: insertError } = await supabase
+const { data: existingHistory, error: existingHistoryError } = await supabase
+  .from("business_upload_history")
+  .select("id")
+  .eq("business_id", business.id)
+  .eq("file_name", body.fileName)
+  .maybeSingle();
+
+if (existingHistoryError) {
+  return NextResponse.json(
+    { error: "No se pudo validar el historial existente." },
+    { status: 500 }
+  );
+}
+
+const { data: uploadHistory, error: saveError } = existingHistory
+  ? await supabase
       .from("business_upload_history")
-      .insert({
-        business_id: business.id,
-        file_name: body.fileName,
-        total_rows: Math.round(toSafeNumber(body.totalRows)),
-        total_sales: toSafeNumber(body.totalSales),
-        total_units: toSafeNumber(body.totalUnits),
-        products_count: Math.round(toSafeNumber(body.productsCount)),
-        locals_count: Math.round(toSafeNumber(body.localsCount)),
-        channels_count: Math.round(toSafeNumber(body.channelsCount)),
-        metadata: body.metadata ?? {},
-        source: "upload_flow",
-      })
+      .update(payload)
+      .eq("id", existingHistory.id)
+      .select("*")
+      .single()
+  : await supabase
+      .from("business_upload_history")
+      .insert(payload)
       .select("*")
       .single();
 
-    if (insertError) {
-      return NextResponse.json(
-        { error: "No se pudo guardar el historial de carga." },
-        { status: 500 }
-      );
-    }
-
+if (saveError) {
+  return NextResponse.json(
+    { error: "No se pudo guardar el historial de carga." },
+    { status: 500 }
+  );
+}
     return NextResponse.json({
       ok: true,
       uploadHistory,
