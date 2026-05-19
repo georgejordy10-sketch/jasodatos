@@ -29,52 +29,6 @@ import {
 
 export default function UploadFlow() {
 
-function toUploadNumber(value: unknown) {
-  const numberValue = Number(value ?? 0);
-  return Number.isFinite(numberValue) ? numberValue : 0;
-}
-
-function buildUploadHistoryItem(
-  result: ProcessDatasetResult,
-  fileName: string
-): UploadHistoryItem {
-  const rows = result.validRows ?? [];
-
-  const products = new Set<string>();
-  const locals = new Set<string>();
-  const channels = new Set<string>();
-
-  let totalSales = 0;
-  let totalUnits = 0;
-
-  for (const row of rows) {
-    const producto = String(row.producto ?? "").trim();
-    const sucursal = String(row.sucursal ?? "Local principal").trim();
-    const canal = String(row.canal ?? "").trim();
-
-    const cantidad = toUploadNumber(row.cantidad);
-    const precio = toUploadNumber(row.precio_unitario);
-
-    totalUnits += cantidad;
-    totalSales += cantidad * precio;
-
-    if (producto) products.add(producto);
-    if (sucursal) locals.add(sucursal);
-    if (canal) channels.add(canal);
-  }
-
-  return {
-    id: `${Date.now()}-${fileName}`,
-    fileName,
-    uploadedAt: new Date().toISOString(),
-    totalRows: rows.length,
-    totalSales,
-    totalUnits,
-    productsCount: products.size,
-    localsCount: locals.size,
-    channelsCount: channels.size,
-  };
-}
   const profiles = useMemo(() => listProfiles(), []);
 const profileId: ProfileId = "comercial";
   const [file, setFile] = useState<File | null>(null);
@@ -95,11 +49,12 @@ async function loadUploadHistoryFromSupabase() {
     const response = await fetch(
       `/api/businesses/by-slug/${encodeURIComponent(businessSlug)}/upload-history`
     );
-
-    if (!response.ok) {
-      throw new Error("No se pudo consultar el historial en Supabase.");
-    }
-
+   if (!response.ok) {
+  console.warn(
+    "No se pudo consultar el historial en Supabase. Se usará localStorage como respaldo."
+  );
+  return false;
+}
     const result = await response.json();
 
     const remoteHistory: UploadHistoryItem[] = (result.uploadHistory ?? []).map(
@@ -607,7 +562,7 @@ const result = processDataset(
 );
 
 const historyItem = buildUploadHistoryItem(result, initialData.fileName);
-const previousUpload = uploadHistory[0] ?? null;
+const previousUpload = visibleUploadHistory[0] ?? null;
 
 if (previousUpload) {
   setLastUploadComparison({
@@ -619,7 +574,9 @@ if (previousUpload) {
 }
 
 saveUploadHistory(historyItem);
-void saveUploadHistoryToSupabase(historyItem);
+void saveUploadHistoryToSupabase(historyItem).then(() => {
+  void refreshUploadHistory();
+});
 setProcessedData(result);
   }
   async function saveUploadHistoryToSupabase(item: UploadHistoryItem) {
