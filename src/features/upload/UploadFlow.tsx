@@ -181,6 +181,31 @@ const selectedUploadComparison = useMemo<{
     previous,
   };
 }, [comparisonMode, lastUploadComparison, uploadHistory]);
+const visibleUploadHistory = useMemo(() => {
+  const uniqueByFileName = new Map<string, UploadHistoryItem>();
+
+  for (const item of uploadHistory) {
+    const key = item.fileName.trim().toLowerCase();
+    const existing = uniqueByFileName.get(key);
+
+    if (!existing) {
+      uniqueByFileName.set(key, item);
+      continue;
+    }
+
+    const existingDate = new Date(existing.uploadedAt).getTime();
+    const itemDate = new Date(item.uploadedAt).getTime();
+
+    if (itemDate > existingDate) {
+      uniqueByFileName.set(key, item);
+    }
+  }
+
+  return Array.from(uniqueByFileName.values()).sort(
+    (a, b) =>
+      new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+  );
+}, [uploadHistory]);
   const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
   const qualityTheme = qualityReport ? getQualitySummary(qualityReport) : null;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -949,7 +974,7 @@ function resetFlow() {
     </div>
 
     <div style={{ display: "grid", gap: 8 }}>
-      {uploadHistory.slice(0, 3).map((item) => (
+      {visibleUploadHistory.slice(0, 3).map((item) => (
         <div
           key={item.id}
           style={{
@@ -1029,12 +1054,11 @@ function resetFlow() {
         </div>
       ))}
     </div>
-
-    {uploadHistory.length > 3 ? (
-      <span style={{ color: "#64748b", fontSize: 11 }}>
-        Mostrando las 3 cargas más recientes de {uploadHistory.length} registradas.
-      </span>
-    ) : null}
+{visibleUploadHistory.length > 3 ? (
+  <span style={{ color: "#64748b", fontSize: 11 }}>
+    Mostrando las 3 cargas más recientes de {visibleUploadHistory.length} archivos registrados.
+  </span>
+) : null}
 <div style={clearHistoryBoxStyle}>
   <button
     type="button"
