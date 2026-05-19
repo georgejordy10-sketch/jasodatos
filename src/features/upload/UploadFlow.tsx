@@ -5,6 +5,17 @@ import { listProfiles } from "@/core/profiles/registry";
 import type { ProfileId } from "@/core/profiles/types";
 import DashboardComercial from "@/features/dashboard/DashboardComercial";
 import {
+  UPLOAD_HISTORY_STORAGE_KEY,
+  buildUploadHistoryItem,
+  calculatePercentChange,
+  findComparisonReference,
+  getComparisonModeLabel,
+  getComparisonUnavailableMessage,
+  getUploadDateLabel,
+  type ComparisonMode,
+  type UploadHistoryItem,
+} from "./uploadHistory";
+import {
   readDatasetInitial,
   processDataset,
   type ReadDatasetInitialResult,
@@ -15,20 +26,8 @@ import {
   calculateDataQualityReport,
   type DataQualityReport,
 } from "@/features/upload/dataQuality";
+
 export default function UploadFlow() {
-const UPLOAD_HISTORY_STORAGE_KEY = "jasodatos_upload_history_v1";
-type ComparisonMode = "previous" | "day" | "week" | "month" | "year";
-type UploadHistoryItem = {
-  id: string;
-  fileName: string;
-  uploadedAt: string;
-  totalRows: number;
-  totalSales: number;
-  totalUnits: number;
-  productsCount: number;
-  localsCount: number;
-  channelsCount: number;
-};
 
 function toUploadNumber(value: unknown) {
   const numberValue = Number(value ?? 0);
