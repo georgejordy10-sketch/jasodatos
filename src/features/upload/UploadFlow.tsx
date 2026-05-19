@@ -501,9 +501,37 @@ if (previousUpload) {
 }
 
 saveUploadHistory(historyItem);
-
+void saveUploadHistoryToSupabase(historyItem);
 setProcessedData(result);
   }
+  async function saveUploadHistoryToSupabase(item: UploadHistoryItem) {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const businessSlug = params.get("business") || "bodega-central";
+
+    await fetch(`/api/businesses/by-slug/${encodeURIComponent(businessSlug)}/upload-history`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName: item.fileName,
+        totalRows: item.totalRows,
+        totalSales: item.totalSales,
+        totalUnits: item.totalUnits,
+        productsCount: item.productsCount,
+        localsCount: item.localsCount,
+        channelsCount: item.channelsCount,
+        metadata: {
+          savedFrom: "UploadFlow",
+          storageMode: "localStorage_and_supabase",
+        },
+      }),
+    });
+  } catch (error) {
+    console.error("No se pudo guardar el historial en Supabase:", error);
+  }
+}
 function getComparisonModeLabel(mode: ComparisonMode) {
 const labels: Record<ComparisonMode, string> = {
   previous: "Carga anterior",
