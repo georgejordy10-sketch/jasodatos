@@ -123,9 +123,17 @@ async function loadUploadHistoryFromSupabase() {
         UPLOAD_HISTORY_STORAGE_KEY,
         JSON.stringify(remoteHistory)
       );
+
+      return true;
     }
+
+    setUploadHistory([]);
+    window.localStorage.removeItem(UPLOAD_HISTORY_STORAGE_KEY);
+
+    return true;
   } catch (error) {
     console.error("No se pudo cargar el historial desde Supabase:", error);
+    return false;
   }
 }
 useEffect(() => {
@@ -133,15 +141,21 @@ useEffect(() => {
 
   async function loadHistory() {
     try {
+      const loadedFromSupabase = await loadUploadHistoryFromSupabase();
+
+      if (!loadedFromSupabase) {
+        const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
+
+        if (saved && isMounted) {
+          setUploadHistory(JSON.parse(saved));
+        }
+      }
+    } catch {
       const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
 
       if (saved && isMounted) {
         setUploadHistory(JSON.parse(saved));
-      }
-
-      await loadUploadHistoryFromSupabase();
-    } catch {
-      if (isMounted) {
+      } else if (isMounted) {
         setUploadHistory([]);
       }
     } finally {
