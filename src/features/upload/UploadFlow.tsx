@@ -87,15 +87,75 @@ const profileId: ProfileId = "comercial";
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
 const [uploadHistory, setUploadHistory] = useState<UploadHistoryItem[]>([]);
 const [historyLoaded, setHistoryLoaded] = useState(false);
-useEffect(() => {
+async function loadUploadHistoryFromSupabase() {
   try {
-    const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
-    setUploadHistory(saved ? JSON.parse(saved) : []);
-  } catch {
-    setUploadHistory([]);
-  } finally {
-    setHistoryLoaded(true);
+    const params = new URLSearchParams(window.location.search);
+    const businessSlug = params.get("business") || "bodega-central";
+
+    const response = await fetch(
+      `/api/businesses/by-slug/${encodeURIComponent(businessSlug)}/upload-history`
+    );
+
+    if (!response.ok) {
+      throw new Error("No se pudo consultar el historial en Supabase.");
+    }
+
+    const result = await response.json();
+
+    const remoteHistory: UploadHistoryItem[] = (result.uploadHistory ?? []).map(
+      (item: Record<string, unknown>) => ({
+        id: String(item.id),
+        fileName: String(item.file_name ?? ""),
+        uploadedAt: String(item.uploaded_at ?? new Date().toISOString()),
+        totalRows: Number(item.total_rows ?? 0),
+        totalSales: Number(item.total_sales ?? 0),
+        totalUnits: Number(item.total_units ?? 0),
+        productsCount: Number(item.products_count ?? 0),
+        localsCount: Number(item.locals_count ?? 0),
+        channelsCount: Number(item.channels_count ?? 0),
+      })
+    );
+
+    if (remoteHistory.length > 0) {
+      setUploadHistory(remoteHistory);
+
+      window.localStorage.setItem(
+        UPLOAD_HISTORY_STORAGE_KEY,
+        JSON.stringify(remoteHistory)
+      );
+    }
+  } catch (error) {
+    console.error("No se pudo cargar el historial desde Supabase:", error);
   }
+}
+useEffect(() => {
+  let isMounted = true;
+
+  async function loadHistory() {
+    try {
+      const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
+
+      if (saved && isMounted) {
+        setUploadHistory(JSON.parse(saved));
+      }
+
+      await loadUploadHistoryFromSupabase();
+    } catch {
+      if (isMounted) {
+        setUploadHistory([]);
+      }
+    } finally {
+      if (isMounted) {
+        setHistoryLoaded(true);
+      }
+    }
+  }
+
+  void loadHistory();
+
+  return () => {
+    isMounted = false;
+  };
 }, []);
 const [lastUploadComparison, setLastUploadComparison] = useState<{
   current: UploadHistoryItem;
