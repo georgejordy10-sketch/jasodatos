@@ -113,16 +113,23 @@ function isSameDay(a: Date, b: Date) {
     a.getDate() === b.getDate()
   );
 }
-
 export function findComparisonReference(
   current: UploadHistoryItem,
   history: UploadHistoryItem[],
   mode: ComparisonMode
 ) {
-  const previousItems = history.filter((item) => item.id !== current.id);
+  const currentFileName = current.fileName.trim().toLowerCase();
+
+  const previousItems = history.filter((item) => {
+    const itemFileName = item.fileName.trim().toLowerCase();
+
+    return item.id !== current.id && itemFileName !== currentFileName;
+  });
+
+  const fallbackItems = history.filter((item) => item.id !== current.id);
 
   if (mode === "previous") {
-    return previousItems[0] ?? null;
+    return previousItems[0] ?? fallbackItems[0] ?? null;
   }
 
   const currentDate = new Date(current.uploadedAt);
@@ -175,7 +182,6 @@ export function findComparisonReference(
     }) ?? null
   );
 }
-
 export function calculatePercentChange(current: number, previous: number) {
   if (previous === 0 && current === 0) return "0.0%";
   if (previous === 0) return "+100.0%";
