@@ -9,22 +9,29 @@ const navItems = [
   { label: "Admin", href: "/admin/clientes" },
 ];
 
-export function AppSidebar() {
+type AppSidebarProps = {
+  onNavigate?: () => void;
+  isDrawer?: boolean;
+};
+
+export function AppSidebar({ onNavigate, isDrawer = false }: AppSidebarProps) {
   return (
     <aside
       style={{
-        minHeight: "100vh",
+        minHeight: isDrawer ? "100dvh" : "100vh",
+        width: isDrawer ? "100%" : undefined,
         padding: "24px 18px",
         color: "#FFFFFF",
         background:
-  "linear-gradient(180deg, #283593 0%, #2E0D4F 62%, #1A0630 100%)",
-        borderRight: "1px solid rgba(255,255,255,0.12)",
-        position: "sticky",
+          "linear-gradient(180deg, #283593 0%, #2E0D4F 62%, #1A0630 100%)",
+        borderRight: isDrawer ? "none" : "1px solid rgba(255,255,255,0.12)",
+        position: isDrawer ? "relative" : "sticky",
         top: 0,
         alignSelf: "start",
+        overflowY: isDrawer ? "auto" : undefined,
       }}
     >
-      <div style={{ marginBottom: "28px" }}>
+      <div style={{ marginBottom: "28px", paddingRight: isDrawer ? 42 : 0 }}>
         <div
           style={{
             fontSize: "24px",
@@ -59,6 +66,7 @@ export function AppSidebar() {
           <a
             key={item.label}
             href={item.href}
+            onClick={onNavigate}
             style={{
               display: "flex",
               alignItems: "center",
@@ -70,7 +78,7 @@ export function AppSidebar() {
               fontSize: "14px",
               fontWeight: 650,
               border: "1px solid rgba(255,255,255,0.12)",
-background: "rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.08)",
             }}
           >
             {item.label}
