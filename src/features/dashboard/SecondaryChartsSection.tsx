@@ -4,8 +4,6 @@ import type { CSSProperties, ReactNode } from "react";
 import {
   Area,
   AreaChart,
-  CartesianGrid,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -55,7 +53,7 @@ function Card({
   fullHeight?: boolean;
 }) {
   return (
-    <div
+    <article
       style={{
         ...styles.card,
         height: fullHeight ? "100%" : undefined,
@@ -63,15 +61,19 @@ function Card({
     >
       <div style={styles.cardHeader}>
         <div>
+          <span style={styles.eyebrow}>Análisis operativo</span>
           <h3 style={styles.sectionTitle}>{title}</h3>
           {subtitle ? <p style={styles.sectionSubtitle}>{subtitle}</p> : null}
         </div>
+
         {action ? <div>{action}</div> : null}
       </div>
+
       {children}
-    </div>
+    </article>
   );
 }
+
 function getFriendlyChannelName(channel: string) {
   const normalized = channel.trim();
 
@@ -83,6 +85,42 @@ function getFriendlyChannelName(channel: string) {
 
   return labels[normalized] ?? normalized;
 }
+
+function normalizeStockState(value: string) {
+  const normalized = value.toLowerCase();
+
+  if (normalized.includes("cr")) return "Crítico";
+  if (normalized.includes("riesgo")) return "En riesgo";
+  if (normalized.includes("inventario")) return "Sin inventario";
+  return value;
+}
+
+function getStockStateStyle(estado: string): CSSProperties {
+  const normalized = normalizeStockState(estado);
+
+  if (normalized === "Crítico" || normalized === "Sin inventario") {
+    return {
+      background: "rgba(220, 38, 38, 0.10)",
+      color: "#B91C1C",
+      border: "1px solid rgba(220, 38, 38, 0.18)",
+    };
+  }
+
+  if (normalized === "En riesgo") {
+    return {
+      background: "rgba(245, 158, 11, 0.12)",
+      color: "#B45309",
+      border: "1px solid rgba(245, 158, 11, 0.22)",
+    };
+  }
+
+  return {
+    background: "rgba(22, 163, 74, 0.10)",
+    color: "#15803D",
+    border: "1px solid rgba(22, 163, 74, 0.18)",
+  };
+}
+
 export default function SecondaryChartsSection({
   defaultStockMin,
   stockRiskRows,
@@ -94,136 +132,92 @@ export default function SecondaryChartsSection({
   colors,
   formatCompactMoney,
   formatMoney,
-onOpenStockDetails,
-onOpenChannelDetails,
+  onOpenStockDetails,
+  onOpenChannelDetails,
 }: Props) {
   return (
     <section style={styles.secondaryCharts}>
       <div id="stock-en-riesgo" style={{ scrollMarginTop: 120 }}>
-      <Card
-        title={`Productos con pocas unidades • Mínimo configurado: ${defaultStockMin}`}
-        subtitle="Aquí ves qué productos necesitan revisión porque podrían quedarse sin unidades para vender."
-        action={
-  <button
-    type="button"
-    style={styles.viewAllButton}
-    onClick={onOpenStockDetails}
-  >
-    Ver todo
-  </button>
-}
-        fullHeight
-      >
-        <div style={{ overflowX: "auto" }}>
-          <table style={styles.tableCompact}>
-            <thead>
-              <tr>
-               <th style={styles.thCompact}>Producto</th>
-<th style={styles.thCompact}>Unidades disponibles</th>
-<th style={styles.thCompact}>Mínimo esperado</th>
-<th style={styles.thCompact}>Situación</th>
-<th style={styles.thCompact}>Días estimados</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stockRiskRows.length === 0 ? (
+        <Card
+          title="Inventario en observación"
+          subtitle={`Productos bajo seguimiento · mínimo configurado: ${defaultStockMin}`}
+          action={
+            <button type="button" style={styles.viewAllButton} onClick={onOpenStockDetails}>
+              Ver todo
+            </button>
+          }
+          fullHeight
+        >
+          <div style={styles.tableShell}>
+            <table style={styles.tableCompact}>
+              <thead>
                 <tr>
-                  <td style={styles.tdCompact}>Sin datos</td>
-                  <td style={styles.tdCompact}>No Disponible</td>
-                  <td style={styles.tdCompact}>{defaultStockMin}</td>
-                  <td style={styles.tdCompact}>
-                    <span
-                      style={{
-                        ...styles.statusPill,
-                        background: "rgba(148,163,184,0.18)",
-                        color: "#CBD5E1",
-                      }}
-                    >
-                      Sin inventario cargado
-                    </span>
-                  </td>
-                  <td style={styles.tdCompact}>-</td>
+                  <th style={styles.thCompact}>Producto</th>
+                  <th style={styles.thCompact}>Stock</th>
+                  <th style={styles.thCompact}>Mínimo</th>
+                  <th style={styles.thCompact}>Situación</th>
+                  <th style={styles.thCompact}>Cobertura</th>
                 </tr>
-              ) : (
-                stockRiskRows.map((row, index) => (
-  <tr key={`${row.producto}-${index}`}>
-                    <td style={styles.tdCompact}>{row.producto}</td>
-                    <td style={styles.tdCompact}>{row.stock}</td>
-                    <td style={styles.tdCompact}>{row.minimo}</td>
+              </thead>
+
+              <tbody>
+                {stockRiskRows.length === 0 ? (
+                  <tr>
+                    <td style={styles.tdCompact}>Sin datos</td>
+                    <td style={styles.tdCompact}>No disponible</td>
+                    <td style={styles.tdCompact}>{defaultStockMin}</td>
                     <td style={styles.tdCompact}>
-                      <div
-                        style={{
-                          ...styles.stockStatusBar,
-                          background:
-                            row.estado === "Crítico" || row.estado === "Sin inventario"
-                              ? "rgba(126, 34, 54, 0.55)"
-                              : row.estado === "En riesgo"
-                              ? "rgba(120, 53, 15, 0.55)"
-                              : "rgba(20, 83, 45, 0.55)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            ...styles.stockStatusFill,
-                            width:
-                              row.estado === "Crítico" || row.estado === "Sin inventario"
-                                ? "64%"
-                                : row.estado === "En riesgo"
-                                ? "78%"
-                                : "58%",
-                            background:
-                              row.estado === "Crítico" || row.estado === "Sin inventario"
-                                ? "linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)"
-                                : row.estado === "En riesgo"
-                                ? "linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)"
-                                : "linear-gradient(90deg, #22c55e 0%, #4ade80 100%)",
-                          }}
-                        />
-                        <span
-                          style={{
-                            ...styles.stockStatusText,
-                            color:
-                              row.estado === "Crítico" || row.estado === "Sin inventario"
-                                ? "#ffe4e6"
-                                : row.estado === "En riesgo"
-                                ? "#fff7ed"
-                                : "#ecfdf5",
-                          }}
-                        >
-                          {row.estado}
-                        </span>
-                      </div>
+                      <span style={{ ...styles.statusPill, ...getStockStateStyle("Sin inventario") }}>
+                        Sin inventario cargado
+                      </span>
                     </td>
-                    <td style={styles.tdCompact}>{row.diasCobertura} días</td>
+                    <td style={styles.tdCompact}>-</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    </div>
+                ) : (
+                  stockRiskRows.map((row, index) => {
+                    const state = normalizeStockState(row.estado);
+
+                    return (
+                      <tr key={`${row.producto}-${index}`}>
+                        <td style={styles.productCell}>{row.producto}</td>
+                        <td style={styles.tdCompact}>{row.stock}</td>
+                        <td style={styles.tdCompact}>{row.minimo}</td>
+                        <td style={styles.tdCompact}>
+                          <span style={{ ...styles.statusPill, ...getStockStateStyle(row.estado) }}>
+                            {state}
+                          </span>
+                        </td>
+                        <td style={styles.tdCompact}>{row.diasCobertura} días</td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
 
       <Card
-        title="Dónde se generan tus ventas"
-        subtitle="Identifica si tus ventas vienen de tienda física, WhatsApp, web u otros medios."
+        title="Ventas por canal"
+        subtitle="Identifica dónde se está generando la venta."
         action={
-  <button
-    type="button"
-    style={styles.viewAllButton}
-    onClick={onOpenChannelDetails}
-  >
-    Ver todo
-  </button>
-}
+          <button type="button" style={styles.viewAllButton} onClick={onOpenChannelDetails}>
+            Ver todo
+          </button>
+        }
+        fullHeight
       >
         <div style={styles.channelBadgeRow}>
-          <span style={styles.channelBadge}>Medios encontrados: {channelResult.channels.length}</span>
-<span style={styles.channelBadgeText}>
-  {channelResult.channels.length > 0
-    ? channelResult.channels.map(getFriendlyChannelName).join(" · ")
-    : "Sin medios detectados"}
-</span>
+          <span style={styles.channelBadge}>
+            Medios: {channelResult.channels.length}
+          </span>
+
+          <span style={styles.channelBadgeText}>
+            {channelResult.channels.length > 0
+              ? channelResult.channels.map(getFriendlyChannelName).join(" · ")
+              : "Sin medios detectados"}
+          </span>
         </div>
 
         {activeChannelsCount === 0 ? (
@@ -235,104 +229,102 @@ onOpenChannelDetails,
             No encontramos en tu archivo una columna que indique por dónde se realizó cada venta.
           </div>
         ) : (
-        <div style={{ width: "100%", height: 340 }}>
-  <ResponsiveContainer>
-    <AreaChart
-      data={channelResult.data}
-      margin={{ top: 22, right: 18, left: 24, bottom: 1 }}
-    >
-      <defs>
-        {channelResult.channels.map((channel, index) => (
-          <linearGradient
-            key={`gradient-${channel}`}
-            id={`channelGradient-${index}`}
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-            <stop
-  offset="5%"
-  stopColor={colors[index % colors.length]}
-  stopOpacity={0.24}
-/>
-<stop
-  offset="55%"
-  stopColor={colors[index % colors.length]}
-  stopOpacity={0.10}
-/>
-<stop
-  offset="95%"
-  stopColor={colors[index % colors.length]}
-  stopOpacity={0.02}
-/>
-          </linearGradient>
-        ))}
-      </defs>
+          <div style={styles.chartBox}>
+            <ResponsiveContainer>
+              <AreaChart
+                data={channelResult.data}
+                margin={{ top: 16, right: 16, left: 16, bottom: 1 }}
+              >
+                <defs>
+                  {channelResult.channels.map((channel, index) => (
+                    <linearGradient
+                      key={`gradient-${channel}`}
+                      id={`channelGradient-${index}`}
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor={colors[index % colors.length]}
+                        stopOpacity={0.20}
+                      />
+                      <stop
+                        offset="55%"
+                        stopColor={colors[index % colors.length]}
+                        stopOpacity={0.08}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor={colors[index % colors.length]}
+                        stopOpacity={0.02}
+                      />
+                    </linearGradient>
+                  ))}
+                </defs>
 
-      <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+                <XAxis
+                  dataKey="fecha"
+                  stroke="#64748B"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  dy={1}
+                  fontSize={12}
+                />
 
-      <XAxis
-        dataKey="fecha"
-        stroke="#B9C2FF"
-        tickLine={false}
-        axisLine={false}
-        tickMargin={8}
-        dy={1}
-      />
+                <YAxis
+                  stroke="#64748B"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  width={axisWidth}
+                  fontSize={12}
+                  tickFormatter={(value) => formatCompactMoney(value)}
+                />
 
-      <YAxis
-        stroke="#B9C2FF"
-        tickLine={false}
-        axisLine={false}
-        tickMargin={10}
-        width={axisWidth}
-        tickFormatter={(v) => formatCompactMoney(v)}
-      />
-      <Tooltip
-  contentStyle={tooltipStyle}
-  formatter={(value, name) => [
-    formatMoney(Number(value ?? 0)),
-    getFriendlyChannelName(String(name)),
-  ]}
-/>
-      <Legend
-  verticalAlign="top"
-  height={34}
-  formatter={(value) => (
-    <span style={{ color: "#DDE4FF", fontSize: 12, fontWeight: 600 }}>
-      {getFriendlyChannelName(String(value))}
-    </span>
-  )}
-/>
+                <Tooltip
+                  contentStyle={{
+                    ...tooltipStyle,
+                    background: "#FFFFFF",
+                    border: "1px solid #E2E8F0",
+                    color: "#0F172A",
+                    boxShadow: "0 18px 42px rgba(15, 23, 42, 0.14)",
+                  }}
+                  formatter={(value, name) => [
+                    formatMoney(Number(value ?? 0)),
+                    getFriendlyChannelName(String(name)),
+                  ]}
+                />
 
-      {channelResult.channels.map((channel, index) => (
-       <Area
-  key={channel}
-  type="monotone"
-  dataKey={channel}
-  name={getFriendlyChannelName(channel)}
-  stroke={colors[index % colors.length]}
-  strokeWidth={2.2}
-  fill={`url(#channelGradient-${index})`}
-  fillOpacity={1}
-  dot={{
-    r: 2.5,
-    strokeWidth: 1.5,
-    fill: "#1f2a78",
-    stroke: colors[index % colors.length],
-  }}
-  activeDot={{
-    r: 5,
-    strokeWidth: 2,
-    fill: "#ffffff",
-    stroke: colors[index % colors.length],
-  }}
-/>
-      ))}
-    </AreaChart>
-  </ResponsiveContainer>
-</div>
+                {channelResult.channels.map((channel, index) => (
+                  <Area
+                    key={channel}
+                    type="monotone"
+                    dataKey={channel}
+                    name={getFriendlyChannelName(channel)}
+                    stroke={colors[index % colors.length]}
+                    strokeWidth={2.4}
+                    fill={`url(#channelGradient-${index})`}
+                    fillOpacity={1}
+                    dot={{
+                      r: 2.8,
+                      strokeWidth: 1.5,
+                      fill: "#FFFFFF",
+                      stroke: colors[index % colors.length],
+                    }}
+                    activeDot={{
+                      r: 5,
+                      strokeWidth: 2,
+                      fill: "#FFFFFF",
+                      stroke: colors[index % colors.length],
+                    }}
+                  />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </Card>
     </section>
@@ -343,70 +335,103 @@ const styles: Record<string, CSSProperties> = {
   secondaryCharts: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: 12,
+    gap: 14,
   },
   card: {
-    background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
-    color: "#FFFFFF",
-    borderRadius: 20,
-    padding: 22,
-    border: "1px solid rgba(255,255,255,0.12)",
-    boxShadow: "0 12px 24px rgba(17,24,39,0.10)",
+    background:
+      "linear-gradient(135deg, #FFFFFF 0%, rgba(239, 246, 255, 0.92) 100%)",
+    color: "var(--jd-text-main, #0F172A)",
+    borderRadius: 22,
+    padding: 18,
+    border: "1px solid rgba(147, 197, 253, 0.36)",
+    boxShadow: "0 14px 34px rgba(37, 99, 235, 0.08)",
+    borderTop: "5px solid rgba(37, 99, 235, 0.85)",
   },
   cardHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 14,
+    marginBottom: 12,
     gap: 12,
+    flexWrap: "wrap",
+  },
+  eyebrow: {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: 24,
+    padding: "0 10px",
+    borderRadius: 999,
+    background: "rgba(37, 99, 235, 0.08)",
+    color: "#1D4ED8",
+    border: "1px solid rgba(37, 99, 235, 0.14)",
+    fontSize: 11,
+    fontWeight: 900,
+    marginBottom: 8,
   },
   sectionTitle: {
     margin: 0,
-    fontSize: 20,
-    fontWeight: 800,
-    color: "#FFFFFF",
-    letterSpacing: "-0.01em",
+    fontSize: 21,
+    fontWeight: 950,
+    color: "var(--jd-text-main, #0F172A)",
+    letterSpacing: "-0.04em",
+    lineHeight: 1.08,
   },
   sectionSubtitle: {
-    margin: "5px 0 0",
-    color: "#C6CFFF",
+    margin: "4px 0 0",
+    color: "var(--jd-text-secondary, #475569)",
     fontSize: 13,
-    lineHeight: 1.45,
+    lineHeight: 1.35,
+    fontWeight: 650,
   },
   viewAllButton: {
-    minHeight: 40,
-    padding: "0 14px",
+    minHeight: 34,
+    padding: "0 13px",
     borderRadius: 999,
-    border: "1px solid rgba(127,178,255,0.22)",
-    background: "rgba(127,178,255,0.10)",
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: 800,
+    border: "1px solid rgba(37, 99, 235, 0.18)",
+    background:
+      "linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(124, 58, 237, 0.10) 100%)",
+    color: "var(--jd-brand-secondary, #3D2C8D)",
+    fontSize: 12,
+    fontWeight: 900,
     cursor: "pointer",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.03)",
+    whiteSpace: "nowrap",
+  },
+  tableShell: {
+    overflowX: "auto",
+    borderRadius: 18,
+    border: "1px solid rgba(226, 232, 240, 0.86)",
+    background: "rgba(255, 255, 255, 0.62)",
   },
   tableCompact: {
     width: "100%",
     borderCollapse: "collapse",
-    color: "#FFFFFF",
+    color: "var(--jd-text-main, #0F172A)",
     fontSize: 13,
   },
   thCompact: {
     textAlign: "left",
-    padding: "12px 14px",
-    color: "#C7D2FE",
-    borderBottom: "1px solid rgba(255,255,255,0.08)",
-    fontWeight: 700,
-    background: "rgba(255,255,255,0.04)",
-    fontSize: 13,
+    padding: "11px 12px",
+    color: "var(--jd-text-secondary, #475569)",
+    borderBottom: "1px solid rgba(226, 232, 240, 0.92)",
+    fontWeight: 900,
+    background: "rgba(248, 250, 252, 0.82)",
+    fontSize: 12,
   },
   tdCompact: {
-    padding: "14px 14px",
-    borderBottom: "1px solid rgba(255,255,255,0.05)",
-    color: "#FFFFFF",
+    padding: "12px 12px",
+    borderBottom: "1px solid rgba(226, 232, 240, 0.72)",
+    color: "var(--jd-text-main, #0F172A)",
     verticalAlign: "middle",
-    fontSize: 14,
-    fontWeight: 600,
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  productCell: {
+    padding: "12px 12px",
+    borderBottom: "1px solid rgba(226, 232, 240, 0.72)",
+    color: "var(--jd-text-main, #0F172A)",
+    verticalAlign: "middle",
+    fontSize: 13,
+    fontWeight: 900,
   },
   statusPill: {
     display: "inline-flex",
@@ -415,31 +440,9 @@ const styles: Record<string, CSSProperties> = {
     minHeight: 26,
     borderRadius: 999,
     padding: "0 10px",
-    fontWeight: 800,
+    fontWeight: 900,
     fontSize: 12,
-  },
-  stockStatusBar: {
-    position: "relative",
-    width: 250,
-    height: 30,
-    borderRadius: 10,
-    overflow: "hidden",
-    display: "flex",
-    alignItems: "center",
-  },
-  stockStatusFill: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    height: "100%",
-    borderRadius: 10,
-  },
-  stockStatusText: {
-    position: "relative",
-    zIndex: 1,
-    fontSize: 13,
-    fontWeight: 800,
-    paddingLeft: 12,
+    whiteSpace: "nowrap",
   },
   channelBadgeRow: {
     display: "flex",
@@ -455,21 +458,30 @@ const styles: Record<string, CSSProperties> = {
     minHeight: 28,
     padding: "0 12px",
     borderRadius: 999,
-    background: "rgba(127,178,255,0.12)",
-    border: "1px solid rgba(127,178,255,0.22)",
-    color: "#FFFFFF",
+    background: "rgba(37, 99, 235, 0.08)",
+    border: "1px solid rgba(37, 99, 235, 0.14)",
+    color: "#1D4ED8",
     fontSize: 12,
-    fontWeight: 800,
+    fontWeight: 900,
   },
   channelBadgeText: {
-    color: "#C6CFFF",
+    color: "var(--jd-text-secondary, #475569)",
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 650,
   },
   channelEmptyState: {
-    color: "#C6CFFF",
+    color: "var(--jd-text-secondary, #475569)",
     fontSize: 14,
     lineHeight: 1.5,
     padding: "10px 0 6px",
+    fontWeight: 650,
+  },
+  chartBox: {
+    width: "100%",
+    height: 320,
+    borderRadius: 18,
+    background: "rgba(255, 255, 255, 0.62)",
+    border: "1px solid rgba(226, 232, 240, 0.86)",
+    padding: "10px 8px 4px",
   },
 };
