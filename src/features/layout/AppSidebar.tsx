@@ -17,7 +17,7 @@ export function AppSidebar() {
         padding: "24px 18px",
         color: "#FFFFFF",
         background:
-          "linear-gradient(180deg, #12051F 0%, #2E0D4F 48%, #283593 100%)",
+  "linear-gradient(180deg, #283593 0%, #2E0D4F 62%, #1A0630 100%)",
         borderRight: "1px solid rgba(255,255,255,0.12)",
         position: "sticky",
         top: 0,
@@ -69,8 +69,8 @@ export function AppSidebar() {
               textDecoration: "none",
               fontSize: "14px",
               fontWeight: 650,
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
+background: "rgba(255,255,255,0.10)",
             }}
           >
             {item.label}
@@ -84,7 +84,7 @@ export function AppSidebar() {
           padding: "14px",
           borderRadius: "18px",
           border: "1px solid rgba(255,255,255,0.12)",
-          background: "rgba(255,255,255,0.08)",
+          background: "rgba(255,255,255,0.10)",
         }}
       >
         <div
