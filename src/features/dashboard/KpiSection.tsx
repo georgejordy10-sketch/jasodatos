@@ -26,14 +26,17 @@ function KpiCard({
   isExportingPdf = false,
 }: KpiItem & { isExportingPdf?: boolean }) {
   const [showHelp, setShowHelp] = useState(false);
+  const isDanger = accent === "danger";
 
   return (
-    <div style={styles.kpiCard}>
+    <article style={styles.kpiCard}>
       <div style={styles.kpiTopRow}>
-        <div style={styles.kpiTitle}>{title}</div>
+        <div>
+          <div style={styles.kpiTitle}>{title}</div>
+        </div>
 
         {helpText && !isExportingPdf ? (
-  <button
+          <button
             type="button"
             style={styles.kpiHelpButton}
             onMouseEnter={() => setShowHelp(true)}
@@ -41,9 +44,9 @@ function KpiCard({
             onFocus={() => setShowHelp(true)}
             onBlur={() => setShowHelp(false)}
             onClick={() => setShowHelp((current) => !current)}
-            aria-label={`Cómo leer este dato ${title}`}
+            aria-label={`Cómo leer este dato: ${title}`}
           >
-            Cómo leer este dato
+            Cómo leer
 
             {showHelp ? (
               <span style={styles.kpiTooltip}>{helpText}</span>
@@ -58,11 +61,7 @@ function KpiCard({
         <span
           style={{
             ...styles.kpiBadge,
-            background:
-              accent === "danger"
-                ? "rgba(239,68,68,0.18)"
-                : "rgba(34,197,94,0.18)",
-            color: accent === "danger" ? "#FCA5A5" : "#86EFAC",
+            ...(isDanger ? styles.kpiBadgeDanger : styles.kpiBadgeSuccess),
           }}
         >
           {badge}
@@ -70,19 +69,15 @@ function KpiCard({
 
         <span style={styles.kpiSubtitle}>{subtitle}</span>
       </div>
-    </div>
+    </article>
   );
 }
 
 export default function KpiSection({ items, isExportingPdf = false }: Props) {
   return (
-    <section style={styles.kpiGrid}>
+    <section style={styles.kpiGrid} aria-label="Indicadores principales">
       {items.map((item) => (
-        <KpiCard
-          key={item.title}
-          {...item}
-          isExportingPdf={isExportingPdf}
-        />
+        <KpiCard key={item.title} {...item} isExportingPdf={isExportingPdf} />
       ))}
     </section>
   );
@@ -92,88 +87,109 @@ const styles: Record<string, CSSProperties> = {
   kpiGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 12,
+    gap: 14,
   },
   kpiCard: {
     position: "relative",
-    background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
-    color: "#FFFFFF",
-    borderRadius: 18,
-    padding: 20,
-    border: "1px solid rgba(255,255,255,0.12)",
-    boxShadow: "0 10px 20px rgba(17,24,39,0.10)",
+    background:
+      "linear-gradient(135deg, #FFFFFF 0%, rgba(248, 250, 252, 0.96) 100%)",
+    color: "var(--jd-text-main, #0F172A)",
+    borderRadius: 22,
+    padding: 18,
+    border: "1px solid var(--jd-border, #E2E8F0)",
+    boxShadow: "0 14px 34px rgba(15, 23, 42, 0.07)",
     overflow: "visible",
+    minHeight: 146,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
   },
   kpiTopRow: {
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "space-between",
     gap: 10,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   kpiTitle: {
-    color: "#D3DAFF",
-    fontSize: 15,
-    fontWeight: 650,
-    marginBottom: 0,
+    color: "var(--jd-text-secondary, #475569)",
+    fontSize: 13,
+    fontWeight: 800,
+    lineHeight: 1.25,
   },
-kpiHelpButton: {
-  position: "relative",
-  border: "0",
-  background: "transparent",
-  color: "rgba(191,219,254,0.78)",
-  borderRadius: 999,
-  padding: "2px 0",
-  fontSize: 10.5,
-  fontWeight: 500,
-  lineHeight: 1,
-  cursor: "help",
-  whiteSpace: "nowrap",
-},
-kpiTooltip: {
-  position: "absolute",
-  right: 0,
-  top: "calc(100% + 8px)",
-  zIndex: 40,
-  width: 300,
-  padding: "11px 13px",
-  borderRadius: 14,
-  background: "linear-gradient(135deg, #172554 0%, #312E81 100%)",
-  border: "1px solid rgba(147,197,253,0.34)",
-  boxShadow: "0 18px 42px rgba(15,23,42,0.38)",
-  color: "#F8FAFC",
-  fontSize: 13,
-  fontWeight: 500,
-  lineHeight: 1.45,
-  textAlign: "left",
-  whiteSpace: "normal",
-},
+  kpiHelpButton: {
+    position: "relative",
+    border: "1px solid var(--jd-border, #E2E8F0)",
+    background: "#FFFFFF",
+    color: "var(--jd-text-muted, #64748B)",
+    borderRadius: 999,
+    padding: "5px 9px",
+    fontSize: 11,
+    fontWeight: 750,
+    lineHeight: 1,
+    cursor: "help",
+    whiteSpace: "nowrap",
+    boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
+  },
+  kpiTooltip: {
+    position: "absolute",
+    right: 0,
+    top: "calc(100% + 8px)",
+    zIndex: 40,
+    width: 300,
+    padding: "11px 13px",
+    borderRadius: 14,
+    background: "#FFFFFF",
+    border: "1px solid var(--jd-border, #E2E8F0)",
+    boxShadow: "0 18px 42px rgba(15,23,42,0.18)",
+    color: "var(--jd-text-main, #0F172A)",
+    fontSize: 13,
+    fontWeight: 550,
+    lineHeight: 1.45,
+    textAlign: "left",
+    whiteSpace: "normal",
+  },
   kpiValue: {
     fontSize: 30,
-    fontWeight: 800,
-    marginBottom: 12,
-    lineHeight: 1.1,
+    fontWeight: 950,
+    marginBottom: 14,
+    lineHeight: 1.08,
+    letterSpacing: "-0.045em",
+    color: "var(--jd-text-main, #0F172A)",
   },
   kpiFooter: {
     display: "flex",
     gap: 8,
     alignItems: "center",
     flexWrap: "wrap",
+    paddingTop: 10,
+    borderTop: "1px solid rgba(226, 232, 240, 0.86)",
   },
   kpiBadge: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 28,
+    minHeight: 26,
     borderRadius: 999,
     padding: "0 10px",
     fontSize: 12,
-    fontWeight: 800,
+    fontWeight: 900,
+    border: "1px solid transparent",
+  },
+  kpiBadgeSuccess: {
+    background: "rgba(22, 163, 74, 0.10)",
+    color: "#15803D",
+    borderColor: "rgba(22, 163, 74, 0.18)",
+  },
+  kpiBadgeDanger: {
+    background: "rgba(220, 38, 38, 0.10)",
+    color: "#B91C1C",
+    borderColor: "rgba(220, 38, 38, 0.18)",
   },
   kpiSubtitle: {
-    color: "rgba(255,255,255,0.72)",
+    color: "var(--jd-text-muted, #64748B)",
     fontSize: 12,
-    fontWeight: 500,
+    fontWeight: 650,
     lineHeight: 1.25,
   },
 };

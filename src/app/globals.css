@@ -389,4 +389,15 @@ button:disabled {
     font-size: 13px !important;
   }
 }
+@media (max-width: 1180px) {
+  section[aria-label="Indicadores principales"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  section[aria-label="Indicadores principales"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
 }
