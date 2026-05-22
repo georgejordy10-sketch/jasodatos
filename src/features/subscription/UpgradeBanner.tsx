@@ -18,24 +18,24 @@ function getUpgradeMessage(plan: SubscriptionPlan): {
     return {
       title: "Desbloquea análisis avanzados",
       subtitle:
-        "Activa desempeño entre sucursales, JasoBot comercial y exportación PDF con el plan Crecimiento.",
-      cta: "Ver beneficios de Crecimiento",
+        "Activa desempeño entre sucursales, JasoBot comercial y exportación PDF.",
+      cta: "Ver Crecimiento",
     };
   }
 
   if (plan === "pro") {
     return {
-      title: "Activa automatización comercial",
+      title: "Automatización comercial disponible",
       subtitle:
-        "Lleva tu operación al siguiente nivel con acciones de WhatsApp y capacidades premium del plan Control.",
-      cta: "Ver beneficios de Control",
+        "Acciones de WhatsApp y capacidades premium del plan Control.",
+      cta: "Ver Control",
     };
   }
 
   return {
-    title: "Ya tienes el plan más completo",
+    title: "Plan Control activo",
     subtitle:
-      "Control desbloquea la experiencia comercial más avanzada de JasoDatos.",
+      "Tienes disponible la experiencia comercial más avanzada de JasoDatos.",
     cta: "Ver planes",
   };
 }
@@ -65,7 +65,7 @@ export default function UpgradeBanner({
               : styles.badgeUltra),
           }}
         >
-          Plan actual: {planLabel}
+          {planLabel}
         </span>
 
         <div style={styles.textBlock}>
@@ -74,7 +74,7 @@ export default function UpgradeBanner({
         </div>
       </div>
 
-      <button style={styles.button} onClick={onOpenPlans}>
+      <button type="button" style={styles.button} onClick={onOpenPlans}>
         {content.cta}
       </button>
     </section>
@@ -86,35 +86,39 @@ const styles: Record<string, CSSProperties> = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: 16,
+    gap: 12,
     flexWrap: "wrap",
-    padding: "16px 18px",
-    borderRadius: 18,
-    background: "linear-gradient(135deg, #ced2f6 0%, #ced2f6 100%)",
-    border: "1px solid rgba(79, 70, 229, 0.16)",
-    boxShadow: "0 10px 22px rgba(79, 70, 229, 0.08)",
+    padding: "10px 14px",
+    borderRadius: 16,
+    background:
+      "linear-gradient(135deg, rgba(238, 242, 255, 0.94) 0%, rgba(224, 231, 255, 0.82) 100%)",
+    border: "1px solid rgba(79, 70, 229, 0.14)",
+    boxShadow: "0 8px 18px rgba(79, 70, 229, 0.06)",
   },
   wrapperUltra: {
-    background: "linear-gradient(135deg, #ced2f6  0%, #ced2f6 100%)",
+    background:
+      "linear-gradient(135deg, rgba(240, 253, 244, 0.94) 0%, rgba(220, 252, 231, 0.78) 100%)",
     border: "1px solid rgba(34, 197, 94, 0.18)",
-    boxShadow: "0 10px 22px rgba(34, 197, 94, 0.08)",
+    boxShadow: "0 8px 18px rgba(34, 197, 94, 0.06)",
   },
   content: {
     display: "flex",
-    alignItems: "flex-start",
-    gap: 14,
+    alignItems: "center",
+    gap: 12,
     flexWrap: "wrap",
+    minWidth: 0,
   },
   badge: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 30,
-    padding: "0 14px",
+    minHeight: 26,
+    padding: "0 12px",
     borderRadius: 999,
     fontSize: 11,
-    fontWeight: 800,
+    fontWeight: 900,
     color: "#FFFFFF",
+    whiteSpace: "nowrap",
   },
   badgeBasic: {
     background: "linear-gradient(135deg, #475569 0%, #64748B 100%)",
@@ -127,33 +131,37 @@ const styles: Record<string, CSSProperties> = {
   },
   textBlock: {
     display: "grid",
-    gap: 4,
+    gap: 2,
+    minWidth: 0,
   },
   title: {
     margin: 0,
-    color: "#1E2670",
-    fontSize: 17,
-    fontWeight: 800,
-    letterSpacing: "-0.01em",
+    color: "var(--jd-brand-secondary, #3D2C8D)",
+    fontSize: 15,
+    fontWeight: 900,
+    letterSpacing: "-0.015em",
+    lineHeight: 1.18,
   },
   subtitle: {
     margin: 0,
-    color: "#334155",
-    fontSize: 14,
-    lineHeight: 1.5,
-    fontWeight: 600,
-    maxWidth: 760,
+    color: "var(--jd-text-secondary, #475569)",
+    fontSize: 12.5,
+    lineHeight: 1.35,
+    fontWeight: 650,
+    maxWidth: 680,
   },
   button: {
-    minHeight: 46,
-    padding: "0 18px",
-    borderRadius: 14,
+    minHeight: 36,
+    padding: "0 14px",
+    borderRadius: 999,
     border: "1px solid rgba(79, 70, 229, 0.18)",
-    background: "linear-gradient(135deg, #4460FF 0%, #5B6CFF 100%)",
+    background:
+      "linear-gradient(135deg, var(--jd-action-primary, #2563EB) 0%, var(--jd-action-premium, #7C3AED) 100%)",
     color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: 800,
+    fontSize: 12,
+    fontWeight: 900,
     cursor: "pointer",
-    boxShadow: "0 10px 20px rgba(68, 96, 255, 0.16)",
+    boxShadow: "0 8px 18px rgba(68, 96, 255, 0.14)",
+    whiteSpace: "nowrap",
   },
 };
