@@ -1,61 +1,42 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import type { BusinessAlert, AlertSeverity } from "./types";
+import type { AlertSeverity, BusinessAlert } from "./types";
 
 type AlertPanelProps = {
   alerts: BusinessAlert[];
 };
 
 function severityLabel(severity: AlertSeverity): string {
-  if (severity === "alta") return "alta";
-  if (severity === "media") return "media";
-  return "baja";
+  if (severity === "alta") return "Alta";
+  if (severity === "media") return "Media";
+  return "Baja";
 }
 
 function severityStyles(severity: AlertSeverity): CSSProperties {
   if (severity === "alta") {
     return {
-      background: "rgba(239, 68, 68, 0.16)",
-      color: "#FFD3D3",
-      border: "1px solid rgba(239, 68, 68, 0.30)",
+      background: "rgba(220, 38, 38, 0.10)",
+      color: "#B91C1C",
+      border: "1px solid rgba(220, 38, 38, 0.18)",
     };
   }
 
   if (severity === "media") {
     return {
-      background: "rgba(245, 158, 11, 0.16)",
-      color: "#FFE7B0",
-      border: "1px solid rgba(245, 158, 11, 0.30)",
+      background: "rgba(245, 158, 11, 0.12)",
+      color: "#B45309",
+      border: "1px solid rgba(245, 158, 11, 0.22)",
     };
   }
 
   return {
-    background: "rgba(34, 197, 94, 0.16)",
-    color: "#C8FFD9",
-    border: "1px solid rgba(34, 197, 94, 0.30)",
+    background: "rgba(22, 163, 74, 0.10)",
+    color: "#15803D",
+    border: "1px solid rgba(22, 163, 74, 0.18)",
   };
 }
-function findScrollableParent(element: HTMLElement): HTMLElement | Window {
-  let parent = element.parentElement;
 
-  while (parent) {
-    const style = window.getComputedStyle(parent);
-    const overflowY = style.overflowY;
-
-    const canScroll =
-      (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
-      parent.scrollHeight > parent.clientHeight;
-
-    if (canScroll) {
-      return parent;
-    }
-
-    parent = parent.parentElement;
-  }
-
-  return window;
-}
 function goToAnchor(anchorId?: string) {
   if (!anchorId) return;
 
@@ -77,7 +58,7 @@ function goToAnchor(anchorId?: string) {
   target.style.outline = "4px solid rgba(34, 197, 94, 1)";
   target.style.outlineOffset = "4px";
   target.style.boxShadow =
-    "0 0 0 10px rgba(34, 197, 94, 0.22), 0 12px 28px rgba(0, 0, 0, 0.28)";
+    "0 0 0 10px rgba(34, 197, 94, 0.22), 0 12px 28px rgba(15, 23, 42, 0.18)";
   target.style.backgroundColor = "rgba(34, 197, 94, 0.08)";
   target.style.borderRadius = "18px";
 
@@ -89,24 +70,30 @@ function goToAnchor(anchorId?: string) {
     target.style.borderRadius = "";
   }, 1800);
 }
+
 export default function AlertPanel({ alerts }: AlertPanelProps) {
   const total = alerts.length;
-  const high = alerts.filter((a) => a.severity === "alta").length;
-  const medium = alerts.filter((a) => a.severity === "media").length;
-  const low = alerts.filter((a) => a.severity === "baja").length;
+  const high = alerts.filter((alert) => alert.severity === "alta").length;
+  const medium = alerts.filter((alert) => alert.severity === "media").length;
+  const low = alerts.filter((alert) => alert.severity === "baja").length;
 
   return (
     <section style={styles.card}>
       <div style={styles.header}>
         <div style={styles.headerCopy}>
-<h2 style={styles.title}>Alertas del negocio</h2>
-<p style={styles.subtitle}>
-  JasoDatos revisa tus datos y te muestra lo que necesita atención.
-</p>
+          <span style={styles.eyebrow}>Alertas accionables</span>
+
+          <h2 style={styles.title}>Alertas del negocio</h2>
+
+          <p style={styles.subtitle}>
+            JasoDatos revisa tus datos y prioriza los puntos que requieren
+            atención comercial.
+          </p>
         </div>
 
         <div style={styles.counterWrap}>
           <span style={styles.counter}>{total}</span>
+          <span style={styles.counterLabel}>alertas</span>
         </div>
       </div>
 
@@ -114,9 +101,11 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
         <div style={{ ...styles.summaryPill, ...severityStyles("alta") }}>
           Altas: {high}
         </div>
+
         <div style={{ ...styles.summaryPill, ...severityStyles("media") }}>
           Medias: {medium}
         </div>
+
         <div style={{ ...styles.summaryPill, ...severityStyles("baja") }}>
           Bajas: {low}
         </div>
@@ -131,8 +120,13 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
           {alerts.map((alert) => (
             <article key={alert.id} style={styles.alertCard}>
               <div style={styles.alertTop}>
-                <span style={{ ...styles.severityBadge, ...severityStyles(alert.severity) }}>
-                  {severityLabel(alert.severity).toUpperCase()}
+                <span
+                  style={{
+                    ...styles.severityBadge,
+                    ...severityStyles(alert.severity),
+                  }}
+                >
+                  {severityLabel(alert.severity)}
                 </span>
               </div>
 
@@ -142,20 +136,19 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
               </div>
 
               <div style={styles.actionsRow}>
-              {alert.actionLabel && alert.anchorId ? (
-  <a
-    href={`#${alert.anchorId}`}
-    style={styles.actionButton}
-    onClick={() => {
-      window.setTimeout(() => goToAnchor(alert.anchorId), 80);
-    }}
-  >
-    {alert.actionLabel}
-  </a>
-) : (
-  <span />
-)}
-
+                {alert.actionLabel && alert.anchorId ? (
+                  <a
+                    href={`#${alert.anchorId}`}
+                    style={styles.actionButton}
+                    onClick={() => {
+                      window.setTimeout(() => goToAnchor(alert.anchorId), 80);
+                    }}
+                  >
+                    {alert.actionLabel}
+                  </a>
+                ) : (
+                  <span style={styles.noAction}>Sin acción directa</span>
+                )}
               </div>
             </article>
           ))}
@@ -164,72 +157,94 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
     </section>
   );
 }
+
 const styles: Record<string, CSSProperties> = {
   card: {
-    background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
-    borderRadius: 20,
+    background:
+      "linear-gradient(135deg, #FFFFFF 0%, rgba(248, 250, 252, 0.96) 100%)",
+    borderRadius: 22,
     padding: 18,
-    border: "1px solid rgba(255,255,255,0.10)",
-    boxShadow: "0 12px 24px rgba(17,24,39,0.10)",
+    border: "1px solid var(--jd-border, #E2E8F0)",
+    boxShadow: "0 14px 34px rgba(15, 23, 42, 0.07)",
     display: "grid",
-    gap: 12,
+    gap: 14,
   },
   header: {
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 14,
     flexWrap: "wrap",
-    marginBottom: 2,
   },
   headerCopy: {
     display: "grid",
-    gap: 3,
+    gap: 5,
+    minWidth: 0,
+  },
+  eyebrow: {
+    display: "inline-flex",
+    alignItems: "center",
+    width: "fit-content",
+    minHeight: 26,
+    padding: "0 11px",
+    borderRadius: 999,
+    background: "rgba(61, 44, 141, 0.08)",
+    color: "var(--jd-brand-secondary, #3D2C8D)",
+    border: "1px solid rgba(61, 44, 141, 0.14)",
+    fontSize: 11,
+    fontWeight: 850,
   },
   title: {
     margin: 0,
-    color: "#FFFFFF",
-    fontSize: 19,
-    fontWeight: 800,
-    lineHeight: 1.1,
-    letterSpacing: "-0.01em",
+    color: "var(--jd-text-main, #0F172A)",
+    fontSize: 22,
+    fontWeight: 900,
+    lineHeight: 1.08,
+    letterSpacing: "-0.035em",
   },
   subtitle: {
     margin: 0,
-    color: "rgba(245,248,255,0.96)",
+    color: "var(--jd-text-secondary, #475569)",
     fontSize: 14,
-    fontWeight: 500,
-    lineHeight: 1.35,
+    fontWeight: 600,
+    lineHeight: 1.4,
   },
   counterWrap: {
-    minWidth: 50,
-    height: 50,
-    borderRadius: 16,
+    minWidth: 72,
+    minHeight: 58,
+    borderRadius: 18,
     display: "grid",
     placeItems: "center",
-    background: "rgba(127, 178, 255, 0.12)",
-    border: "1px solid rgba(127, 178, 255, 0.22)",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.03)",
+    gap: 2,
+    background:
+      "linear-gradient(135deg, rgba(46, 13, 79, 0.06) 0%, rgba(40, 53, 147, 0.08) 100%)",
+    border: "1px solid rgba(61, 44, 141, 0.12)",
+    padding: "8px 12px",
   },
   counter: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: 800,
+    color: "var(--jd-brand-secondary, #3D2C8D)",
+    fontSize: 22,
+    fontWeight: 950,
+    lineHeight: 1,
+  },
+  counterLabel: {
+    color: "var(--jd-text-muted, #64748B)",
+    fontSize: 11,
+    fontWeight: 750,
     lineHeight: 1,
   },
   summaryRow: {
     display: "flex",
-    gap: 10,
+    gap: 8,
     flexWrap: "wrap",
-    marginTop: 2,
   },
   summaryPill: {
     borderRadius: 999,
     padding: "7px 12px",
-    fontSize: 13,
-    fontWeight: 800,
+    fontSize: 12,
+    fontWeight: 850,
     lineHeight: 1,
-    minHeight: 34,
+    minHeight: 32,
     display: "inline-flex",
     alignItems: "center",
   },
@@ -237,14 +252,14 @@ const styles: Record<string, CSSProperties> = {
     minHeight: 68,
     display: "grid",
     placeItems: "center",
-    color: "rgba(245,248,255,0.94)",
-    border: "1px dashed rgba(127, 178, 255, 0.20)",
+    color: "var(--jd-text-secondary, #475569)",
+    border: "1px dashed rgba(148, 163, 184, 0.50)",
     borderRadius: 16,
-    background: "rgba(127, 178, 255, 0.04)",
+    background: "rgba(248, 250, 252, 0.80)",
     padding: 14,
     textAlign: "center",
     fontSize: 14,
-    fontWeight: 500,
+    fontWeight: 600,
   },
   grid: {
     display: "grid",
@@ -254,11 +269,12 @@ const styles: Record<string, CSSProperties> = {
   alertCard: {
     borderRadius: 18,
     padding: 16,
-    background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(127,178,255,0.02) 100%)",
-    border: "1px solid rgba(255,255,255,0.08)",
+    background: "#FFFFFF",
+    border: "1px solid var(--jd-border, #E2E8F0)",
     display: "grid",
     gap: 10,
-    minHeight: 150,
+    minHeight: 148,
+    boxShadow: "0 10px 24px rgba(15, 23, 42, 0.05)",
   },
   alertTop: {
     display: "flex",
@@ -269,27 +285,28 @@ const styles: Record<string, CSSProperties> = {
   severityBadge: {
     borderRadius: 999,
     padding: "6px 11px",
-    fontSize: 12,
-    fontWeight: 800,
-    letterSpacing: 0.25,
+    fontSize: 11,
+    fontWeight: 900,
+    letterSpacing: 0.2,
     lineHeight: 1,
   },
   contentBlock: {
     display: "grid",
-    gap: 8,
+    gap: 7,
   },
   alertTitle: {
     margin: 0,
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: 800,
+    color: "var(--jd-text-main, #0F172A)",
+    fontSize: 17,
+    fontWeight: 900,
     lineHeight: 1.2,
+    letterSpacing: "-0.02em",
   },
   alertMessage: {
     margin: 0,
-    color: "rgba(247,250,255,0.98)",
-    fontSize: 15,
-    fontWeight: 500,
+    color: "var(--jd-text-secondary, #475569)",
+    fontSize: 14,
+    fontWeight: 600,
     lineHeight: 1.45,
   },
   actionsRow: {
@@ -297,18 +314,24 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: "flex-end",
     marginTop: "auto",
   },
-actionButton: {
-  border: "1px solid rgba(255,255,255,0.18)",
-  background: "rgba(255,255,255,0.10)",
-  color: "#FFFFFF",
-  borderRadius: 999,
-  padding: "8px 12px",
-  fontSize: 12,
-  fontWeight: 800,
-  cursor: "pointer",
-  textDecoration: "none",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-},
+  actionButton: {
+    border: "1px solid rgba(61, 44, 141, 0.18)",
+    background:
+      "linear-gradient(135deg, rgba(61, 44, 141, 0.08) 0%, rgba(124, 58, 237, 0.10) 100%)",
+    color: "var(--jd-brand-secondary, #3D2C8D)",
+    borderRadius: 999,
+    padding: "8px 12px",
+    fontSize: 12,
+    fontWeight: 900,
+    cursor: "pointer",
+    textDecoration: "none",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noAction: {
+    color: "var(--jd-text-muted, #64748B)",
+    fontSize: 12,
+    fontWeight: 700,
+  },
 };
