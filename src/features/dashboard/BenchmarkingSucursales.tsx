@@ -108,8 +108,13 @@ export default function BenchmarkingSucursales({ rows }: Props) {
     <section style={styles.wrapper}>
       <div style={styles.header}>
         <div>
+          <span style={styles.eyebrow}>Comparativo interno</span>
+
           <h3 style={styles.title}>Desempeño entre sucursales</h3>
-          <p style={styles.subtitle}>Comparativo comercial interno del período filtrado</p>
+
+          <p style={styles.subtitle}>
+            Ranking comercial del período filtrado.
+          </p>
         </div>
 
         <div style={styles.headerBadges}>
@@ -121,7 +126,7 @@ export default function BenchmarkingSucursales({ rows }: Props) {
       {benchmarkRows.length === 0 ? (
         <div style={styles.empty}>No hay datos suficientes para comparar sucursales.</div>
       ) : (
-        <div style={{ overflowX: "auto" }}>
+        <div style={styles.tableShell}>
           <table style={styles.table}>
             <thead>
               <tr>
@@ -133,26 +138,35 @@ export default function BenchmarkingSucursales({ rows }: Props) {
                 <th style={styles.th}>Producto top</th>
               </tr>
             </thead>
+
             <tbody>
               {benchmarkRows.map((row, index) => (
                 <tr key={row.sucursal}>
-                  <td style={styles.td}>{index + 1}</td>
+                  <td style={styles.td}>
+                    <span style={index === 0 ? styles.rankFirst : styles.rank}>{index + 1}</span>
+                  </td>
+
                   <td style={styles.tdStrong}>{row.sucursal}</td>
                   <td style={styles.td}>{formatMoney(row.ventas)}</td>
                   <td style={styles.td}>{formatInt(row.unidades)}</td>
+
                   <td style={styles.td}>
                     <div style={styles.shareCell}>
-                      <span>{row.participacion.toFixed(1)}%</span>
+                      <div style={styles.shareTop}>
+                        <span style={styles.sharePct}>{row.participacion.toFixed(1)}%</span>
+                      </div>
+
                       <div style={styles.shareTrack}>
                         <div
                           style={{
                             ...styles.shareFill,
-                            width: `${Math.max(6, row.participacion)}%`,
+                            width: `${Math.min(100, Math.max(6, row.participacion))}%`,
                           }}
                         />
                       </div>
                     </div>
                   </td>
+
                   <td style={styles.td}>{row.productoTop}</td>
                 </tr>
               ))}
@@ -166,31 +180,50 @@ export default function BenchmarkingSucursales({ rows }: Props) {
 
 const styles: Record<string, React.CSSProperties> = {
   wrapper: {
-    background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
-    color: "#FFFFFF",
-    borderRadius: 18,
+    background:
+      "linear-gradient(135deg, #FFFFFF 0%, rgba(239, 246, 255, 0.92) 100%)",
+    color: "var(--jd-text-main, #0F172A)",
+    borderRadius: 22,
     padding: 18,
-    border: "1px solid rgba(255,255,255,0.12)",
-    boxShadow: "0 10px 20px rgba(17,24,39,0.10)",
+    border: "1px solid rgba(147, 197, 253, 0.36)",
+    boxShadow: "0 14px 34px rgba(37, 99, 235, 0.08)",
+    borderTop: "5px solid rgba(37, 99, 235, 0.85)",
   },
   header: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 12,
     marginBottom: 14,
     flexWrap: "wrap",
   },
+  eyebrow: {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: 24,
+    padding: "0 10px",
+    borderRadius: 999,
+    background: "rgba(37, 99, 235, 0.08)",
+    color: "#1D4ED8",
+    border: "1px solid rgba(37, 99, 235, 0.14)",
+    fontSize: 11,
+    fontWeight: 900,
+    marginBottom: 8,
+  },
   title: {
     margin: 0,
-    fontSize: 18,
-    fontWeight: 800,
-    color: "#FFFFFF",
+    fontSize: 21,
+    fontWeight: 950,
+    color: "var(--jd-text-main, #0F172A)",
+    letterSpacing: "-0.04em",
+    lineHeight: 1.08,
   },
   subtitle: {
     margin: "4px 0 0",
-    color: "#C6CFFF",
+    color: "var(--jd-text-secondary, #475569)",
     fontSize: 13,
+    fontWeight: 650,
+    lineHeight: 1.35,
   },
   headerBadges: {
     display: "flex",
@@ -204,9 +237,10 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: 30,
     borderRadius: 999,
     padding: "0 12px",
-    background: "rgba(34,197,94,0.18)",
-    color: "#86EFAC",
-    fontWeight: 800,
+    background: "rgba(22, 163, 74, 0.10)",
+    border: "1px solid rgba(22, 163, 74, 0.18)",
+    color: "#15803D",
+    fontWeight: 900,
     fontSize: 12,
   },
   badgeMuted: {
@@ -216,55 +250,113 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: 30,
     borderRadius: 999,
     padding: "0 12px",
-    background: "rgba(245,158,11,0.18)",
-    color: "#FCD34D",
-    fontWeight: 800,
+    background: "rgba(245, 158, 11, 0.12)",
+    border: "1px solid rgba(245, 158, 11, 0.22)",
+    color: "#B45309",
+    fontWeight: 900,
     fontSize: 12,
   },
   empty: {
-    color: "#C6CFFF",
+    color: "var(--jd-text-secondary, #475569)",
     fontSize: 14,
+    fontWeight: 650,
+    padding: 14,
+    borderRadius: 16,
+    background: "rgba(255,255,255,0.62)",
+    border: "1px dashed rgba(148, 163, 184, 0.50)",
+  },
+  tableShell: {
+    overflowX: "auto",
+    borderRadius: 18,
+    border: "1px solid rgba(226, 232, 240, 0.86)",
+    background: "rgba(255, 255, 255, 0.64)",
   },
   table: {
     width: "100%",
     borderCollapse: "collapse",
-    color: "#FFFFFF",
-    fontSize: 14,
+    color: "var(--jd-text-main, #0F172A)",
+    fontSize: 13,
   },
   th: {
     textAlign: "left",
-    padding: "12px 14px",
-    color: "#BFC8FF",
-    borderBottom: "1px solid rgba(255,255,255,0.10)",
-    fontWeight: 700,
+    padding: "11px 12px",
+    color: "var(--jd-text-secondary, #475569)",
+    borderBottom: "1px solid rgba(226, 232, 240, 0.92)",
+    fontWeight: 900,
+    background: "rgba(248, 250, 252, 0.82)",
+    fontSize: 12,
+    whiteSpace: "nowrap",
   },
   td: {
-    padding: "12px 14px",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-    color: "#FFFFFF",
+    padding: "12px 12px",
+    borderBottom: "1px solid rgba(226, 232, 240, 0.72)",
+    color: "var(--jd-text-main, #0F172A)",
     verticalAlign: "middle",
+    fontSize: 13,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
   },
   tdStrong: {
-    padding: "12px 14px",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-    color: "#FFFFFF",
+    padding: "12px 12px",
+    borderBottom: "1px solid rgba(226, 232, 240, 0.72)",
+    color: "var(--jd-text-main, #0F172A)",
     verticalAlign: "middle",
-    fontWeight: 700,
+    fontSize: 13,
+    fontWeight: 900,
+    whiteSpace: "nowrap",
+  },
+  rank: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    background: "rgba(100, 116, 139, 0.10)",
+    color: "var(--jd-text-secondary, #475569)",
+    fontSize: 12,
+    fontWeight: 900,
+  },
+  rankFirst: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    background:
+      "linear-gradient(135deg, var(--jd-action-primary, #2563EB) 0%, var(--jd-action-premium, #7C3AED) 100%)",
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: 900,
+    boxShadow: "0 8px 18px rgba(37, 99, 235, 0.18)",
   },
   shareCell: {
     display: "grid",
     gap: 6,
+    minWidth: 120,
+  },
+  shareTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  sharePct: {
+    color: "var(--jd-text-main, #0F172A)",
+    fontSize: 12,
+    fontWeight: 900,
   },
   shareTrack: {
     width: "100%",
     height: 8,
     borderRadius: 999,
-    background: "rgba(255,255,255,0.10)",
+    background: "rgba(148, 163, 184, 0.18)",
     overflow: "hidden",
   },
   shareFill: {
     height: "100%",
     borderRadius: 999,
-    background: "linear-gradient(90deg, #5B6CFF 0%, #8B5CF6 100%)",
+    background:
+      "linear-gradient(90deg, var(--jd-action-primary, #2563EB) 0%, var(--jd-action-premium, #7C3AED) 100%)",
   },
 };
