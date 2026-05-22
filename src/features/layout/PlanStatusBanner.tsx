@@ -121,7 +121,7 @@ export function PlanStatusBanner({
           {statusLabel}
         </span>
 
-        <a href="/planes" className="jd-button jd-button-premium">
+        <a href="/cargas#planes" className="jd-button jd-button-premium">
           Ver planes
         </a>
       </div>

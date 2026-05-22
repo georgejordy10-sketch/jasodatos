@@ -1,11 +1,11 @@
 const navItems = [
-  { label: "Resumen", href: "/dashboard" },
-  { label: "Ventas", href: "/dashboard#ventas" },
-  { label: "Inventario", href: "/dashboard#inventario" },
-  { label: "Productos", href: "/dashboard#productos" },
-  { label: "Alertas", href: "/dashboard#alertas" },
-  { label: "Reportes", href: "/dashboard#reportes" },
-  { label: "Configuración", href: "/configuracion" },
+  { label: "Resumen", href: "/cargas" },
+  { label: "Ventas", href: "/cargas#ventas" },
+  { label: "Inventario", href: "/cargas#inventario" },
+  { label: "Productos", href: "/cargas#productos" },
+  { label: "Alertas", href: "/cargas#alertas" },
+  { label: "Reportes", href: "/cargas#reportes" },
+  { label: "Configuración", href: "/cargas#configuracion" },
   { label: "Admin", href: "/admin/clientes" },
 ];
 
