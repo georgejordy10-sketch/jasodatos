@@ -2982,7 +2982,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
       <div id="benchmarking-sucursales">
         <div style={styles.modulePlanRow}>
           {!isExportingPdf ? (
-            <ActivePlanBadge tone="pro">Incluido en PRO</ActivePlanBadge>
+            <ActivePlanBadge tone="pro">Incluido en Crecimiento</ActivePlanBadge>
           ) : null}
 
           <span style={styles.modulePlanText}>
@@ -3018,10 +3018,10 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
 
               {!isExportingPdf ? (
                 <>
-                  <ActivePlanBadge tone="pro">Incluido en PRO</ActivePlanBadge>
+                  <ActivePlanBadge tone="pro">Incluido en Crecimiento</ActivePlanBadge>
 
                   {canUseWhatsappByPlan ? (
-                    <ActivePlanBadge tone="ultra">WhatsApp en ULTRA</ActivePlanBadge>
+                    <ActivePlanBadge tone="ultra">WhatsApp en Control</ActivePlanBadge>
                   ) : (
                     <ActivePlanBadge tone="basic">WhatsApp bloqueado</ActivePlanBadge>
                   )}
@@ -3118,7 +3118,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
                       style={styles.actionButton}
                       onClick={() => usarAccion(item)}
                     >
-                      Copiar mensaje par campaña
+                      Copiar mensaje para campaña
                     </button>
                   ) : null}
                 </div>
@@ -3133,8 +3133,8 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
           {!isExportingPdf ? (
             <div style={styles.assistantActions}>
               <div style={styles.modulePlanRow}>
-                <ActivePlanBadge tone="pro">PDF en PRO</ActivePlanBadge>
-                <ActivePlanBadge tone="ultra">WhatsApp en ULTRA</ActivePlanBadge>
+<ActivePlanBadge tone="pro">PDF en Crecimiento</ActivePlanBadge>
+<ActivePlanBadge tone="ultra">WhatsApp en Control</ActivePlanBadge>
               </div>
 
               <button
@@ -3552,18 +3552,21 @@ const styles: Record<string, CSSProperties> = {
     background: "linear-gradient(180deg, #EEF2FF 0%, #E8EDFF 100%)",
   },
 assistantCard: {
-  background: "linear-gradient(180deg, #2f347f 0%, #2b3170 100%)",
-  borderRadius: 20,
-  padding: "20px 22px",
-  border: "1px solid rgba(255,255,255,0.08)",
-  boxShadow: "0 12px 24px rgba(17,24,39,0.10)",
+  background:
+    "linear-gradient(135deg, #FFFFFF 0%, rgba(239, 246, 255, 0.92) 100%)",
+  color: "var(--jd-text-main, #0F172A)",
+  borderRadius: 22,
+  padding: 18,
+  border: "1px solid rgba(147, 197, 253, 0.36)",
+  boxShadow: "0 14px 34px rgba(37, 99, 235, 0.08)",
+  borderTop: "5px solid rgba(124, 58, 237, 0.85)",
 },
 
 assistantGrid: {
   display: "grid",
-  gridTemplateColumns: "1.05fr 1fr 320px",
-  alignItems: "center",
-  columnGap: 16,
+  gridTemplateColumns: "minmax(0, 1.05fr) minmax(0, 1fr) minmax(260px, 320px)",
+  alignItems: "stretch",
+  columnGap: 14,
 },
 lockedFeatureActions: {
   display: "flex",
@@ -3586,135 +3589,148 @@ lockedFeatureSalesButton: {
   boxShadow: "0 10px 20px rgba(16,185,129,0.18)",
 },
 actionButton: {
-  marginLeft: "auto",
-  background: "rgba(127,178,255,0.10)",
-  color: "#FFFFFF",
-  border: "1px solid rgba(127,178,255,0.20)",
-  borderRadius: 12,
-  minHeight: 38,
-  padding: "0 14px",
-  fontSize: 13,
-  fontWeight: 800,
+  gridColumn: "1 / -1",
+  justifySelf: "start",
+  background:
+    "linear-gradient(135deg, rgba(34, 197, 94, 0.10) 0%, rgba(16, 185, 129, 0.12) 100%)",
+  color: "#15803D",
+  border: "1px solid rgba(34, 197, 94, 0.22)",
+  borderRadius: 999,
+  minHeight: 34,
+  padding: "0 12px",
+  fontSize: 12,
+  fontWeight: 900,
   cursor: "pointer",
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.03)",
 },
 
 actionNotice: {
   padding: "10px 12px",
-  borderRadius: 12,
-  background: "rgba(255,255,255,0.08)",
-  border: "1px solid rgba(255,255,255,0.14)",
-  color: "#EAF0FF",
+  borderRadius: 14,
+  background: "rgba(37, 99, 235, 0.08)",
+  border: "1px solid rgba(37, 99, 235, 0.16)",
+  color: "var(--jd-brand-secondary, #3D2C8D)",
   fontSize: 13,
-  fontWeight: 600,
+  fontWeight: 700,
 },
 assistantContent: {
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
   paddingRight: 8,
-  paddingLeft: 24,
+  paddingLeft: 0,
 },
 assistantPromoBadge: {
-  padding: "4px 10px",
+  padding: "5px 10px",
   borderRadius: 999,
   fontSize: 11,
-  fontWeight: 800,
+  fontWeight: 900,
   border: "1px solid transparent",
 },
 actionsGrid: {
-  marginTop: 14,
+  marginTop: 10,
   display: "grid",
-  gap: 12,
+  gap: 10,
 },
 
 actionCard: {
-  display: "flex",
-  alignItems: "center",
+  display: "grid",
+  gridTemplateColumns: "22px minmax(0, 1fr)",
+  alignItems: "start",
   gap: 10,
-  padding: "10px 12px",
-  borderRadius: 12,
-  background: "rgba(34,197,94,0.08)",
-  border: "1px solid rgba(34,197,94,0.18)",
+  padding: "11px 12px",
+  borderRadius: 16,
+  background: "#FFFFFF",
+  border: "1px solid rgba(34, 197, 94, 0.18)",
+  boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
 },
 
 actionIcon: {
+  width: 22,
+  height: 22,
+  borderRadius: 999,
+  display: "grid",
+  placeItems: "center",
+  background: "rgba(34, 197, 94, 0.12)",
+  color: "#15803D",
   fontSize: 14,
+  fontWeight: 900,
 },
 
 actionText: {
-  color: "#86EFAC",
-  fontSize: 14,
-  fontWeight: 700,
+  color: "var(--jd-text-main, #0F172A)",
+  fontSize: 13,
+  fontWeight: 750,
   lineHeight: 1.35,
 },
 assistantHeader: {
   display: "flex",
   alignItems: "center",
-  gap: 10,
+  gap: 8,
   marginBottom: 10,
+  flexWrap: "wrap",
 },
 assistantTitle: {
-  fontSize: 18,
-  fontWeight: 800,
-  color: "#FFFFFF",
-  lineHeight: 1.15,
-  letterSpacing: "-0.01em",
+  fontSize: 21,
+  fontWeight: 950,
+  color: "var(--jd-text-main, #0F172A)",
+  lineHeight: 1.08,
+  letterSpacing: "-0.04em",
 },
 
 assistantText: {
-  color: "rgba(236,242,255,0.94)",
+  color: "var(--jd-text-secondary, #475569)",
   fontSize: 14,
-  lineHeight: 1.58,
+  lineHeight: 1.5,
   margin: 0,
   maxWidth: 720,
-  fontWeight: 500,
+  fontWeight: 650,
 },
 
 whatsappButton: {
-  background: "#22C55E",
+  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
   color: "#FFFFFF",
-  border: "1px solid rgba(255,255,255,0.80)",
+  border: "1px solid rgba(34,197,94,0.26)",
   borderRadius: 16,
-  minHeight: 58,
-  padding: "0 18px",
+  minHeight: 46,
+  padding: "0 14px",
   width: "100%",
-  fontWeight: 800,
-  fontSize: 15,
+  fontWeight: 900,
+  fontSize: 13,
   cursor: "pointer",
-  boxShadow: "0 8px 18px rgba(34,197,94,0.28)",
+  boxShadow: "0 10px 22px rgba(34,197,94,0.18)",
   transition: "all 0.2s ease",
 },
 shareButton: {
-  background: "#5e69c7",
+  background:
+    "linear-gradient(135deg, var(--jd-action-primary, #2563EB) 0%, var(--jd-action-premium, #7C3AED) 100%)",
   color: "#FFFFFF",
-  border: "1px solid rgba(255,255,255,0.80)",
-  borderRadius: 12,
-  minHeight: 54,
-  padding: "0 18px",
+  border: "1px solid rgba(37, 99, 235, 0.22)",
+  borderRadius: 16,
+  minHeight: 46,
+  padding: "0 14px",
   width: "100%",
-  fontWeight: 800,
-  fontSize: 15,
+  fontWeight: 900,
+  fontSize: 13,
   cursor: "pointer",
-  boxShadow: "0 8px 18px rgba(18,140,126,0.24)",
+  boxShadow: "0 10px 22px rgba(37, 99, 235, 0.16)",
 },
 assistantInsights: {
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
-  gap: 12,
-  fontSize: 18,
-  fontWeight: 700,
-  color: "#F1F5FF",
-  lineHeight: 1.5,
-  padding: "0 8px 0 18px",
-  borderLeft: "1px solid rgba(255,255,255,0.08)",
+  gap: 10,
+  fontSize: 14,
+  fontWeight: 750,
+  color: "var(--jd-text-main, #0F172A)",
+  lineHeight: 1.45,
+  padding: "0 10px 0 14px",
+  borderLeft: "1px solid rgba(147, 197, 253, 0.38)",
 },
 assistantActions: {
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
-  gap: 12,
+  gap: 10,
   width: "100%",
   minWidth: 0,
 },
@@ -3736,6 +3752,10 @@ assistantChannelRow: {
   display: "grid",
   gap: 8,
   marginTop: 12,
+  padding: 12,
+  borderRadius: 16,
+  background: "rgba(255,255,255,0.70)",
+  border: "1px solid rgba(226, 232, 240, 0.86)",
 },
 
 assistantChannelBadge: {
@@ -3745,25 +3765,26 @@ assistantChannelBadge: {
   minHeight: 28,
   padding: "0 12px",
   borderRadius: 999,
-  background: "rgba(127,178,255,0.12)",
-  border: "1px solid rgba(127,178,255,0.22)",
-  color: "#FFFFFF",
+  background: "rgba(37, 99, 235, 0.08)",
+  border: "1px solid rgba(37, 99, 235, 0.14)",
+  color: "#1D4ED8",
   fontSize: 12,
-  fontWeight: 800,
+  fontWeight: 900,
   width: "fit-content",
 },
 
 assistantChannelText: {
-  color: "#DDE6FF",
+  color: "var(--jd-text-secondary, #475569)",
   fontSize: 13,
   lineHeight: 1.45,
-  fontWeight: 600,
+  fontWeight: 650,
 },
 
 disabledButton: {
-  opacity: 0.55,
+  opacity: 0.52,
   cursor: "not-allowed",
   boxShadow: "none",
+  filter: "grayscale(0.2)",
 },
 lockedFeatureCard: {
   background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
