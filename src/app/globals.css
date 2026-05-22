@@ -411,4 +411,26 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+@media (max-width: 1180px) {
+  #tendencia-ventas,
+  #participacion-producto {
+    min-width: 0;
+  }
+
+  #tendencia-ventas,
+  #participacion-producto {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 980px) {
+  #tendencia-ventas,
+  #participacion-producto {
+    width: 100%;
+  }
+
+  section:has(#tendencia-ventas) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
 }
