@@ -1068,7 +1068,7 @@ const canUseWhatsappInputs = activeChannels.length > 0 && hasValidWhatsapp;
 const canUseWhatsappActions = canUseWhatsappByPlan && canUseWhatsappInputs;
 
 const whatsappDisabledReason = !canUseWhatsappByPlan
-  ? "Disponible en plan Ultra."
+  ? "Disponible en plan Control."
   : !hasValidWhatsapp
   ? "Configura un WhatsApp válido en Configuración del negocio."
   : activeChannels.length === 0
@@ -3147,7 +3147,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
                 title={whatsappDisabledReason}
               >
                 {!canUseWhatsappByPlan
-                  ? "Disponible en plan Ultra"
+                  ? "Disponible en plan Control"
                   : !hasValidWhatsapp
                   ? "Configura tu número celular para activar el envío a WhatsApp"
                   : "Preparar campaña para WhatsApp"}
@@ -3556,7 +3556,7 @@ assistantCard: {
     "linear-gradient(135deg, #FFFFFF 0%, rgba(239, 246, 255, 0.92) 100%)",
   color: "var(--jd-text-main, #0F172A)",
   borderRadius: 22,
-  padding: 18,
+  padding: 16,
   border: "1px solid rgba(147, 197, 253, 0.36)",
   boxShadow: "0 14px 34px rgba(37, 99, 235, 0.08)",
   borderTop: "5px solid rgba(124, 58, 237, 0.85)",
@@ -3564,8 +3564,8 @@ assistantCard: {
 
 assistantGrid: {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1.05fr) minmax(0, 1fr) minmax(260px, 320px)",
-  alignItems: "stretch",
+  gridTemplateColumns: "minmax(280px, 0.95fr) minmax(320px, 1fr) minmax(240px, 280px)",
+  alignItems: "start",
   columnGap: 14,
 },
 lockedFeatureActions: {
@@ -3615,7 +3615,7 @@ actionNotice: {
 assistantContent: {
   display: "flex",
   flexDirection: "column",
-  justifyContent: "center",
+  justifyContent: "flex-start",
   paddingRight: 8,
   paddingLeft: 0,
 },
@@ -3629,16 +3629,16 @@ assistantPromoBadge: {
 actionsGrid: {
   marginTop: 10,
   display: "grid",
-  gap: 10,
+  gap: 8,
 },
 
 actionCard: {
   display: "grid",
   gridTemplateColumns: "22px minmax(0, 1fr)",
   alignItems: "start",
-  gap: 10,
-  padding: "11px 12px",
-  borderRadius: 16,
+  gap: 9,
+  padding: "10px 11px",
+  borderRadius: 15,
   background: "#FFFFFF",
   border: "1px solid rgba(34, 197, 94, 0.18)",
   boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
@@ -3717,14 +3717,16 @@ shareButton: {
 assistantInsights: {
   display: "flex",
   flexDirection: "column",
-  justifyContent: "center",
-  gap: 10,
-  fontSize: 14,
+  justifyContent: "flex-start",
+  gap: 8,
+  fontSize: 13,
   fontWeight: 750,
   color: "var(--jd-text-main, #0F172A)",
-  lineHeight: 1.45,
-  padding: "0 10px 0 14px",
-  borderLeft: "1px solid rgba(147, 197, 253, 0.38)",
+  lineHeight: 1.4,
+  padding: 14,
+  borderRadius: 18,
+  background: "rgba(255, 255, 255, 0.72)",
+  border: "1px solid rgba(226, 232, 240, 0.86)",
 },
 assistantActions: {
   display: "flex",
