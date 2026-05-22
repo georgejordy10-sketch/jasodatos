@@ -12,6 +12,7 @@ type AppShellProps = {
   periodLabel?: string;
   planName?: "basic" | "pro" | "ultra" | string;
   planStatus?: "trial" | "active" | "past_due" | "canceled" | "manual" | string;
+  showPlanBanner?: boolean;
 };
 
 function useIsMobile(breakpoint = 900) {
@@ -37,6 +38,7 @@ export function AppShell({
   periodLabel = "Período actual",
   planName = "basic",
   planStatus = "trial",
+  showPlanBanner = true,
 }: AppShellProps) {
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -56,7 +58,7 @@ export function AppShell({
       style={{
         minHeight: "100vh",
         display: "grid",
-        gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "280px minmax(0, 1fr)",
+        gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "244px minmax(0, 1fr)",
         background:
           "linear-gradient(135deg, var(--jd-bg-main, #F8FAFC) 0%, var(--jd-bg-soft, #EEF2FF) 100%)",
       }}
@@ -82,7 +84,7 @@ export function AppShell({
             onClick={(event) => event.stopPropagation()}
             style={{
               position: "relative",
-              width: "min(86vw, 320px)",
+              width: "min(86vw, 300px)",
               minHeight: "100dvh",
               maxHeight: "100dvh",
               overflow: "hidden",
@@ -138,7 +140,9 @@ export function AppShell({
             gap: isMobile ? "14px" : "20px",
           }}
         >
-          <PlanStatusBanner planName={planName} planStatus={planStatus} />
+          {showPlanBanner ? (
+  <PlanStatusBanner planName={planName} planStatus={planStatus} />
+) : null}
 
           <section>{children}</section>
         </div>

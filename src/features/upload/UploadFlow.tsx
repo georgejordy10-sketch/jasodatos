@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { listProfiles } from "@/core/profiles/registry";
 import type { ProfileId } from "@/core/profiles/types";
 import DashboardComercial from "@/features/dashboard/DashboardComercial";
+import { AppShell } from "@/features/layout/AppShell";
 import {
   UPLOAD_HISTORY_STORAGE_KEY,
   buildUploadHistoryItem,
@@ -1349,13 +1350,21 @@ title={
             </div>
           ) : null}
 
-          {processedData.analytics && processedData.profileId === "comercial" ? (
-            <DashboardComercial
-              processedData={processedData}
-              onClearFile={resetFlow}
-              onSelectAnotherFile={resetFlow}
-            />
-          ) : null}
+        {processedData.analytics && processedData.profileId === "comercial" ? (
+<AppShell
+  businessName="Panel comercial"
+  periodLabel="Carga y análisis"
+  planName="Análisis comercial"
+  planStatus="active"
+  showPlanBanner={false}
+>
+    <DashboardComercial
+      processedData={processedData}
+      onClearFile={resetFlow}
+      onSelectAnotherFile={resetFlow}
+    />
+  </AppShell>
+) : null}
         </div>
       ) : null}
     </div>

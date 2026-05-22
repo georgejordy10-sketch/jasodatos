@@ -30,7 +30,12 @@ function FilterSelect({
   return (
     <div style={styles.filterBox}>
       <span style={styles.filterLabel}>{label}</span>
-      <select style={styles.filterSelect} value={value} onChange={(e) => onChange(e.target.value)}>
+
+      <select
+        style={styles.filterControl}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
         {options.map((option) => (
           <option key={option} value={option}>
             {option}
@@ -53,11 +58,12 @@ function FilterDate({
   return (
     <div style={styles.filterBox}>
       <span style={styles.filterLabel}>{label}</span>
+
       <input
         type="date"
-        style={styles.filterDateInput}
+        style={styles.filterControl}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
       />
     </div>
   );
@@ -77,27 +83,36 @@ export default function FilterBar({
   onClearFilters,
 }: Props) {
   return (
-    <section style={styles.filterBar}>
-      <FilterSelect
-        label="Sucursal"
-        value={selectedSucursal}
-        options={sucursalOptions}
-        onChange={onChangeSucursal}
-      />
+    <section style={styles.filterBar} aria-label="Filtros del análisis">
+      <div style={styles.header}>
+        <div style={styles.titleWrap}>
+          <span style={styles.accentDot} />
+          <h2 style={styles.title}>Filtros</h2>
+        </div>
 
-      <FilterSelect
-        label="Producto"
-        value={selectedProducto}
-        options={productoOptions}
-        onChange={onChangeProducto}
-      />
+        <button type="button" style={styles.clearButtonTop} onClick={onClearFilters}>
+          Limpiar filtros
+        </button>
+      </div>
 
-      <FilterDate label="Desde" value={fromDate} onChange={onChangeFromDate} />
-      <FilterDate label="Hasta" value={toDate} onChange={onChangeToDate} />
+      <div style={styles.controlsGrid}>
+        <FilterSelect
+          label="Sucursal"
+          value={selectedSucursal}
+          options={sucursalOptions}
+          onChange={onChangeSucursal}
+        />
 
-      <button style={styles.filterButton} onClick={onClearFilters}>
-        Limpiar filtros
-      </button>
+        <FilterSelect
+          label="Producto"
+          value={selectedProducto}
+          options={productoOptions}
+          onChange={onChangeProducto}
+        />
+
+        <FilterDate label="Desde" value={fromDate} onChange={onChangeFromDate} />
+        <FilterDate label="Hasta" value={toDate} onChange={onChangeToDate} />
+      </div>
     </section>
   );
 }
@@ -105,50 +120,81 @@ export default function FilterBar({
 const styles: Record<string, CSSProperties> = {
   filterBar: {
     display: "grid",
-    gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
     gap: 12,
-    background: "linear-gradient(135deg, #232D82 0%, #2C318E 100%)",
-    borderRadius: 18,
+    background:
+      "linear-gradient(135deg, #FFFFFF 0%, rgba(239, 246, 255, 0.92) 100%)",
+    borderRadius: 20,
     padding: 16,
-    border: "1px solid rgba(255,255,255,0.12)",
+    border: "1px solid rgba(147, 197, 253, 0.42)",
+    boxShadow: "0 12px 30px rgba(37, 99, 235, 0.08)",
+    borderLeft: "5px solid var(--jd-action-primary, #2563EB)",
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  titleWrap: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 9,
+  },
+  accentDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    background:
+      "linear-gradient(135deg, var(--jd-action-primary, #2563EB) 0%, var(--jd-action-premium, #7C3AED) 100%)",
+    boxShadow: "0 0 0 5px rgba(37, 99, 235, 0.10)",
+  },
+  title: {
+    margin: 0,
+    color: "var(--jd-text-main, #0F172A)",
+    fontSize: 18,
+    fontWeight: 900,
+    lineHeight: 1.1,
+    letterSpacing: "-0.03em",
+  },
+  controlsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gap: 10,
   },
   filterBox: {
     display: "grid",
-    gap: 8,
+    gap: 6,
+    minWidth: 0,
   },
   filterLabel: {
-    color: "#D9E0FF",
-    fontSize: 13,
-    fontWeight: 600,
+    color: "var(--jd-text-secondary, #475569)",
+    fontSize: 12,
+    fontWeight: 850,
   },
-  filterSelect: {
-    background: "rgba(255,255,255,0.96)",
-    color: "#111827",
-    borderRadius: 12,
-    minHeight: 44,
-    padding: "0 14px",
-    fontWeight: 600,
-    border: "none",
+  filterControl: {
+    width: "100%",
+    background: "#FFFFFF",
+    color: "var(--jd-text-main, #0F172A)",
+    borderRadius: 13,
+    minHeight: 42,
+    padding: "0 13px",
+    fontWeight: 750,
+    border: "1px solid var(--jd-border, #E2E8F0)",
     outline: "none",
+    boxShadow: "0 7px 16px rgba(15, 23, 42, 0.04)",
   },
-  filterDateInput: {
-    background: "rgba(255,255,255,0.96)",
-    color: "#111827",
-    borderRadius: 12,
-    minHeight: 44,
-    padding: "0 14px",
-    fontWeight: 600,
-    border: "none",
-    outline: "none",
-  },
-  filterButton: {
-    alignSelf: "end",
-    minHeight: 44,
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.16)",
-    background: "#365BFF",
-    color: "#FFFFFF",
-    fontWeight: 700,
+  clearButtonTop: {
+    minHeight: 36,
+    borderRadius: 999,
+    border: "1px solid rgba(61, 44, 141, 0.18)",
+    background: "#FFFFFF",
+    color: "var(--jd-brand-secondary, #3D2C8D)",
+    fontWeight: 900,
+    fontSize: 12,
     cursor: "pointer",
+    padding: "0 14px",
+    whiteSpace: "nowrap",
+    boxShadow: "0 8px 18px rgba(15, 23, 42, 0.05)",
   },
 };

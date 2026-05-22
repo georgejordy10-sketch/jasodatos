@@ -20,7 +20,7 @@ export function AppSidebar({ onNavigate, isDrawer = false }: AppSidebarProps) {
       style={{
         minHeight: isDrawer ? "100dvh" : "100vh",
         width: isDrawer ? "100%" : undefined,
-        padding: "24px 18px",
+        padding: "24px 14px",
         color: "#FFFFFF",
         background:
           "linear-gradient(180deg, #283593 0%, #2E0D4F 62%, #1A0630 100%)",
@@ -70,12 +70,12 @@ export function AppSidebar({ onNavigate, isDrawer = false }: AppSidebarProps) {
             style={{
               display: "flex",
               alignItems: "center",
-              minHeight: "42px",
-              padding: "0 14px",
-              borderRadius: "14px",
+               minHeight: "38px",
+               padding: "0 12px",
+               borderRadius: "13px",
               color: "rgba(255,255,255,0.86)",
               textDecoration: "none",
-              fontSize: "14px",
+              fontSize: "13px",
               fontWeight: 650,
               border: "1px solid rgba(255,255,255,0.12)",
               background: "rgba(255,255,255,0.08)",
@@ -89,8 +89,8 @@ export function AppSidebar({ onNavigate, isDrawer = false }: AppSidebarProps) {
       <div
         style={{
           marginTop: "28px",
-          padding: "14px",
-          borderRadius: "18px",
+          padding: "12px",
+borderRadius: "16px",
           border: "1px solid rgba(255,255,255,0.12)",
           background: "rgba(255,255,255,0.10)",
         }}

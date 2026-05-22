@@ -400,4 +400,15 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+@media (max-width: 980px) {
+  section[aria-label="Filtros del análisis"] > div:last-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  section[aria-label="Filtros del análisis"] > div:last-child {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
 }
