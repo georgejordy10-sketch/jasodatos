@@ -12,11 +12,6 @@ export type UploadHistoryItem = {
   channelsCount: number;
 };
 
-export type UploadComparisonReference = {
-  item: UploadHistoryItem;
-  source: "distinct_file" | "fallback_previous";
-};
-
 export const UPLOAD_HISTORY_STORAGE_KEY = "jasodatos_upload_history_v1";
 
 function toHistoryNumber(value: unknown) {
@@ -118,39 +113,16 @@ function isSameDay(a: Date, b: Date) {
     a.getDate() === b.getDate()
   );
 }
+
 export function findComparisonReference(
   current: UploadHistoryItem,
   history: UploadHistoryItem[],
   mode: ComparisonMode
-): UploadComparisonReference | null {
-  const currentFileName = current.fileName.trim().toLowerCase();
-
-  const previousItems = history.filter((item) => {
-    const itemFileName = item.fileName.trim().toLowerCase();
-
-    return item.id !== current.id && itemFileName !== currentFileName;
-  });
-
-  const fallbackItems = history.filter((item) => item.id !== current.id);
+) {
+  const previousItems = history.filter((item) => item.id !== current.id);
 
   if (mode === "previous") {
-    const distinctReference = previousItems[0];
-
-    if (distinctReference) {
-      return {
-        item: distinctReference,
-        source: "distinct_file",
-      };
-    }
-
-    const fallbackReference = fallbackItems[0];
-
-    return fallbackReference
-      ? {
-          item: fallbackReference,
-          source: "fallback_previous",
-        }
-      : null;
+    return previousItems[0] ?? null;
   }
 
   const currentDate = new Date(current.uploadedAt);
@@ -159,75 +131,51 @@ export function findComparisonReference(
     const targetDate = new Date(currentDate);
     targetDate.setDate(targetDate.getDate() - 1);
 
-    const reference =
+    return (
       previousItems.find((item) =>
         isSameDay(new Date(item.uploadedAt), targetDate)
-      ) ?? null;
-
-    return reference
-      ? {
-          item: reference,
-          source: "distinct_file",
-        }
-      : null;
+      ) ?? null
+    );
   }
 
   if (mode === "week") {
     const fromDate = new Date(currentDate);
     fromDate.setDate(fromDate.getDate() - 7);
 
-    const reference =
+    return (
       previousItems.find((item) => {
         const itemDate = new Date(item.uploadedAt);
         return itemDate >= fromDate && itemDate < currentDate;
-      }) ?? null;
-
-    return reference
-      ? {
-          item: reference,
-          source: "distinct_file",
-        }
-      : null;
+      }) ?? null
+    );
   }
 
   if (mode === "month") {
     const previousMonth = new Date(currentDate);
     previousMonth.setMonth(previousMonth.getMonth() - 1);
 
-    const reference =
+    return (
       previousItems.find((item) => {
         const itemDate = new Date(item.uploadedAt);
-
         return (
           itemDate.getFullYear() === previousMonth.getFullYear() &&
           itemDate.getMonth() === previousMonth.getMonth()
         );
-      }) ?? null;
-
-    return reference
-      ? {
-          item: reference,
-          source: "distinct_file",
-        }
-      : null;
+      }) ?? null
+    );
   }
 
   const previousYear = new Date(currentDate);
   previousYear.setFullYear(previousYear.getFullYear() - 1);
 
-  const reference =
+  return (
     previousItems.find((item) => {
       const itemDate = new Date(item.uploadedAt);
       return itemDate.getFullYear() === previousYear.getFullYear();
-    }) ?? null;
-
-  return reference
-    ? {
-        item: reference,
-        source: "distinct_file",
-      }
-    : null;
+    }) ?? null
+  );
 }
+
 export function calculatePercentChange(current: number, previous: number) {
   if (previous === 0 && current === 0) return "0.0%";
   if (previous === 0) return "+100.0%";

@@ -189,7 +189,7 @@ action={
         style={styles.viewAllButton}
         onClick={onOpenProductDetails}
       >
-        Ver todo
+        Ver detalle
       </button>
     </div>
   ) : null

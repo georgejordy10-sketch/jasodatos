@@ -12,9 +12,8 @@ import {
   getComparisonModeLabel,
   getComparisonUnavailableMessage,
   getUploadDateLabel,
-  type ComparisonMode,
-  type UploadHistoryItem,
 } from "./uploadHistory";
+import type { ComparisonMode, UploadHistoryItem } from "./uploadHistory";
 import {
   readDatasetInitial,
   processDataset,
@@ -29,6 +28,11 @@ import {
 
 export default function UploadFlow() {
 
+function toUploadNumber(value: unknown) {
+  const numberValue = Number(value ?? 0);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+}
+
   const profiles = useMemo(() => listProfiles(), []);
 const profileId: ProfileId = "comercial";
   const [file, setFile] = useState<File | null>(null);
@@ -41,90 +45,15 @@ const profileId: ProfileId = "comercial";
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
 const [uploadHistory, setUploadHistory] = useState<UploadHistoryItem[]>([]);
 const [historyLoaded, setHistoryLoaded] = useState(false);
-async function loadUploadHistoryFromSupabase() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const businessSlug = params.get("business") || "bodega-central";
-
-    const response = await fetch(
-      `/api/businesses/by-slug/${encodeURIComponent(businessSlug)}/upload-history`
-    );
-   if (!response.ok) {
-  console.warn(
-    "No se pudo consultar el historial en Supabase. Se usará localStorage como respaldo."
-  );
-  return false;
-}
-    const result = await response.json();
-
-    const remoteHistory: UploadHistoryItem[] = (result.uploadHistory ?? []).map(
-      (item: Record<string, unknown>) => ({
-        id: String(item.id),
-        fileName: String(item.file_name ?? ""),
-        uploadedAt: String(item.uploaded_at ?? new Date().toISOString()),
-        totalRows: Number(item.total_rows ?? 0),
-        totalSales: Number(item.total_sales ?? 0),
-        totalUnits: Number(item.total_units ?? 0),
-        productsCount: Number(item.products_count ?? 0),
-        localsCount: Number(item.locals_count ?? 0),
-        channelsCount: Number(item.channels_count ?? 0),
-      })
-    );
-
-    if (remoteHistory.length > 0) {
-      setUploadHistory(remoteHistory);
-
-      window.localStorage.setItem(
-        UPLOAD_HISTORY_STORAGE_KEY,
-        JSON.stringify(remoteHistory)
-      );
-
-      return true;
-    }
-
-    setUploadHistory([]);
-    window.localStorage.removeItem(UPLOAD_HISTORY_STORAGE_KEY);
-
-    return true;
-  } catch (error) {
-    console.error("No se pudo cargar el historial desde Supabase:", error);
-    return false;
-  }
-}
 useEffect(() => {
-  let isMounted = true;
-
-  async function loadHistory() {
-    try {
-      const loadedFromSupabase = await loadUploadHistoryFromSupabase();
-
-      if (!loadedFromSupabase) {
-        const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
-
-        if (saved && isMounted) {
-          setUploadHistory(JSON.parse(saved));
-        }
-      }
-    } catch {
-      const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
-
-      if (saved && isMounted) {
-        setUploadHistory(JSON.parse(saved));
-      } else if (isMounted) {
-        setUploadHistory([]);
-      }
-    } finally {
-      if (isMounted) {
-        setHistoryLoaded(true);
-      }
-    }
+  try {
+    const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
+    setUploadHistory(saved ? JSON.parse(saved) : []);
+  } catch {
+    setUploadHistory([]);
+  } finally {
+    setHistoryLoaded(true);
   }
-
-  void loadHistory();
-
-  return () => {
-    isMounted = false;
-  };
 }, []);
 const [lastUploadComparison, setLastUploadComparison] = useState<{
   current: UploadHistoryItem;
@@ -134,49 +63,22 @@ const [comparisonMode, setComparisonMode] = useState<ComparisonMode>("previous")
 const selectedUploadComparison = useMemo<{
   current: UploadHistoryItem;
   previous: UploadHistoryItem;
-  referenceSource: "distinct_file" | "fallback_previous";
 } | null>(() => {
   if (!lastUploadComparison) return null;
 
-  const reference = findComparisonReference(
+  const previous = findComparisonReference(
     lastUploadComparison.current,
     uploadHistory,
     comparisonMode
   );
 
-  if (!reference) return null;
+  if (!previous) return null;
 
   return {
     current: lastUploadComparison.current,
-    previous: reference.item,
-    referenceSource: reference.source,
+    previous,
   };
 }, [comparisonMode, lastUploadComparison, uploadHistory]);
-const visibleUploadHistory = useMemo(() => {
-  const uniqueByFileName = new Map<string, UploadHistoryItem>();
-
-  for (const item of uploadHistory) {
-    const key = item.fileName.trim().toLowerCase();
-    const existing = uniqueByFileName.get(key);
-
-    if (!existing) {
-      uniqueByFileName.set(key, item);
-      continue;
-    }
-
-    const existingDate = new Date(existing.uploadedAt).getTime();
-    const itemDate = new Date(item.uploadedAt).getTime();
-
-    if (itemDate > existingDate) {
-      uniqueByFileName.set(key, item);
-    }
-  }
-
-  return Array.from(uniqueByFileName.values()).sort(
-    (a, b) =>
-      new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-  );
-}, [uploadHistory]);
   const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
   const qualityTheme = qualityReport ? getQualitySummary(qualityReport) : null;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -513,31 +415,12 @@ function clearUploadHistory() {
 
   setUploadHistory([]);
   setLastUploadComparison(null);
-  setHistoryLoaded(true);
 }
-
-async function refreshUploadHistory() {
-  setHistoryLoaded(false);
-
-  const loadedFromSupabase = await loadUploadHistoryFromSupabase();
-
-  if (!loadedFromSupabase) {
-    try {
-      const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
-      setUploadHistory(saved ? JSON.parse(saved) : []);
-    } catch {
-      setUploadHistory([]);
+  function handleProcess() {
+    if (!initialData) {
+      setError("Primero debes leer el archivo.");
+      return;
     }
-  }
-
-  setHistoryLoaded(true);
-}
-
-function handleProcess() {
-  if (!initialData) {
-    setError("Primero debes leer el archivo.");
-    return;
-  }
 
 setError("");
 
@@ -564,7 +447,7 @@ const result = processDataset(
 );
 
 const historyItem = buildUploadHistoryItem(result, initialData.fileName);
-const previousUpload = visibleUploadHistory[0] ?? null;
+const previousUpload = uploadHistory[0] ?? null;
 
 if (previousUpload) {
   setLastUploadComparison({
@@ -576,66 +459,10 @@ if (previousUpload) {
 }
 
 saveUploadHistory(historyItem);
-void saveUploadHistoryToSupabase(historyItem).then(() => {
-  void refreshUploadHistory();
-});
+
 setProcessedData(result);
   }
-  async function saveUploadHistoryToSupabase(item: UploadHistoryItem) {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const businessSlug = params.get("business") || "bodega-central";
 
-    await fetch(`/api/businesses/by-slug/${encodeURIComponent(businessSlug)}/upload-history`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        fileName: item.fileName,
-        totalRows: item.totalRows,
-        totalSales: item.totalSales,
-        totalUnits: item.totalUnits,
-        productsCount: item.productsCount,
-        localsCount: item.localsCount,
-        channelsCount: item.channelsCount,
-        metadata: {
-          savedFrom: "UploadFlow",
-          storageMode: "localStorage_and_supabase",
-        },
-      }),
-    });
-  } catch (error) {
-    console.error("No se pudo guardar el historial en Supabase:", error);
-  }
-}
-function getComparisonModeLabel(mode: ComparisonMode) {
-const labels: Record<ComparisonMode, string> = {
-  previous: "Carga anterior",
-  day: "Día anterior",
-  week: "Semana anterior",
-  month: "Mes anterior",
-  year: "Año anterior",
-};
-
-  return labels[mode];
-}
-function getComparisonUnavailableMessage(mode: ComparisonMode) {
-const messages: Record<ComparisonMode, string> = {
-  previous:
-    "Aún no hay una carga anterior disponible. Procesa al menos dos archivos para activar esta comparación.",
-  day:
-    "Para comparar contra el día anterior, carga al menos un archivo de una fecha previa.",
-  week:
-    "Para comparar contra la semana anterior, carga archivos en diferentes semanas o con varios días de diferencia.",
-  month:
-    "Para comparar contra el mes anterior, carga al menos un archivo de un mes previo.",
-  year:
-    "Para comparar contra el año anterior, carga al menos un archivo de un año previo.",
-};
-
-  return messages[mode];
-}
 function isSameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -644,13 +471,6 @@ function isSameDay(a: Date, b: Date) {
   );
 }
 
-function calculatePercentChange(current: number, previous: number) {
-  if (previous === 0 && current === 0) return "0.0%";
-  if (previous === 0) return "+100.0%";
-
-  const change = ((current - previous) / previous) * 100;
-  return `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
-}
 function resetFlow() {
   setFile(null);
   setLoading(false);
@@ -854,7 +674,7 @@ function resetFlow() {
     </div>
 
     <div style={{ display: "grid", gap: 8 }}>
-      {visibleUploadHistory.slice(0, 3).map((item) => (
+      {uploadHistory.slice(0, 3).map((item) => (
         <div
           key={item.id}
           style={{
@@ -934,24 +754,19 @@ function resetFlow() {
         </div>
       ))}
     </div>
-{visibleUploadHistory.length > 3 ? (
-  <span style={{ color: "#64748b", fontSize: 11 }}>
-    Mostrando las 3 cargas más recientes de {visibleUploadHistory.length} archivos registrados.
-  </span>
-) : null}
-<div style={clearHistoryBoxStyle}>
-  <button
-    type="button"
-    onClick={refreshUploadHistory}
-    style={clearHistoryButtonStyle}
-  >
-    Actualizar historial
-  </button>
 
-  <span style={clearHistoryHelpStyle}>
-    El historial se guarda por negocio y se sincroniza desde Supabase.
-  </span>
-</div>
+    {uploadHistory.length > 3 ? (
+      <span style={{ color: "#64748b", fontSize: 11 }}>
+        Mostrando las 3 cargas más recientes de {uploadHistory.length} registradas.
+      </span>
+    ) : null}
+    <button
+  type="button"
+  onClick={clearUploadHistory}
+  style={clearHistoryButtonStyle}
+>
+  Limpiar historial local
+</button>
   </div>
 ) : null}
       {initialData && !processedData ? (
@@ -1426,21 +1241,10 @@ title={
                 </p>
                 {selectedUploadComparison ? (
   <div style={historyComparisonReferenceStyle}>
-    {selectedUploadComparison.referenceSource === "fallback_previous" ? (
-      <>
-        Comparando contra la carga anterior disponible:{" "}
-        <strong>{selectedUploadComparison.previous.fileName}</strong>
-        {" · "}
-        {new Date(selectedUploadComparison.previous.uploadedAt).toLocaleString("es-EC")}
-      </>
-    ) : (
-      <>
-        Comparando contra:{" "}
-        <strong>{selectedUploadComparison.previous.fileName}</strong>
-        {" · "}
-        {new Date(selectedUploadComparison.previous.uploadedAt).toLocaleString("es-EC")}
-      </>
-    )}
+    Comparando contra:{" "}
+    <strong>{selectedUploadComparison.previous.fileName}</strong>
+    {" · "}
+    {new Date(selectedUploadComparison.previous.uploadedAt).toLocaleString("es-EC")}
   </div>
 ) : null}
                 <div style={historyComparisonModeStyle}>
@@ -1894,13 +1698,6 @@ const analysisWarningStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
-const clearHistoryBoxStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  flexWrap: "wrap",
-};
-
 const clearHistoryButtonStyle: React.CSSProperties = {
   width: "fit-content",
   border: "1px solid #cbd5e1",
@@ -1911,12 +1708,6 @@ const clearHistoryButtonStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 800,
   cursor: "pointer",
-};
-
-const clearHistoryHelpStyle: React.CSSProperties = {
-  color: "#64748b",
-  fontSize: 11,
-  fontWeight: 600,
 };
 const dashboardLayerStyle: React.CSSProperties = {
   display: "grid",

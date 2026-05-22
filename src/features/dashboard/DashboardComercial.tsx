@@ -25,6 +25,17 @@ import DetailTableSection from "@/features/dashboard/DetailTableSection";
 import SalesChartsSection from "@/features/dashboard/SalesChartsSection";
 import SecondaryChartsSection from "@/features/dashboard/SecondaryChartsSection";
 import UpgradeBanner from "@/features/subscription/UpgradeBanner";
+type DashboardUploadHistoryItem = {
+  id: string;
+  file_name: string;
+  uploaded_at: string;
+  total_rows: number;
+  total_sales: number;
+  total_units: number;
+  products_count: number;
+  locals_count: number;
+  channels_count: number;
+};
 type Props = {
   processedData: ProcessDatasetResult;
   onClearFile?: () => void;
@@ -727,7 +738,50 @@ const [comparisonMetric, setComparisonMetric] = useState<ComparisonMetric>("vent
 const BUSINESS_SLUG_STORAGE_KEY = "jasodatos.currentBusinessSlug";
 
 const [currentBusinessSlug, setCurrentBusinessSlug] = useState("");
+const [dashboardUploadHistory, setDashboardUploadHistory] = useState<
+  DashboardUploadHistoryItem[]
+>([]);
+const [showFullUploadHistory, setShowFullUploadHistory] = useState(false);
+const dashboardHistorySummary = useMemo(() => {
+  const [latest, previous] = dashboardUploadHistory;
 
+  if (!latest || !previous) {
+    return null;
+  }
+const calculateChange = (current: number, before: number) => {
+  if (before === 0 && current === 0) return "0.0%";
+  if (before === 0) return "Sin base previa";
+
+  const change = ((current - before) / before) * 100;
+
+  if (Math.abs(change) > 999) {
+    return "Carga anterior muy baja";
+  }
+
+  return `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
+};
+
+  const productDelta = latest.products_count - previous.products_count;
+return {
+  latest,
+  previous,
+  salesChange: calculateChange(
+    Number(latest.total_sales),
+    Number(previous.total_sales)
+  ),
+  unitsChange: calculateChange(
+    Number(latest.total_units),
+    Number(previous.total_units)
+  ),
+  productDelta,
+  currentSales: Number(latest.total_sales),
+  previousSales: Number(previous.total_sales),
+  currentUnits: Number(latest.total_units),
+  previousUnits: Number(previous.total_units),
+  currentProducts: Number(latest.products_count),
+  previousProducts: Number(previous.products_count),
+};
+}, [dashboardUploadHistory]);
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
   const businessSlugFromUrl = params.get("business")?.trim();
@@ -744,7 +798,47 @@ useEffect(() => {
     );
   }
 }, []);
+useEffect(() => {
+  if (!currentBusinessSlug) {
+    setDashboardUploadHistory([]);
+    return;
+  }
 
+  let isMounted = true;
+
+  async function loadDashboardUploadHistory() {
+    try {
+      const response = await fetch(
+        `/api/businesses/by-slug/${encodeURIComponent(
+          currentBusinessSlug
+        )}/upload-history`
+      );
+
+      if (!response.ok) {
+        setDashboardUploadHistory([]);
+        return;
+      }
+
+      const result = await response.json();
+
+      if (!isMounted) return;
+
+      setDashboardUploadHistory(result.uploadHistory ?? []);
+    } catch (error) {
+      console.error("No se pudo cargar el historial de análisis:", error);
+
+      if (isMounted) {
+        setDashboardUploadHistory([]);
+      }
+    }
+  }
+
+  void loadDashboardUploadHistory();
+
+  return () => {
+    isMounted = false;
+  };
+}, [currentBusinessSlug]);
 useEffect(() => {
   let cancelled = false;
 
@@ -1521,7 +1615,199 @@ const metadataRows = [
     { width: 16 },
     { width: 12 },
   ];
+  if (dashboardUploadHistory.length > 0) {
+    const historyWorksheet = workbook.addWorksheet("Historial de analisis", {
+      views: [{ state: "frozen", ySplit: 1 }],
+    });
 
+    historyWorksheet.addRow([
+      "Archivo",
+      "Fecha de carga",
+      "Filas",
+      "Ventas",
+      "Unidades",
+      "Productos",
+      "Locales",
+      "Canales",
+    ]);
+
+    dashboardUploadHistory.forEach((item) => {
+      historyWorksheet.addRow([
+        item.file_name,
+        new Date(item.uploaded_at).toLocaleString("es-EC"),
+        Number(item.total_rows),
+        Number(item.total_sales),
+        Number(item.total_units),
+        Number(item.products_count),
+        Number(item.locals_count),
+        Number(item.channels_count),
+      ]);
+    });
+
+    historyWorksheet.getRow(1).height = 22;
+
+    historyWorksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF2B2F86" },
+      };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FF1F2A6B" } },
+        bottom: { style: "thin", color: { argb: "FF1F2A6B" } },
+        left: { style: "thin", color: { argb: "FF1F2A6B" } },
+        right: { style: "thin", color: { argb: "FF1F2A6B" } },
+      };
+    });
+
+    for (
+      let rowNumber = 2;
+      rowNumber <= historyWorksheet.rowCount;
+      rowNumber++
+    ) {
+      const row = historyWorksheet.getRow(rowNumber);
+      const isEven = rowNumber % 2 === 0;
+      const fillColor = isEven ? "FFF8FAFC" : "FFEEF2FF";
+
+      row.eachCell((cell, colNumber) => {
+        cell.alignment = { vertical: "middle" };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: fillColor },
+        };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFE5E7EB" } },
+          bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
+          left: { style: "thin", color: { argb: "FFE5E7EB" } },
+          right: { style: "thin", color: { argb: "FFE5E7EB" } },
+        };
+
+        if (colNumber === 4) {
+          cell.numFmt = moneyNumFmt;
+        }
+      });
+    }
+
+    historyWorksheet.autoFilter = {
+      from: { row: 1, column: 1 },
+      to: { row: 1, column: 8 },
+    };
+
+    historyWorksheet.columns = [
+      { width: 42 },
+      { width: 24 },
+      { width: 12 },
+      { width: 16 },
+      { width: 14 },
+      { width: 14 },
+      { width: 12 },
+      { width: 12 },
+    ];
+
+    if (dashboardHistorySummary) {
+      const comparisonWorksheet = workbook.addWorksheet("Comparativo historico", {
+        views: [{ state: "frozen", ySplit: 1 }],
+      });
+
+      comparisonWorksheet.addRow([
+        "Indicador",
+        "Valor actual",
+        "Valor anterior",
+        "Resultado",
+        "Observacion",
+      ]);
+
+      comparisonWorksheet.addRow([
+        "Ventas",
+        dashboardHistorySummary.currentSales,
+        dashboardHistorySummary.previousSales,
+        dashboardHistorySummary.salesChange,
+        "Comparativo con ventas anteriores",
+      ]);
+
+      comparisonWorksheet.addRow([
+        "Unidades",
+        dashboardHistorySummary.currentUnits,
+        dashboardHistorySummary.previousUnits,
+        dashboardHistorySummary.unitsChange,
+        "Comparativo con unidades anteriores",
+      ]);
+
+      comparisonWorksheet.addRow([
+        "Productos",
+        dashboardHistorySummary.currentProducts,
+        dashboardHistorySummary.previousProducts,
+        dashboardHistorySummary.productDelta,
+        "Comparativo con productos anteriores",
+      ]);
+
+      comparisonWorksheet.getRow(1).height = 22;
+
+      comparisonWorksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF2B2F86" },
+        };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FF1F2A6B" } },
+          bottom: { style: "thin", color: { argb: "FF1F2A6B" } },
+          left: { style: "thin", color: { argb: "FF1F2A6B" } },
+          right: { style: "thin", color: { argb: "FF1F2A6B" } },
+        };
+      });
+
+      for (
+        let rowNumber = 2;
+        rowNumber <= comparisonWorksheet.rowCount;
+        rowNumber++
+      ) {
+        const row = comparisonWorksheet.getRow(rowNumber);
+        const fillColor = rowNumber % 2 === 0 ? "FFF8FAFC" : "FFEEF2FF";
+
+        row.eachCell((cell, colNumber) => {
+          cell.alignment = { vertical: "middle" };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: fillColor },
+          };
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFE5E7EB" } },
+            bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
+            left: { style: "thin", color: { argb: "FFE5E7EB" } },
+            right: { style: "thin", color: { argb: "FFE5E7EB" } },
+          };
+
+          if (colNumber === 2 || colNumber === 3) {
+            const indicator = String(row.getCell(1).value ?? "");
+
+            if (indicator === "Ventas") {
+              cell.numFmt = moneyNumFmt;
+            }
+          }
+        });
+      }
+
+      comparisonWorksheet.autoFilter = {
+        from: { row: 1, column: 1 },
+        to: { row: 1, column: 5 },
+      };
+
+      comparisonWorksheet.columns = [
+        { width: 18 },
+        { width: 18 },
+        { width: 18 },
+        { width: 24 },
+        { width: 38 },
+      ];
+    }
+  }
   const buffer = await workbook.xlsx.writeBuffer();
 
   const business = slugifyFileName(businessName);
@@ -1797,7 +2083,7 @@ function openSalesWhatsapp() {
 
   window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
 }
-  return (
+return (
   <div id="dashboard-export">
     <div style={styles.page}>
 <HeroHeader
@@ -1907,6 +2193,432 @@ function openSalesWhatsapp() {
 <KpiSection items={kpiItems} isExportingPdf={isExportingPdf} />
 <AlertsSection alerts={alerts} isExportingPdf={isExportingPdf} />
 
+{dashboardUploadHistory.length > 0 ? (
+  <section
+    style={{
+      border: "1px solid #dbeafe",
+      borderRadius: 18,
+      padding: 16,
+      background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
+      display: "grid",
+      gap: 12,
+    }}
+  >
+    <div>
+     <div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    flexWrap: "wrap",
+  }}
+>
+  <div>
+    <h3
+      style={{
+        margin: 0,
+        color: "#1d4ed8",
+        fontSize: 22,
+        fontWeight: 900,
+        letterSpacing: "-0.02em",
+      }}
+    >
+      Historial reciente de análisis
+    </h3>
+
+    <p
+      style={{
+        margin: "4px 0 0",
+        color: "#475569",
+        fontSize: 13,
+        lineHeight: 1.4,
+      }}
+    >
+      Historial de archivos procesados para comparar la evolución del negocio.
+    </p>
+  </div>
+
+{dashboardUploadHistory.length > 2 ? (
+  <button
+    type="button"
+    onClick={() => setShowFullUploadHistory(true)}
+    style={{
+      border: "1px solid #bfdbfe",
+      background: "#ffffff",
+      color: "#1d4ed8",
+      borderRadius: 999,
+      padding: "8px 12px",
+      fontSize: 12,
+      fontWeight: 800,
+      cursor: "pointer",
+      whiteSpace: "nowrap",
+    }}
+  >
+    Ver historial completo
+  </button>
+) : null}
+</div>
+      {dashboardHistorySummary ? (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: 10,
+      marginTop: 12,
+    }}
+  >
+    <div
+      style={{
+        border: "1px solid #bfdbfe",
+        borderRadius: 14,
+        padding: 12,
+        background: "#ffffff",
+      }}
+    >
+      <span
+        style={{
+          display: "block",
+          color: "#64748b",
+          fontSize: 11,
+          fontWeight: 800,
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+        }}
+      >
+        Comparativo con ventas anteriores
+      </span>
+      <strong style={{ color: "#1d4ed8", fontSize: 20 }}>
+        {dashboardHistorySummary.salesChange}
+      </strong>
+      <span
+  style={{
+    display: "block",
+    marginTop: 4,
+    color: "#64748b",
+    fontSize: 11,
+    fontWeight: 700,
+  }}
+>
+  Actual:{" "}
+  {dashboardHistorySummary.currentSales.toLocaleString("es-EC", {
+    style: "currency",
+    currency: "USD",
+  })}{" "}
+  · Anterior:{" "}
+  {dashboardHistorySummary.previousSales.toLocaleString("es-EC", {
+    style: "currency",
+    currency: "USD",
+  })}
+</span>
+    </div>
+
+    <div
+      style={{
+        border: "1px solid #bfdbfe",
+        borderRadius: 14,
+        padding: 12,
+        background: "#ffffff",
+      }}
+    >
+      <span
+        style={{
+          display: "block",
+          color: "#64748b",
+          fontSize: 11,
+          fontWeight: 800,
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+        }}
+      >
+        Comparativo con unidades anteriores
+      </span>
+      <strong style={{ color: "#1d4ed8", fontSize: 20 }}>
+        {dashboardHistorySummary.unitsChange}
+      </strong>
+      <span
+  style={{
+    display: "block",
+    marginTop: 4,
+    color: "#64748b",
+    fontSize: 11,
+    fontWeight: 700,
+  }}
+>
+  Actual: {dashboardHistorySummary.currentUnits} · Anterior:{" "}
+  {dashboardHistorySummary.previousUnits}
+</span>
+    </div>
+
+    <div
+      style={{
+        border: "1px solid #bfdbfe",
+        borderRadius: 14,
+        padding: 12,
+        background: "#ffffff",
+      }}
+    >
+      <span
+        style={{
+          display: "block",
+          color: "#64748b",
+          fontSize: 11,
+          fontWeight: 800,
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+        }}
+      >
+        Comparativo con productos anteriores
+      </span>
+      <strong style={{ color: "#1d4ed8", fontSize: 20 }}>
+        {dashboardHistorySummary.productDelta >= 0 ? "+" : ""}
+        {dashboardHistorySummary.productDelta}
+      </strong>
+      <span
+  style={{
+    display: "block",
+    marginTop: 4,
+    color: "#64748b",
+    fontSize: 11,
+    fontWeight: 700,
+  }}
+>
+  Actual: {dashboardHistorySummary.currentProducts} · Anterior:{" "}
+  {dashboardHistorySummary.previousProducts}
+</span>
+    </div>
+  </div>
+) : null}
+    </div>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gap: 10,
+      }}
+    >
+{dashboardUploadHistory.slice(0, 2).map((item) => (
+        <article
+          key={item.id}
+          style={{
+            border: "1px solid #bfdbfe",
+            borderRadius: 14,
+            padding: 12,
+            background: "#ffffff",
+            display: "grid",
+            gap: 8,
+          }}
+        >
+          <div style={{ display: "grid", gap: 2 }}>
+            <strong
+              style={{
+                color: "#0f172a",
+                fontSize: 13,
+                lineHeight: 1.25,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={item.file_name}
+            >
+              {item.file_name}
+            </strong>
+
+            <span style={{ color: "#64748b", fontSize: 11, fontWeight: 700 }}>
+              {new Date(item.uploaded_at).toLocaleString("es-EC")}
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              color: "#334155",
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            <span>{item.total_rows} filas</span>
+            <span>
+              {Number(item.total_sales).toLocaleString("es-EC", {
+                style: "currency",
+                currency: "USD",
+              })}
+            </span>
+            <span>{item.total_units} unidades</span>
+            <span>{item.products_count} productos</span>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+) : null}
+{showFullUploadHistory ? (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(15, 23, 42, 0.62)",
+      zIndex: 80,
+      display: "grid",
+      placeItems: "center",
+      padding: 20,
+    }}
+    role="dialog"
+    aria-modal="true"
+  >
+    <div
+      style={{
+        width: "min(980px, 100%)",
+        maxHeight: "85vh",
+        overflow: "auto",
+        background: "#ffffff",
+        borderRadius: 22,
+        border: "1px solid #bfdbfe",
+        boxShadow: "0 24px 70px rgba(15, 23, 42, 0.35)",
+        padding: 18,
+        display: "grid",
+        gap: 14,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <h3
+            style={{
+              margin: 0,
+              color: "#1d4ed8",
+              fontSize: 24,
+              fontWeight: 900,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Historial completo de análisis
+          </h3>
+
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "#475569",
+              fontSize: 13,
+              lineHeight: 1.4,
+            }}
+          >
+            Archivos procesados para este negocio, ordenados desde la carga más reciente.
+          </p>
+        </div>
+          <div
+  style={{
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+  }}
+>
+  <button
+    type="button"
+    onClick={() => setShowFullUploadHistory(false)}
+    style={{
+      border: "1px solid #cbd5e1",
+      background: "#ffffff",
+      color: "#0f172a",
+      borderRadius: 999,
+      padding: "8px 12px",
+      fontSize: 12,
+      fontWeight: 800,
+      cursor: "pointer",
+    }}
+  >
+    Cerrar
+  </button>
+</div>
+      </div>
+
+      <div style={{ display: "grid", gap: 10 }}>
+        {dashboardUploadHistory.map((item) => (
+          <article
+            key={item.id}
+            style={{
+              border: "1px solid #dbeafe",
+              borderRadius: 16,
+              padding: 12,
+              background: "#f8faff",
+              display: "grid",
+              gap: 8,
+            }}
+          >
+            <div style={{ display: "grid", gap: 2 }}>
+              <strong
+                style={{
+                  color: "#0f172a",
+                  fontSize: 14,
+                  lineHeight: 1.25,
+                }}
+              >
+                {item.file_name}
+              </strong>
+
+              <span
+                style={{
+                  color: "#64748b",
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                {new Date(item.uploaded_at).toLocaleString("es-EC")}
+              </span>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+                gap: 8,
+              }}
+            >
+              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+                Filas: {item.total_rows}
+              </span>
+
+              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+                Ventas:{" "}
+                {Number(item.total_sales).toLocaleString("es-EC", {
+                  style: "currency",
+                  currency: "USD",
+                })}
+              </span>
+
+              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+                Unidades: {item.total_units}
+              </span>
+
+              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+                Productos: {item.products_count}
+              </span>
+
+              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+                Locales: {item.locals_count}
+              </span>
+
+              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+                Canales: {item.channels_count}
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </div>
+) : null}
 <SalesChartsSection
   tendenciaVentas={tendenciaVentas}
   topProductos={topProductos}
