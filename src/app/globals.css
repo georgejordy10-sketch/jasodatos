@@ -342,4 +342,51 @@ button:disabled {
   .jd-card-premium {
     border-radius: var(--jd-radius-lg);
   }
+  @media (max-width: 640px) {
+  .jd-upload-main-title {
+    font-size: clamp(30px, 9vw, 40px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.055em !important;
+  }
+
+  .jd-upload-hero {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+    padding: 16px !important;
+  }
+
+  .jd-upload-actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    justify-content: stretch !important;
+    gap: 10px !important;
+  }
+
+  .jd-upload-primary-action,
+  .jd-upload-secondary-action {
+    width: 100% !important;
+    min-height: 44px !important;
+    padding-inline: 12px !important;
+    text-align: center !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .jd-upload-main-title {
+    font-size: clamp(28px, 8.8vw, 34px) !important;
+  }
+
+  .jd-upload-hero {
+    padding: 14px !important;
+  }
+
+  .jd-upload-primary-action,
+  .jd-upload-secondary-action {
+    font-size: 13px !important;
+  }
+}
 }

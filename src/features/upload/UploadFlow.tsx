@@ -497,10 +497,13 @@ function resetFlow() {
           gap: 12,
         }}
       >
-      <h2 style={uploadTitleStyle}>Empecemos el análisis de tus datos</h2>
+      <h1 className="jd-upload-main-title" style={uploadTitleStyle}>
+  Empecemos el análisis de tus datos
+</h1>
 
 {!initialData ? (
-  <div style={uploadHeroStyle}>
+  <div className="jd-upload-hero"
+style={uploadHeroStyle}>
     <div style={uploadHeroTextStyle}>
 <strong style={uploadHeroTitleStyle}>
   Sube tu archivo o solicita ayuda a JasoDatos para crearlo y organizarlo.
@@ -512,15 +515,21 @@ function resetFlow() {
       </p>
     </div>
 
-    <div style={uploadActionsStyle}>
-      <label htmlFor="file" style={selectFileButtonStyle}>
+    <div className="jd-upload-actions"
+style={uploadActionsStyle}>
+      <label
+  htmlFor="file"
+  className="jd-upload-primary-action"
+  style={selectFileButtonStyle}
+>
         Tengo un archivo para subir
       </label>
 
       <button
         type="button"
         onClick={openInventoryHelpWhatsapp}
-        style={inventoryHelpButtonStyle}
+        className="jd-upload-secondary-action"
+style={inventoryHelpButtonStyle}
       >
         No tengo inventario, necesito ayuda
       </button>
