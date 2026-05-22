@@ -8,9 +8,9 @@ export type PlanFeature =
   | "whatsapp_actions";
 
 export const PLAN_LABELS: Record<SubscriptionPlan, string> = {
-  basic: "Basic",
-  pro: "Pro",
-  ultra: "Ultra",
+  basic: "Inicio",
+  pro: "Crecimiento",
+  ultra: "Control",
 };
 
 export const PLAN_FEATURES: Record<SubscriptionPlan, PlanFeature[]> = {

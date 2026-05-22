@@ -18,8 +18,8 @@ function getUpgradeMessage(plan: SubscriptionPlan): {
     return {
       title: "Desbloquea análisis avanzados",
       subtitle:
-        "Activa Desempeño entre sucursales, JasoBot Comercial y exportación PDF con el plan Pro.",
-      cta: "Ver beneficios de Pro",
+        "Activa desempeño entre sucursales, JasoBot comercial y exportación PDF con el plan Crecimiento.",
+      cta: "Ver beneficios de Crecimiento",
     };
   }
 
@@ -27,15 +27,15 @@ function getUpgradeMessage(plan: SubscriptionPlan): {
     return {
       title: "Activa automatización comercial",
       subtitle:
-        "Lleva tu operación al siguiente nivel con acciones de WhatsApp y capacidades premium del plan Ultra.",
-      cta: "Ver beneficios de Ultra",
+        "Lleva tu operación al siguiente nivel con acciones de WhatsApp y capacidades premium del plan Control.",
+      cta: "Ver beneficios de Control",
     };
   }
 
   return {
     title: "Ya tienes el plan más completo",
     subtitle:
-      "Ultra desbloquea la experiencia comercial más avanzada de JasoDatos.",
+      "Control desbloquea la experiencia comercial más avanzada de JasoDatos.",
     cta: "Ver planes",
   };
 }
