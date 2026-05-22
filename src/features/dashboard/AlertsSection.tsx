@@ -17,7 +17,7 @@ export default function AlertsSection({
     <section style={styles.wrapper}>
       <div style={styles.modulePlanRow}>
 {!isExportingPdf ? (
-  <span style={styles.badge}>Incluido en BASIC</span>
+  <span style={styles.badge}>Incluido en Inicio</span>
 ) : null}
         <span style={styles.modulePlanText}>Alertas base del negocio</span>
       </div>
