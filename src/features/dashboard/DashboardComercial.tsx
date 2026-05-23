@@ -3023,7 +3023,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
             <ActivePlanBadge tone="pro">Incluido en Crecimiento</ActivePlanBadge>
 
             {canUseWhatsappByPlan ? (
-              <ActivePlanBadge tone="ultra">WhatsApp en Control</ActivePlanBadge>
+              <ActivePlanBadge tone="ultra">WhatsApp en plan Control</ActivePlanBadge>
             ) : (
               <ActivePlanBadge tone="basic">WhatsApp bloqueado</ActivePlanBadge>
             )}
@@ -3105,8 +3105,8 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
   {!isExportingPdf ? (
     <div style={styles.assistantFooter}>
       <div style={styles.modulePlanRow}>
-        <ActivePlanBadge tone="pro">PDF en Crecimiento</ActivePlanBadge>
-        <ActivePlanBadge tone="ultra">WhatsApp en Control</ActivePlanBadge>
+        <ActivePlanBadge tone="pro">PDF en Plan Crecimiento</ActivePlanBadge>
+        <ActivePlanBadge tone="ultra">WhatsApp en plan Control</ActivePlanBadge>
       </div>
 
       <div style={styles.assistantFooterActions}>
@@ -3557,7 +3557,8 @@ assistantFooter: {
   justifyContent: "space-between",
   gap: 12,
   flexWrap: "wrap",
-  padding: "14px 6px 0",
+  marginTop: 4,
+  padding: "18px 10px 4px",
   borderTop: "1px solid rgba(109,126,219,0.24)",
   background: "#d8e1ff",
   borderRadius: "0 0 18px 18px",
@@ -3568,6 +3569,7 @@ assistantFooterActions: {
   justifyContent: "flex-end",
   gap: 10,
   flexWrap: "wrap",
+  paddingBottom: 2,
 },
 assistantGrid: {
   display: "grid",
