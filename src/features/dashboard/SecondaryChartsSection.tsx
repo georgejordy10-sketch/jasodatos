@@ -143,7 +143,7 @@ export default function SecondaryChartsSection({
           subtitle={`Productos bajo seguimiento · mínimo configurado: ${defaultStockMin}`}
           action={
             <button type="button" style={styles.viewAllButton} onClick={onOpenStockDetails}>
-              Ver todo
+              Ver stock
             </button>
           }
           fullHeight
@@ -204,7 +204,7 @@ export default function SecondaryChartsSection({
     subtitle="Identifica dónde se está generando la venta."
     action={
       <button type="button" style={styles.viewAllButton} onClick={onOpenChannelDetails}>
-        Ver todo
+        Ver canales
       </button>
     }
     fullHeight
