@@ -563,8 +563,8 @@ function buildJasoBotInsights(
       insights: [
         "Carga un archivo para activar recomendaciones.",
         "JasoAlix analiza tus ventas, inventario y canales.",
-"Podrás detectar productos líderes y riesgos.",
-"También sugerirá acciones comerciales.",
+        "Podrás detectar productos líderes y riesgos.",
+        "También sugerirá acciones comerciales.",
       ],
       recomendaciones: [],
       promoWhatsApp:
@@ -607,8 +607,8 @@ function buildJasoBotInsights(
     .slice(0, 3);
 
   const recomendaciones: string[] = commercialRecommendations.map(
-  (item) => `${item.title}. ${item.message}`
-);
+    (item) => `${item.title}. ${item.message}`
+  );
   const productosOrdenados = [...ventasPorProducto.entries()].sort((a, b) => b[1] - a[1]);
 
   let promoWhatsApp = "";
@@ -664,8 +664,8 @@ function buildJasoBotInsights(
   insights.push(`Sucursal líder: ${nombreSucursalTop}`);
   insights.push(`Sucursal a reforzar: ${nombreSucursalBaja}`);
   if (nombreCanalTop && nombreCanalTop !== "tu canal principal") {
-  insights.push(`Canal con mayor aporte: ${nombreCanalTop}`);
-}
+    insights.push(`Canal con mayor aporte: ${nombreCanalTop}`);
+  }
 
   if (productosCriticos.length > 0) {
     const nombresCriticos = productosCriticos.map((p) => p.producto).join(", ");
