@@ -3552,14 +3552,12 @@ const styles: Record<string, CSSProperties> = {
     background: "linear-gradient(180deg, #EEF2FF 0%, #E8EDFF 100%)",
   },
 assistantCard: {
-  background:
-    "linear-gradient(135deg, #FFFFFF 0%, rgba(239, 246, 255, 0.92) 100%)",
-  color: "var(--jd-text-main, #0F172A)",
+  background: "var(--jd-gradient-container)",
+  color: "var(--jd-text-main)",
   borderRadius: 22,
   padding: 16,
-  border: "1px solid rgba(147, 197, 253, 0.36)",
-  boxShadow: "0 14px 34px rgba(37, 99, 235, 0.08)",
-  borderTop: "5px solid rgba(124, 58, 237, 0.85)",
+  border: "1px solid var(--jd-border-accent)",
+  boxShadow: "var(--jd-shadow-card)",
 },
 
 assistantGrid: {
@@ -3606,9 +3604,9 @@ actionButton: {
 actionNotice: {
   padding: "10px 12px",
   borderRadius: 14,
-  background: "rgba(37, 99, 235, 0.08)",
-  border: "1px solid rgba(37, 99, 235, 0.16)",
-  color: "var(--jd-brand-secondary, #3D2C8D)",
+  background: "var(--jd-info-soft)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  color: "var(--jd-brand-secondary)",
   fontSize: 13,
   fontWeight: 700,
 },
@@ -3639,9 +3637,9 @@ actionCard: {
   gap: 9,
   padding: "10px 11px",
   borderRadius: 15,
-  background: "#FFFFFF",
-  border: "1px solid rgba(34, 197, 94, 0.18)",
-  boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
+  background: "rgba(255,255,255,0.82)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
 },
 
 actionIcon: {
@@ -3672,13 +3670,13 @@ assistantHeader: {
 assistantTitle: {
   fontSize: 21,
   fontWeight: 950,
-  color: "var(--jd-text-main, #0F172A)",
+  color: "var(--jd-text-main)",
   lineHeight: 1.08,
   letterSpacing: "-0.04em",
 },
 
 assistantText: {
-  color: "var(--jd-text-secondary, #475569)",
+  color: "var(--jd-text-secondary)",
   fontSize: 14,
   lineHeight: 1.5,
   margin: 0,
@@ -3701,10 +3699,9 @@ whatsappButton: {
   transition: "all 0.2s ease",
 },
 shareButton: {
-  background:
-    "linear-gradient(135deg, var(--jd-action-primary, #2563EB) 0%, var(--jd-action-premium, #7C3AED) 100%)",
+  background: "var(--jd-gradient-accent)",
   color: "#FFFFFF",
-  border: "1px solid rgba(37, 99, 235, 0.22)",
+  border: "1px solid rgba(255,255,255,0.18)",
   borderRadius: 16,
   minHeight: 46,
   padding: "0 14px",
@@ -3712,7 +3709,7 @@ shareButton: {
   fontWeight: 900,
   fontSize: 13,
   cursor: "pointer",
-  boxShadow: "0 10px 22px rgba(37, 99, 235, 0.16)",
+  boxShadow: "var(--jd-shadow-button)",
 },
 assistantInsights: {
   display: "flex",
@@ -3721,12 +3718,12 @@ assistantInsights: {
   gap: 8,
   fontSize: 13,
   fontWeight: 750,
-  color: "var(--jd-text-main, #0F172A)",
+  color: "var(--jd-text-main)",
   lineHeight: 1.4,
   padding: 14,
   borderRadius: 18,
-  background: "rgba(255, 255, 255, 0.72)",
-  border: "1px solid rgba(226, 232, 240, 0.86)",
+  background: "var(--jd-gradient-table-surface)",
+  border: "1px solid var(--jd-border-accent-soft)",
 },
 assistantActions: {
   display: "flex",
@@ -3756,8 +3753,8 @@ assistantChannelRow: {
   marginTop: 12,
   padding: 12,
   borderRadius: 16,
-  background: "rgba(255,255,255,0.70)",
-  border: "1px solid rgba(226, 232, 240, 0.86)",
+  background: "var(--jd-gradient-table-surface)",
+  border: "1px solid var(--jd-border-accent-soft)",
 },
 
 assistantChannelBadge: {
@@ -3767,16 +3764,16 @@ assistantChannelBadge: {
   minHeight: 28,
   padding: "0 12px",
   borderRadius: 999,
-  background: "rgba(37, 99, 235, 0.08)",
-  border: "1px solid rgba(37, 99, 235, 0.14)",
-  color: "#1D4ED8",
+  background: "var(--jd-info-soft)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  color: "var(--jd-info)",
   fontSize: 12,
   fontWeight: 900,
   width: "fit-content",
 },
 
 assistantChannelText: {
-  color: "var(--jd-text-secondary, #475569)",
+  color: "var(--jd-text-secondary)",
   fontSize: 13,
   lineHeight: 1.45,
   fontWeight: 650,
@@ -4234,7 +4231,6 @@ productComparisonTotalTd: {
   color: "#FFFFFF",
   fontSize: 12,
   fontWeight: 750,
-  borderTop: "1px solid rgba(255,255,255,0.20)",
   borderBottom: "1px solid rgba(255,255,255,0.16)",
   background: "rgba(255,255,255,0.04)",
 },

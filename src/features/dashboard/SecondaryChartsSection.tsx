@@ -345,7 +345,6 @@ const styles: Record<string, CSSProperties> = {
     padding: 18,
     border: "1px solid rgba(147, 197, 253, 0.36)",
     boxShadow: "0 14px 34px rgba(37, 99, 235, 0.08)",
-    borderTop: "5px solid rgba(37, 99, 235, 0.85)",
   },
   cardHeader: {
     display: "flex",

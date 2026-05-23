@@ -113,7 +113,6 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 22,
     padding: 18,
     border: "1px solid var(--jd-border-accent)",
-    borderTop: "4px solid var(--jd-accent-main)",
     boxShadow: "var(--jd-shadow-card)",
     position: "relative",
     overflow: "hidden",
