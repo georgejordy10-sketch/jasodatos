@@ -2187,17 +2187,22 @@ return (
     }
   />
 ) : null}
+<div id="resumen" style={{ scrollMarginTop: 96 }}>
+  <KpiSection items={kpiItems} isExportingPdf={isExportingPdf} />
+</div>
 
-<KpiSection items={kpiItems} isExportingPdf={isExportingPdf} />
-<AlertsSection alerts={alerts} isExportingPdf={isExportingPdf} />
+<div id="alertas" style={{ scrollMarginTop: 96 }}>
+  <AlertsSection alerts={alerts} isExportingPdf={isExportingPdf} />
+</div>
+
 <RecommendedActionsSection
   recommendations={commercialRecommendations}
   isExportingPdf={isExportingPdf}
 />
 
-{dashboardUploadHistory.length > 0 ? (
-  <section
-style={{
+{dashboardUploadHistory.length > 0 ? (  
+<section
+    style={{
   border: "1px solid var(--jd-border-accent)",
   borderRadius: 22,
   padding: 18,
@@ -2623,30 +2628,34 @@ color: "var(--jd-brand-secondary)",
     </div>
   </div>
 ) : null}
-<SalesChartsSection
-  tendenciaVentas={tendenciaVentas}
-  topProductos={topProductos}
-  ventasTotales={ventasTotales}
-  axisWidth={axisWidth}
-  tooltipStyle={tooltipStyle}
-  colors={COLORS}
-  formatCompactMoney={formatCompactMoney}
-  formatMoney={(value) =>
-    formatMoney(value, settings.locale, settings.currencyCode)
-  }
-  isExportingPdf={isExportingPdf}
-  onCompareProducts={() => {
-  startProductComparison();
-  focusProductComparison();
-}}
-  onOpenProductDetails={() => {
-    setDetailModal("products");
-  }}
-/>
+<div id="ventas" style={{ scrollMarginTop: 96 }}>
+  <SalesChartsSection
+    tendenciaVentas={tendenciaVentas}
+    topProductos={topProductos}
+    ventasTotales={ventasTotales}
+    axisWidth={axisWidth}
+    tooltipStyle={tooltipStyle}
+    colors={COLORS}
+    formatCompactMoney={formatCompactMoney}
+    formatMoney={(value) =>
+      formatMoney(value, settings.locale, settings.currencyCode)
+    }
+    isExportingPdf={isExportingPdf}
+    onCompareProducts={() => {
+      startProductComparison();
+      focusProductComparison();
+    }}
+    onOpenProductDetails={() => {
+      setDetailModal("products");
+    }}
+  />
+</div>
 <section
+  id="productos"
   ref={productComparisonRef}
   style={{
     ...styles.productComparisonCard,
+    scrollMarginTop: 96,
     ...(highlightProductComparison ? styles.productComparisonHighlight : null),
   }}
 >
@@ -2958,26 +2967,30 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     </div>
   ) : null}
 </section>
-<SecondaryChartsSection
-  defaultStockMin={settings.defaultStockMin}
-  stockRiskRows={stockRiskRows}
-  activeChannelsCount={activeChannels.length}
-  activeChannelsLabel={activeChannelsLabel}
-  channelResult={channelResult}
-  axisWidth={axisWidth}
-  tooltipStyle={tooltipStyle}
-  colors={COLORS}
-  formatCompactMoney={formatCompactMoney}
-  formatMoney={(value) => formatMoney(value, settings.locale, settings.currencyCode)}
-  onOpenStockDetails={() => {
-  console.log("ABRIR MODAL INVENTARIO");
-  setDetailModal("stock");
-}}
-  onOpenChannelDetails={() => {
-  console.log("ABRIR MODAL CHANNELS");
-  setDetailModal("channels");
-}}
-/>
+<div id="inventario" style={{ scrollMarginTop: 96 }}>
+  <SecondaryChartsSection
+    defaultStockMin={settings.defaultStockMin}
+    stockRiskRows={stockRiskRows}
+    activeChannelsCount={activeChannels.length}
+    activeChannelsLabel={activeChannelsLabel}
+    channelResult={channelResult}
+    axisWidth={axisWidth}
+    tooltipStyle={tooltipStyle}
+    colors={COLORS}
+    formatCompactMoney={formatCompactMoney}
+    formatMoney={(value) =>
+      formatMoney(value, settings.locale, settings.currencyCode)
+    }
+    onOpenStockDetails={() => {
+      console.log("ABRIR MODAL INVENTARIO");
+      setDetailModal("stock");
+    }}
+    onOpenChannelDetails={() => {
+      console.log("ABRIR MODAL CHANNELS");
+      setDetailModal("channels");
+    }}
+  />
+</div>
 {settings.showBenchmarking && hasMultipleLocals ? (
   canUseBenchmarking ? (
     <>
@@ -3164,23 +3177,27 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
       onContactSales={openSalesWhatsapp}
     />
   ))}
-<DetailTableSection
-  searchedRowsCount={searchedRows.length}
-  paginatedRows={paginatedRows}
-  pageSize={pageSize}
-  currentPage={currentPage}
-  totalPages={totalPages}
-  searchTerm={searchTerm}
-  onSearchTermChange={setSearchTerm}
-  onPageSizeChange={setPageSize}
-  onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-  onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-  toDateKey={toDateKey}
-  toText={toText}
-  toNumber={toNumber}
-  formatInt={(value) => formatInt(value)}
-  formatMoney={(value) => formatMoney(value, settings.locale, settings.currencyCode)}
-/>
+<div id="reportes" style={{ scrollMarginTop: 96 }}>
+  <DetailTableSection
+    searchedRowsCount={searchedRows.length}
+    paginatedRows={paginatedRows}
+    pageSize={pageSize}
+    currentPage={currentPage}
+    totalPages={totalPages}
+    searchTerm={searchTerm}
+    onSearchTermChange={setSearchTerm}
+    onPageSizeChange={setPageSize}
+    onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+    onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+    toDateKey={toDateKey}
+    toText={toText}
+    toNumber={toNumber}
+    formatInt={(value) => formatInt(value)}
+    formatMoney={(value) =>
+      formatMoney(value, settings.locale, settings.currencyCode)
+    }
+  />
+</div>
 <style jsx global>{`
   input::placeholder {
     color: rgba(255, 255, 255, 0.88);
@@ -4350,6 +4367,7 @@ assistantInsightItem: {
   fontWeight: 500,
 },
 };
+
 
 
 

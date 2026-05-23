@@ -1241,8 +1241,8 @@ title={
             </div>
           ) : null}
 
-          {lastUploadComparison ? (
-            <div style={historyComparisonSectionStyle}>
+{lastUploadComparison ? (
+  <div id="comparativo" style={historyComparisonSectionStyle}>
               <div style={historyComparisonHeaderStyle}>
                 <h3 style={historyComparisonTitleStyle}>
   Comparativo rápido
