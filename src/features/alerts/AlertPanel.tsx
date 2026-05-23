@@ -335,7 +335,7 @@ alertCard: {
 
 actionButton: {
   border: "1px solid var(--jd-border-accent-soft)",
-  background: "#FFFFFF",
+  background: "rgba(109, 126, 219, 0.12)",
   color: "var(--jd-brand-secondary)",
   borderRadius: 999,
   padding: "8px 12px",
