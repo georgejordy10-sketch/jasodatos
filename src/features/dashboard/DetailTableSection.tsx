@@ -47,25 +47,31 @@ export default function DetailTableSection({
   return (
     <section style={styles.detailCardPro}>
       <div style={styles.detailTopBar}>
-        <div style={styles.detailTopLeft}>
-          Detalle de registros — mostrando {Math.min(pageSize, paginatedRows.length)} de{" "}
-          {searchedRowsCount} filas
+        <div>
+          <span style={styles.eyebrow}>Datos de respaldo</span>
+
+          <h3 style={styles.title}>Detalle de registros</h3>
+
+          <p style={styles.subtitle}>
+            Mostrando {Math.min(pageSize, paginatedRows.length)} de{" "}
+            {searchedRowsCount} filas procesadas.
+          </p>
         </div>
 
         <div style={styles.detailTopRight}>
           <input
             style={styles.searchInput}
-            placeholder="Buscar..."
+            placeholder="Buscar registro..."
             value={searchTerm}
-            onChange={(e) => onSearchTermChange(e.target.value)}
+            onChange={(event) => onSearchTermChange(event.target.value)}
           />
 
-          <span style={styles.detailTopLabel}>Filas por página</span>
+          <span style={styles.detailTopLabel}>Filas</span>
 
           <select
             style={styles.pageSizeSelect}
             value={pageSize}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            onChange={(event) => onPageSizeChange(Number(event.target.value))}
           >
             <option value="25">25</option>
             <option value="50">50</option>
@@ -73,11 +79,15 @@ export default function DetailTableSection({
           </select>
 
           <button
-            style={styles.pageGhostButton}
+            type="button"
+            style={{
+              ...styles.pageGhostButton,
+              ...(currentPage === 1 ? styles.disabledButton : null),
+            }}
             onClick={onPrevPage}
             disabled={currentPage === 1}
           >
-            ◀ Anterior
+            Anterior
           </button>
 
           <span style={styles.pageIndicator}>
@@ -85,11 +95,15 @@ export default function DetailTableSection({
           </span>
 
           <button
-            style={styles.pagePrimaryButton}
+            type="button"
+            style={{
+              ...styles.pagePrimaryButton,
+              ...(currentPage === totalPages ? styles.disabledButton : null),
+            }}
             onClick={onNextPage}
             disabled={currentPage === totalPages}
           >
-            Siguiente ▶
+            Siguiente
           </button>
         </div>
       </div>
@@ -131,15 +145,19 @@ export default function DetailTableSection({
                   <td style={styles.dataTd}>{toText(row.sucursal)}</td>
                   <td style={styles.dataTd}>{toText(row.bodega, "-")}</td>
                   <td style={styles.dataTd}>{toText(row.sku, "-")}</td>
-                  <td style={styles.dataTd}>{toText(row.producto)}</td>
+                  <td style={styles.dataTdStrong}>{toText(row.producto)}</td>
                   <td style={styles.dataTd}>{toText(row.tipo_movimiento, "-")}</td>
                   <td style={styles.dataTd}>{formatInt(toNumber(row.cantidad))}</td>
-                  <td style={styles.dataTd}>{formatMoney(toNumber(row.costo_unitario))}</td>
-                  <td style={styles.dataTd}>{formatMoney(toNumber(row.precio_unitario))}</td>
+                  <td style={styles.dataTd}>
+                    {formatMoney(toNumber(row.costo_unitario))}
+                  </td>
+                  <td style={styles.dataTd}>
+                    {formatMoney(toNumber(row.precio_unitario))}
+                  </td>
                   <td style={styles.dataTd}>{toText(row.canal, "-")}</td>
                   <td style={styles.dataTd}>
                     {row.stock === undefined || row.stock === null || row.stock === ""
-                      ? "No Disponible"
+                      ? "No disponible"
                       : formatInt(toNumber(row.stock))}
                   </td>
                 </tr>
@@ -149,147 +167,220 @@ export default function DetailTableSection({
         </div>
 
         <div style={styles.detailBottomBar}>
-          Mostrando {start}–{end} de {searchedRowsCount} filas.
+          Mostrando {start}-{end} de {searchedRowsCount} filas.
         </div>
       </div>
     </section>
   );
 }
-
 const styles: Record<string, CSSProperties> = {
-  detailCardPro: {
-    background: "linear-gradient(180deg, #4F56E8 0%, #1BC3D9 100%)",
-    borderRadius: 22,
-    padding: 14,
-    border: "1px solid rgba(255,255,255,0.10)",
-    boxShadow: "0 14px 28px rgba(17,24,39,0.16)",
-  },
+detailCardPro: {
+  background:
+    "linear-gradient(180deg, rgba(109,126,219,0.10) 0%, rgba(241,244,255,0.96) 42%, #FFFFFF 100%)",
+  color: "#0F172A",
+  borderRadius: 22,
+  padding: 18,
+  border: "1px solid rgba(109,126,219,0.16)",
+  boxShadow: "0 10px 24px rgba(46,13,79,0.04)",
+  borderTop: "4px solid rgba(109,126,219,0.72)",
+},
+
   detailTopBar: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 10,
+    alignItems: "flex-start",
+    gap: 14,
+    marginBottom: 14,
     flexWrap: "wrap",
   },
-  detailTopLeft: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: 700,
+
+  eyebrow: {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: 24,
+    padding: "0 10px",
+    borderRadius: 999,
+    background: "rgba(40,53,147,0.10)",
+    color: "#283593",
+    border: "1px solid rgba(61,44,141,0.18)",
+    fontSize: 11,
+    fontWeight: 900,
+    marginBottom: 8,
   },
+
+  title: {
+    margin: 0,
+    fontSize: 21,
+    fontWeight: 950,
+    color: "#0F172A",
+    letterSpacing: "-0.04em",
+    lineHeight: 1.08,
+  },
+
+  subtitle: {
+    margin: "4px 0 0",
+    color: "#475569",
+    fontSize: 13,
+    fontWeight: 650,
+    lineHeight: 1.35,
+  },
+
   detailTopRight: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "flex-end",
     gap: 8,
     flexWrap: "wrap",
   },
+
   detailTopLabel: {
-    color: "#EAF0FF",
+    color: "#475569",
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 850,
   },
-  pageSizeSelect: {
-    background: "rgba(18, 27, 84, 0.92)",
-    color: "#FFFFFF",
-    border: "1px solid rgba(255,255,255,0.24)",
+
+  searchInput: {
+    minWidth: 220,
+    minHeight: 38,
     borderRadius: 999,
-    padding: "6px 12px",
-    fontWeight: 700,
+    border: "1px solid rgba(61,44,141,0.12)",
+    background: "rgba(255,255,255,0.92)",
+    color: "#0F172A",
+    padding: "0 14px",
     outline: "none",
+    fontWeight: 750,
+    boxShadow: "0 6px 14px rgba(46,13,79,0.04)",
   },
+
+  pageSizeSelect: {
+    background: "rgba(255,255,255,0.92)",
+    color: "#0F172A",
+    border: "1px solid rgba(61,44,141,0.12)",
+    borderRadius: 999,
+    minHeight: 38,
+    padding: "0 12px",
+    fontWeight: 850,
+    outline: "none",
+    boxShadow: "0 6px 14px rgba(46,13,79,0.04)",
+  },
+
   pageGhostButton: {
-    background: "rgba(255,255,255,0.10)",
-    color: "#D8DEFF",
-    border: "1px solid rgba(255,255,255,0.18)",
+    background: "rgba(255,255,255,0.72)",
+    color: "#5B5AA6",
+    border: "1px solid rgba(61,44,141,0.10)",
     borderRadius: 999,
-    padding: "6px 12px",
-    fontWeight: 700,
+    minHeight: 38,
+    padding: "0 13px",
+    fontWeight: 900,
     cursor: "pointer",
-    opacity: 1,
   },
+
   pagePrimaryButton: {
-    background: "rgba(99,102,241,0.85)",
+    background:
+      "linear-gradient(135deg, #4F46E5 0%, #3D2C8D 65%, #2E0D4F 100%)",
     color: "#FFFFFF",
-    border: "1px solid rgba(255,255,255,0.24)",
+    border: "1px solid rgba(61,44,141,0.18)",
     borderRadius: 999,
-    padding: "6px 12px",
-    fontWeight: 700,
+    minHeight: 38,
+    padding: "0 13px",
+    fontWeight: 900,
     cursor: "pointer",
-    opacity: 1,
+    boxShadow: "0 10px 18px rgba(61,44,141,0.14)",
   },
+
+  disabledButton: {
+    opacity: 0.45,
+    cursor: "not-allowed",
+    boxShadow: "none",
+  },
+
   pageIndicator: {
-    color: "#FFFFFF",
+    color: "#475569",
     fontSize: 12,
-    fontWeight: 700,
+    fontWeight: 850,
   },
-  detailTableShell: {
-    background: "linear-gradient(180deg, rgba(8,17,65,0.88) 0%, rgba(7,89,133,0.88) 100%)",
-    borderRadius: 18,
-    overflow: "hidden",
-    border: "1px solid rgba(255,255,255,0.12)",
-  },
+
+detailTableShell: {
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(244,246,255,0.96) 100%)",
+  borderRadius: 18,
+  overflow: "hidden",
+  border: "1px solid rgba(109,126,219,0.12)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72)",
+},
+
   detailTableScroller: {
     overflowX: "auto",
-    maxHeight: 720,
+    maxHeight: 620,
     overflowY: "auto",
   },
+
   dataTablePro: {
     width: "100%",
     minWidth: 1200,
     borderCollapse: "collapse",
-    color: "#FFFFFF",
+    color: "#0F172A",
     fontSize: 13,
+    background: "transparent",
   },
-  dataTh: {
-    textAlign: "left",
-    padding: "12px 10px",
-    background: "rgba(7,16,54,0.96)",
-    color: "#EAF0FF",
-    borderRight: "1px solid rgba(255,255,255,0.16)",
-    borderBottom: "1px solid rgba(255,255,255,0.18)",
-    fontWeight: 800,
-    fontSize: 12,
-    textTransform: "none",
-    whiteSpace: "nowrap",
-    position: "sticky",
-    top: 0,
-    zIndex: 2,
-  },
+
+dataTh: {
+  textAlign: "left",
+  padding: "11px 10px",
+  background:
+    "linear-gradient(135deg, #6d7edb 0%, #6271d1 42%, #5965c3 72%, #5657b2 100%)",
+  color: "#F8FAFC",
+  borderRight: "1px solid rgba(255,255,255,0.14)",
+  borderBottom: "1px solid rgba(61,44,141,0.08)",
+  fontWeight: 850,
+  fontSize: 12,
+  whiteSpace: "nowrap",
+  position: "sticky",
+  top: 0,
+  zIndex: 2,
+},
+
   dataTd: {
     padding: "10px 10px",
-    color: "#F8FAFF",
-    borderRight: "1px solid rgba(255,255,255,0.10)",
-    borderBottom: "1px solid rgba(255,255,255,0.10)",
+    color: "#1E293B",
+    borderRight: "1px solid rgba(61,44,141,0.05)",
+    borderBottom: "1px solid rgba(61,44,141,0.06)",
     whiteSpace: "nowrap",
-    fontWeight: 600,
+    fontWeight: 650,
     background: "transparent",
-    letterSpacing: 0.2,
+    letterSpacing: 0.08,
   },
-  detailBottomBar: {
-    padding: "10px 12px",
-    color: "#EAF0FF",
-    fontSize: 12,
-    fontWeight: 700,
-    background: "rgba(0,0,0,0.12)",
+
+  dataTdStrong: {
+    padding: "10px 10px",
+    color: "#0F172A",
+    borderRight: "1px solid rgba(61,44,141,0.05)",
+    borderBottom: "1px solid rgba(61,44,141,0.06)",
+    whiteSpace: "nowrap",
+    fontWeight: 850,
+    background: "transparent",
+    letterSpacing: 0.08,
   },
-  searchInput: {
-    minWidth: 220,
-    minHeight: 42,
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.20)",
-    background: "rgba(255,255,255,0.10)",
-    color: "#FFFFFF",
-    padding: "0 12px",
-    outline: "none",
-    fontWeight: 700,
-  },
-  dataRowEven: {
-    background: "rgba(255,255,255,0.04)",
-  },
-  dataRowOdd: {
-    background: "rgba(255,255,255,0.08)",
-  },
-  dataRowHover: {
-    background: "rgba(255,255,255,0.14)",
-  },
+
+detailBottomBar: {
+  padding: "10px 12px",
+  color: "#475569",
+  fontSize: 12,
+  fontWeight: 800,
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(240,244,255,0.96) 100%)",
+  borderTop: "1px solid rgba(61,44,141,0.07)",
+},
+
+dataRowEven: {
+  background: "rgba(255,255,255,0.78)",
+},
+
+dataRowOdd: {
+  background: "rgba(241,244,255,0.82)",
+},
+
+dataRowHover: {
+  background: "rgba(228,234,255,0.92)",
+},
 };
