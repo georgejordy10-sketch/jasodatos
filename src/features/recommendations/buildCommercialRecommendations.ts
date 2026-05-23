@@ -179,15 +179,19 @@ if (
       priority: "media",
       actionLabel: "Ver sucursal",
       anchorId: "benchmarking-sucursales",
-evidence: [
-  `${topBranch[0]} concentra ${round(topBranchShare)}% de las ventas.`,
-  `${lowBranch[0]} concentra ${round(lowBranchShare)}% de las ventas.`,
-],
+      evidence: [
+        `${topBranch[0]} lidera el desempeño comercial.`,
+        `${lowBranch[0]} tiene el menor aporte relativo.`,
+      ],
       branchName: lowBranch[0],
     });
   }
+ const hasChannelData = orderedChannels.length >= 1 && topChannel?.[0] !== "Sin canal";
+const topChannelShare =
+  topChannel && totalSales > 0 ? (topChannel[1] / totalSales) * 100 : 0;
+const hasClearChannelWeight = topChannelShare >= 35;
 
-  if (topChannel && topChannel[0] !== "Sin canal") {
+  if (hasChannelData && hasClearChannelWeight && topChannel) {
     recommendations.push({
       id: "potenciar-canal",
       type: "potenciar_canal",
@@ -197,8 +201,8 @@ evidence: [
       actionLabel: "Ver canal",
       anchorId: "ventas-por-canal",
       evidence: [
-        `${topChannel[0]} concentra el mayor aporte por canal.`,
-      ],
+  `${topChannel[0]} concentra ${round(topChannelShare)}% de las ventas por canal.`,
+],
       channelName: topChannel[0],
     });
   }
