@@ -1064,7 +1064,7 @@ const whatsappDisabledReason = !canUseWhatsappByPlan
   : "";
 
 const pdfDisabledReason = !canExportPdf
-  ? "Disponible desde el plan Pro."
+  ? "Disponible desde Crecimiento."
   : !hasValidWhatsapp
   ? "Configura un WhatsApp válido en Configuración del negocio."
   : activeChannels.length === 0
@@ -3158,7 +3158,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
   ) : (
     <LockedFeatureCard
       title="Asistente comercial JasoAlix"
-      description="Recibe recomendaciones accionables, promociones sugeridas y apoyo de WhatsApp. Disponible desde el plan Pro."
+      description="Recibe recomendaciones accionables, promociones sugeridas y apoyo de WhatsApp. Disponible desde Crecimiento."
       requiredPlan="pro"
       onOpenPlans={() => setPlansOpen(true)}
       onContactSales={openSalesWhatsapp}
@@ -3213,7 +3213,7 @@ function LockedFeatureCard({
     <div style={styles.lockedFeatureCard}>
       <div style={styles.lockedFeatureTop}>
         <span style={styles.lockedFeatureBadge}>
-          Disponible en {requiredPlan.toUpperCase()}
+          Disponible en {PLAN_LABELS[requiredPlan]}
         </span>
         <span style={styles.lockedFeatureMiniBadge}>Upgrade</span>
       </div>
