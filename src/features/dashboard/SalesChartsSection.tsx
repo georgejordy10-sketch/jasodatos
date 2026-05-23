@@ -122,8 +122,8 @@ export default function SalesChartsSection({
               >
                 <defs>
                   <linearGradient id="ventasFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2563EB" stopOpacity={0.24} />
-                    <stop offset="100%" stopColor="#2563EB" stopOpacity={0.03} />
+                    <stop offset="0%" stopColor="#6D7EDB" stopOpacity={0.24} />
+<stop offset="100%" stopColor="#6D7EDB" stopOpacity={0.03} />
                   </linearGradient>
                 </defs>
                 <XAxis
@@ -158,16 +158,16 @@ export default function SalesChartsSection({
                 <Area
                   type="monotone"
                   dataKey="ventas"
-                  stroke="#2563EB"
+                  stroke="#6D7EDB"
                   fill="url(#ventasFill)"
                   strokeWidth={3}
-                  dot={{ r: 4, fill: "#FFFFFF", stroke: "#2563EB", strokeWidth: 2 }}
+                  dot={{ r: 4, fill: "#FFFFFF", stroke: "#6D7EDB", strokeWidth: 2 }}
                 />
 
                 <Line
                   type="monotone"
                   dataKey="comparativo"
-                  stroke="#7C3AED"
+                  stroke="#3D2C8D"
                   strokeDasharray="4 4"
                   strokeWidth={2}
                   dot={false}
@@ -281,15 +281,14 @@ const styles: Record<string, CSSProperties> = {
     gap: 14,
     alignItems: "stretch",
   },
-  card: {
-    background:
-      "linear-gradient(135deg, #FFFFFF 0%, rgba(239, 246, 255, 0.92) 100%)",
-    color: "var(--jd-text-main, #0F172A)",
-    borderRadius: 22,
-    padding: 18,
-    border: "1px solid rgba(147, 197, 253, 0.36)",
-    boxShadow: "0 14px 34px rgba(37, 99, 235, 0.08)",
-  },
+card: {
+  background: "var(--jd-gradient-container)",
+  color: "var(--jd-text-main)",
+  borderRadius: 22,
+  padding: 18,
+  border: "1px solid var(--jd-border-accent)",
+  boxShadow: "var(--jd-shadow-card)",
+},
   cardHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -298,34 +297,34 @@ const styles: Record<string, CSSProperties> = {
     gap: 12,
     flexWrap: "wrap",
   },
-  eyebrow: {
-    display: "inline-flex",
-    alignItems: "center",
-    minHeight: 24,
-    padding: "0 10px",
-    borderRadius: 999,
-    background: "rgba(37, 99, 235, 0.08)",
-    color: "#1D4ED8",
-    border: "1px solid rgba(37, 99, 235, 0.14)",
-    fontSize: 11,
-    fontWeight: 900,
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    margin: 0,
-    fontSize: 21,
-    fontWeight: 950,
-    color: "var(--jd-text-main, #0F172A)",
-    letterSpacing: "-0.04em",
-    lineHeight: 1.08,
-  },
-  sectionSubtitle: {
-    margin: "4px 0 0",
-    color: "var(--jd-text-secondary, #475569)",
-    fontSize: 13,
-    lineHeight: 1.35,
-    fontWeight: 650,
-  },
+eyebrow: {
+  display: "inline-flex",
+  alignItems: "center",
+  minHeight: 24,
+  padding: "0 10px",
+  borderRadius: 999,
+  background: "var(--jd-info-soft)",
+  color: "var(--jd-info)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  fontSize: 11,
+  fontWeight: 900,
+  marginBottom: 8,
+},
+sectionTitle: {
+  margin: 0,
+  fontSize: 21,
+  fontWeight: 950,
+  color: "var(--jd-text-main)",
+  letterSpacing: "-0.04em",
+  lineHeight: 1.08,
+},
+sectionSubtitle: {
+  margin: "4px 0 0",
+  color: "var(--jd-text-secondary)",
+  fontSize: 13,
+  lineHeight: 1.35,
+  fontWeight: 650,
+},
   chartTopBar: {
     display: "flex",
     justifyContent: "space-between",
@@ -347,38 +346,38 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 12,
     fontWeight: 800,
   },
-  legendLineSolid: {
-    width: 22,
-    height: 3,
-    borderRadius: 999,
-    background: "#2563EB",
-  },
+legendLineSolid: {
+  width: 22,
+  height: 3,
+  borderRadius: 999,
+  background: "var(--jd-accent-main)",
+},
   legendLineDashed: {
     width: 22,
     height: 0,
   },
-  totalPill: {
-    display: "grid",
-    gap: 2,
-    minWidth: 112,
-    justifyItems: "center",
-    padding: "8px 11px",
-    borderRadius: 14,
-    background: "#FFFFFF",
-    color: "var(--jd-text-main, #0F172A)",
-    fontSize: 11,
-    fontWeight: 750,
-    border: "1px solid var(--jd-border, #E2E8F0)",
-    boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
-  },
-  chartBox: {
-    width: "100%",
-    height: 300,
-    borderRadius: 18,
-    background: "rgba(255, 255, 255, 0.62)",
-    border: "1px solid rgba(226, 232, 240, 0.86)",
-    padding: "10px 8px 4px",
-  },
+totalPill: {
+  display: "grid",
+  gap: 2,
+  minWidth: 112,
+  justifyItems: "center",
+  padding: "8px 11px",
+  borderRadius: 14,
+  background: "rgba(255,255,255,0.86)",
+  color: "var(--jd-text-main)",
+  fontSize: 11,
+  fontWeight: 750,
+  border: "1px solid var(--jd-border-accent-soft)",
+  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
+},
+chartBox: {
+  width: "100%",
+  height: 300,
+  borderRadius: 18,
+  background: "var(--jd-gradient-table-surface)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  padding: "10px 8px 4px",
+},
   pieLayout: {
     display: "grid",
     gridTemplateColumns: "310px minmax(0, 1fr)",
@@ -459,30 +458,30 @@ const styles: Record<string, CSSProperties> = {
     gap: 8,
     flexWrap: "wrap",
   },
-  compareButton: {
-    minHeight: 34,
-    borderRadius: 999,
-    border: "1px solid rgba(61, 44, 141, 0.18)",
-    background: "#FFFFFF",
-    color: "var(--jd-brand-secondary, #3D2C8D)",
-    padding: "0 13px",
-    fontSize: 12,
-    fontWeight: 900,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
-  },
-  viewAllButton: {
-    minHeight: 34,
-    padding: "0 13px",
-    borderRadius: 999,
-    border: "1px solid rgba(37, 99, 235, 0.18)",
-    background:
-      "linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(124, 58, 237, 0.10) 100%)",
-    color: "var(--jd-brand-secondary, #3D2C8D)",
-    fontSize: 12,
-    fontWeight: 900,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-  },
+compareButton: {
+  minHeight: 34,
+  borderRadius: 999,
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "#FFFFFF",
+  color: "var(--jd-brand-secondary)",
+  padding: "0 13px",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
+},
+viewAllButton: {
+  minHeight: 34,
+  padding: "0 13px",
+  borderRadius: 999,
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "#FFFFFF",
+  color: "var(--jd-brand-secondary)",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
+},
 };
