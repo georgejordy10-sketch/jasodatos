@@ -2981,7 +2981,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     <>
       {isExportingPdf ? <div style={styles.pdfSpacerBeforeBenchmarking} /> : null}
 
-      <div id="benchmarking-sucursales">
+      <div id="benchmarking-sucursales" style={{ scrollMarginTop: 120 }}>
         <div style={styles.modulePlanRow}>
           {!isExportingPdf ? (
             <ActivePlanBadge tone="pro">Incluido en Crecimiento</ActivePlanBadge>
@@ -3105,10 +3105,11 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
           </div>
 
           <div style={styles.assistantInsights}>
-            {jasoBot.insights.map((item) => (
-              <div style={styles.actionIcon}>•</div>
-            ))}
-
+{jasoBot.insights.map((item, index) => (
+  <div key={`${item}-${index}`} style={styles.actionIcon}>
+    •
+  </div>
+))}
             <div style={styles.actionsGrid}>
               {jasoBot.recomendaciones?.map((item) => (
                 <div key={item} style={styles.actionCard}>

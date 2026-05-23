@@ -178,7 +178,10 @@ export default function SalesChartsSection({
         </Card>
       </div>
 
-      <div id="participacion-producto" style={{ height: "100%" }}>
+    <div
+  id="participacion-producto"
+  style={{ height: "100%", scrollMarginTop: 120 }}
+>
         <Card
           title="Participación por producto"
           subtitle="Productos que concentran mayor venta."
