@@ -128,8 +128,20 @@ message: `${productName} tiene stock bajo frente al mínimo configurado. Convien
       });
     }
   }
+ const hasEnoughProductsForCombo = orderedProducts.length >= 3;
+const topProductShare =
+  topProduct && totalSales > 0 ? (topProduct[1] / totalSales) * 100 : 0;
+const lowProductShare =
+  lowProduct && totalSales > 0 ? (lowProduct[1] / totalSales) * 100 : 0;
+const hasClearProductGap = topProductShare - lowProductShare >= 15;
 
-  if (topProduct && lowProduct && topProduct[0] !== lowProduct[0]) {
+if (
+  hasEnoughProductsForCombo &&
+  hasClearProductGap &&
+  topProduct &&
+  lowProduct &&
+  topProduct[0] !== lowProduct[0]
+) {
     recommendations.push({
       id: "crear-combo",
       type: "crear_combo",
@@ -139,8 +151,8 @@ message: `${productName} tiene stock bajo frente al mínimo configurado. Convien
       actionLabel: "Comparar productos",
       anchorId: "participacion-producto",
       evidence: [
-        `${topProduct[0]} es el producto con mayor venta.`,
-        `${lowProduct[0]} tiene menor movimiento relativo.`,
+    `${topProduct[0]} concentra ${round(topProductShare)}% de las ventas.`,
+`${lowProduct[0]} concentra ${round(lowProductShare)}% de las ventas.`,
       ],
       productName: topProduct[0],
     });
