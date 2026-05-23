@@ -114,8 +114,8 @@ message: `${productName} tiene stock bajo frente al mínimo configurado. Convien
       recommendations.push({
         id: "producto-estrella",
         type: "producto_estrella",
-        title: "Potenciar producto estrella",
-        message: `${productName} concentra ${round(share)}% de las ventas. Conviene destacarlo como producto ancla para campañas y promociones.`,
+        title: "Impulsar producto más vendido",
+        message: `${productName} concentra ${round(share)}% de las ventas. Conviene destacarlo en promociones porque es uno de los productos que más mueve el negocio.`,
         priority: share >= 40 ? "alta" : "media",
         actionLabel: "Ver producto",
         anchorId: "participacion-producto",
@@ -145,8 +145,8 @@ if (
     recommendations.push({
       id: "crear-combo",
       type: "crear_combo",
-      title: "Crear combo comercial",
-      message: `Combina ${topProduct[0]} con ${lowProduct[0]} para aprovechar la tracción del producto líder y mover productos con menor venta.`,
+      title: "Crear combo de productos",
+      message: `Combina ${topProduct[0]} con ${lowProduct[0]} para aprovechar el producto más vendido y ayudar a mover uno con menor salida.`,
       priority: "media",
       actionLabel: "Comparar productos",
       anchorId: "participacion-producto",
@@ -174,8 +174,8 @@ if (
     recommendations.push({
       id: "impulsar-sucursal",
       type: "impulsar_sucursal",
-      title: "Impulsar sucursal rezagada",
-      message: `${lowBranch[0]} muestra menor aporte comercial. Conviene revisar surtido, canal y ejecución comercial en esa sucursal.`,
+      title: "Revisar sucursal con baja venta",
+      message: `${lowBranch[0]} muestra menor aporte en ventas. Conviene revisar productos disponibles, atención, precios y canales de venta en esa sucursal.`,
       priority: "media",
       actionLabel: "Ver sucursal",
       anchorId: "benchmarking-sucursales",
@@ -195,8 +195,8 @@ const hasClearChannelWeight = topChannelShare >= 35;
     recommendations.push({
       id: "potenciar-canal",
       type: "potenciar_canal",
-      title: "Potenciar canal principal",
-      message: `${topChannel[0]} es el canal con mayor aporte. Conviene reforzarlo con promociones, disponibilidad y comunicación directa.`,
+      title: "Reforzar canal con más ventas",
+      message: `${topChannel[0]} es el canal que más aporta a las ventas. Conviene reforzarlo con mejor disponibilidad, promociones y comunicación con clientes.`,
       priority: "baja",
       actionLabel: "Ver canal",
       anchorId: "ventas-por-canal",

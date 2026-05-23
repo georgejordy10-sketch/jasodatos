@@ -59,10 +59,10 @@ export default function RecommendedActionsSection({
       <section style={styles.wrapper}>
         <div style={styles.header}>
           <div>
-            <span style={styles.eyebrow}>Motor comercial explicable</span>
+            <span style={styles.eyebrow}>Recomendaciones del negocio</span>
             <h3 style={styles.title}>Acciones recomendadas</h3>
             <p style={styles.subtitle}>
-              Aún no se detectan acciones prioritarias. Carga datos de ventas, inventario y canales para activar recomendaciones.
+              Aún no hay acciones claras para recomendar. Carga datos de ventas, inventario y canales para recibir sugerencias útiles.
             </p>
           </div>
         </div>
@@ -74,10 +74,10 @@ export default function RecommendedActionsSection({
     <section style={styles.wrapper}>
       <div style={styles.header}>
         <div>
-          <span style={styles.eyebrow}>Motor comercial explicable</span>
+          <span style={styles.eyebrow}>Recomendaciones del negocio</span>
           <h3 style={styles.title}>Acciones recomendadas</h3>
           <p style={styles.subtitle}>
-            Recomendaciones generadas con reglas comerciales, métricas de ventas, inventario y comportamiento por canal.
+            Sugerencias creadas a partir de tus ventas, inventario y canales para ayudarte a tomar mejores decisiones.
           </p>
         </div>
 
@@ -112,7 +112,7 @@ export default function RecommendedActionsSection({
 
             {item.evidence.length > 0 ? (
               <div style={styles.evidenceBox}>
-                <span style={styles.evidenceTitle}>Evidencia</span>
+                <span style={styles.evidenceTitle}>Por qué se recomienda</span>
                 {item.evidence.slice(0, 2).map((evidence) => (
                   <div key={evidence} style={styles.evidenceItem}>
                     • {evidence}
