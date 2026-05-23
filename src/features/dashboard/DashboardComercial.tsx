@@ -562,7 +562,7 @@ function buildJasoBotInsights(
       mensajePrincipal: "No hay suficiente información para generar recomendaciones comerciales.",
       insights: [
         "Carga un archivo para activar recomendaciones.",
-        "JasoBot analiza ventas, canales e inventario.",
+        "JasoAlix analiza tus ventas, inventario y canales.",
         "Podrs detectar productos lderes y riesgos.",
         "Tambin sugerir acciones comerciales.",
       ],
@@ -3016,7 +3016,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
         <div style={styles.assistantGrid}>
           <div style={styles.assistantContent}>
             <div style={styles.assistantHeader}>
-              <span style={styles.assistantTitle}>Asistente comercial JasoBot</span>
+              <span style={styles.assistantTitle}>Asistente comercial JasoAlix</span>
 
               {!isExportingPdf ? (
                 <>
@@ -3027,52 +3027,17 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
                   ) : (
                     <ActivePlanBadge tone="basic">WhatsApp bloqueado</ActivePlanBadge>
                   )}
-
-                  <span
-                    style={{
-                      ...styles.assistantPromoBadge,
-                      background:
-                        jasoBot.tipoPromo === "combo"
-                          ? "rgba(59,130,246,0.18)"
-                          : jasoBot.tipoPromo === "liquidacion"
-                          ? "rgba(239,68,68,0.18)"
-                          : jasoBot.tipoPromo === "impulso_sucursal"
-                          ? "rgba(245,158,11,0.18)"
-                          : jasoBot.tipoPromo === "producto_estrella"
-                          ? "rgba(34,197,94,0.18)"
-                          : "rgba(148,163,184,0.18)",
-                      color:
-                        jasoBot.tipoPromo === "combo"
-                          ? "#93C5FD"
-                          : jasoBot.tipoPromo === "liquidacion"
-                          ? "#FCA5A5"
-                          : jasoBot.tipoPromo === "impulso_sucursal"
-                          ? "#FCD34D"
-                          : jasoBot.tipoPromo === "producto_estrella"
-                          ? "#86EFAC"
-                          : "#CBD5E1",
-                      border:
-                        jasoBot.tipoPromo === "combo"
-                          ? "1px solid rgba(147,197,253,0.22)"
-                          : jasoBot.tipoPromo === "liquidacion"
-                          ? "1px solid rgba(252,165,165,0.22)"
-                          : jasoBot.tipoPromo === "impulso_sucursal"
-                          ? "1px solid rgba(252,211,77,0.22)"
-                          : jasoBot.tipoPromo === "producto_estrella"
-                          ? "1px solid rgba(134,239,172,0.22)"
-                          : "1px solid rgba(203,213,225,0.22)",
-                    }}
-                  >
-                    {jasoBot.tipoPromo === "combo"
-                      ? "Combo"
-                      : jasoBot.tipoPromo === "liquidacion"
-                      ? "Liquidación"
-                      : jasoBot.tipoPromo === "impulso_sucursal"
-                      ? "Impulso sucursal"
-                      : jasoBot.tipoPromo === "producto_estrella"
-                      ? "Producto estrella"
-                      : "Promo"}
-                  </span>
+                  <span style={styles.assistantPromoBadge}>
+  {jasoBot.tipoPromo === "combo"
+    ? "Combo sugerido"
+    : jasoBot.tipoPromo === "liquidacion"
+    ? "Inventario"
+    : jasoBot.tipoPromo === "impulso_sucursal"
+    ? "Sucursal"
+    : jasoBot.tipoPromo === "producto_estrella"
+    ? "Producto destacado"
+    : "Sugerencia"}
+</span>
                 </>
               ) : null}
             </div>
@@ -3081,7 +3046,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
               {jasoBot.mensajePrincipal}
               <br />
               <strong>
-                JasoBot te propone una idea comercial. Tú decides si la usas, la ajustas o la envías a tus clientes.
+                JasoAlix resume una acción comercial. Tú decides si la usas, la ajustas o la envías a tus clientes.
               </strong>
             </div>
 
@@ -3106,8 +3071,8 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
 
           <div style={styles.assistantInsights}>
 {jasoBot.insights.map((item, index) => (
-  <div key={`${item}-${index}`} style={styles.actionIcon}>
-    •
+  <div key={`${item}-${index}`} style={styles.assistantInsightItem}>
+    {item}
   </div>
 ))}
             <div style={styles.actionsGrid}>
@@ -3185,7 +3150,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     </>
   ) : (
     <LockedFeatureCard
-      title="Asistente comercial JasoBot"
+      title="Asistente comercial JasoAlix"
       description="Recibe recomendaciones accionables, promociones sugeridas y apoyo de WhatsApp. Disponible desde el plan Pro."
       requiredPlan="pro"
       onOpenPlans={() => setPlansOpen(true)}
@@ -3590,20 +3555,19 @@ lockedFeatureSalesButton: {
   boxShadow: "0 10px 20px rgba(16,185,129,0.18)",
 },
 actionButton: {
-  gridColumn: "1 / -1",
-  justifySelf: "start",
-  background:
-    "linear-gradient(135deg, rgba(34, 197, 94, 0.10) 0%, rgba(16, 185, 129, 0.12) 100%)",
-  color: "#15803D",
-  border: "1px solid rgba(34, 197, 94, 0.22)",
-  borderRadius: 999,
-  minHeight: 34,
+  minHeight: 32,
+  width: "fit-content",
+  maxWidth: "100%",
   padding: "0 12px",
-  fontSize: 12,
-  fontWeight: 900,
+  borderRadius: 999,
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "rgba(109, 126, 219, 0.12)",
+  color: "var(--jd-brand-secondary)",
+  fontSize: 11,
+  fontWeight: 750,
   cursor: "pointer",
+  whiteSpace: "nowrap",
 },
-
 actionNotice: {
   padding: "10px 12px",
   borderRadius: 14,
@@ -3621,28 +3585,32 @@ assistantContent: {
   paddingLeft: 0,
 },
 assistantPromoBadge: {
-  padding: "5px 10px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 28,
+  padding: "0 12px",
   borderRadius: 999,
-  fontSize: 11,
-  fontWeight: 900,
-  border: "1px solid transparent",
+  background: "var(--jd-info-soft)",
+  color: "var(--jd-brand-secondary)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  fontSize: 12,
+  fontWeight: 750,
+  width: "fit-content",
 },
 actionsGrid: {
-  marginTop: 10,
   display: "grid",
-  gap: 8,
+  gap: 10,
 },
-
 actionCard: {
   display: "grid",
-  gridTemplateColumns: "22px minmax(0, 1fr)",
-  alignItems: "start",
-  gap: 9,
-  padding: "10px 11px",
-  borderRadius: 15,
-  background: "rgba(255,255,255,0.82)",
+  gridTemplateColumns: "18px minmax(0, 1fr)",
+  gap: 10,
+  alignItems: "flex-start",
+  padding: 14,
+  borderRadius: 16,
+  background: "rgba(255,255,255,0.86)",
   border: "1px solid var(--jd-border-accent-soft)",
-  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
 },
 
 actionIcon: {
@@ -3658,10 +3626,10 @@ actionIcon: {
 },
 
 actionText: {
-  color: "var(--jd-text-main, #0F172A)",
+  color: "var(--jd-text-main)",
   fontSize: 13,
-  fontWeight: 750,
-  lineHeight: 1.35,
+  lineHeight: 1.45,
+  fontWeight: 650,
 },
 assistantHeader: {
   display: "flex",
@@ -4357,6 +4325,16 @@ insightBadge: {
 },
 pdfSpacerBeforeBenchmarking: {
   height: 0,
+},
+assistantInsightItem: {
+  padding: "8px 10px",
+  borderRadius: 14,
+  background: "rgba(255,255,255,0.76)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  color: "var(--jd-text-secondary)",
+  fontSize: 12,
+  lineHeight: 1.35,
+  fontWeight: 600,
 },
 };
 
