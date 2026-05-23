@@ -2512,7 +2512,7 @@ style={{
           <p
             style={{
               margin: "4px 0 0",
-              color: "#475569",
+              color: "var(--jd-text-secondary)",
               fontSize: 13,
               lineHeight: 1.4,
             }}
@@ -2532,9 +2532,9 @@ style={{
     type="button"
     onClick={() => setShowFullUploadHistory(false)}
     style={{
-      border: "1px solid #cbd5e1",
-      background: "var(--jd-gradient-table-surface)",
-      color: "var(--jd-text-main)",
+border: "1px solid var(--jd-border-accent-soft)",
+background: "rgba(109, 126, 219, 0.12)",
+color: "var(--jd-brand-secondary)",
       borderRadius: 999,
       padding: "8px 12px",
       fontSize: 12,
@@ -2555,7 +2555,7 @@ style={{
               border: "1px solid var(--jd-border-accent-soft)",
               borderRadius: 16,
               padding: 12,
-              background: "#f8faff",
+              background: "var(--jd-gradient-table-surface)",
               display: "grid",
               gap: 8,
             }}
