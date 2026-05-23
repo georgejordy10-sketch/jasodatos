@@ -3525,11 +3525,12 @@ const styles: Record<string, CSSProperties> = {
     background: "linear-gradient(180deg, #EEF2FF 0%, #E8EDFF 100%)",
   },
 assistantCard: {
-  background: "var(--jd-gradient-container)",
+  background:
+    "linear-gradient(180deg, #dfe6ff 0%, #e7ecff 48%, #eef3ff 100%)",
   color: "var(--jd-text-main)",
   borderRadius: 22,
   padding: 18,
-  border: "1px solid var(--jd-border-accent)",
+  border: "1px solid rgba(109,126,219,0.28)",
   boxShadow: "var(--jd-shadow-card)",
   display: "grid",
   gap: 14,
@@ -3545,6 +3546,10 @@ assistantBody: {
   gridTemplateColumns: "minmax(220px, 0.75fr) minmax(0, 1.25fr)",
   gap: 14,
   alignItems: "start",
+  padding: 10,
+  borderRadius: 18,
+  background: "#d8e1ff",
+  border: "1px solid rgba(109,126,219,0.24)",
 },
 assistantFooter: {
   display: "flex",
@@ -3552,8 +3557,10 @@ assistantFooter: {
   justifyContent: "space-between",
   gap: 12,
   flexWrap: "wrap",
-  paddingTop: 12,
-  borderTop: "1px solid var(--jd-border-accent-soft)",
+  padding: "14px 6px 0",
+  borderTop: "1px solid rgba(109,126,219,0.24)",
+  background: "#d8e1ff",
+  borderRadius: "0 0 18px 18px",
 },
 assistantFooterActions: {
   display: "flex",
@@ -3594,8 +3601,8 @@ actionButton: {
   maxWidth: "100%",
   padding: "0 12px",
   borderRadius: 999,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "rgba(109, 126, 219, 0.12)",
+  border: "1px solid rgba(109, 126, 219, 0.22)",
+  background: "rgba(109, 126, 219, 0.14)",
   color: "var(--jd-brand-secondary)",
   fontSize: 11,
   fontWeight: 750,
@@ -3643,8 +3650,8 @@ actionCard: {
   alignItems: "center",
   padding: 14,
   borderRadius: 16,
-  background: "rgba(255,255,255,0.86)",
-  border: "1px solid var(--jd-border-accent-soft)",
+  background: "#f3f6ff",
+  border: "1px solid rgba(109,126,219,0.24)",
 },
 
 actionIcon: {
@@ -3663,7 +3670,7 @@ actionText: {
   color: "var(--jd-text-main)",
   fontSize: 13,
   lineHeight: 1.45,
-  fontWeight: 550,
+  fontWeight: 500,
 },
 assistantHeader: {
   display: "flex",
@@ -3675,7 +3682,7 @@ assistantHeader: {
 
 assistantTitle: {
   fontSize: 21,
-  fontWeight: 850,
+  fontWeight: 800,
   color: "var(--jd-text-main)",
   lineHeight: 1.08,
   letterSpacing: "-0.035em",
@@ -3687,7 +3694,7 @@ assistantText: {
   lineHeight: 1.5,
   margin: 0,
   maxWidth: 760,
-  fontWeight: 600,
+  fontWeight: 500,
 },
 assistantHelperText: {
   color: "var(--jd-text-secondary)",
@@ -3758,8 +3765,8 @@ assistantChannelRow: {
   gap: 8,
   padding: 12,
   borderRadius: 16,
-  background: "var(--jd-gradient-table-surface)",
-  border: "1px solid var(--jd-border-accent-soft)",
+  background: "linear-gradient(135deg, rgba(109, 126, 219, 0.12) 0%, rgba(255,255,255,0.92) 100%)",
+  border: "1px solid rgba(109, 126, 219, 0.20)",
 },
 
 assistantChannelBadge: {
@@ -4361,11 +4368,11 @@ pdfSpacerBeforeBenchmarking: {
   height: 0,
 },
 assistantInsightItem: {
-  padding: "8px 10px",
+  padding: "9px 11px",
   borderRadius: 14,
-  background: "rgba(255,255,255,0.76)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  color: "var(--jd-text-secondary)",
+  background: "#f3f6ff",
+  border: "1px solid rgba(109,126,219,0.24)",
+  color: "var(--jd-text-main)",
   fontSize: 12,
   lineHeight: 1.35,
   fontWeight: 500,
