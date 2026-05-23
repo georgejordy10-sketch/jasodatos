@@ -118,17 +118,14 @@ export default function FilterBar({
 }
 
 const styles: Record<string, CSSProperties> = {
-  filterBar: {
-    display: "grid",
-    gap: 12,
-    background:
-      "linear-gradient(135deg, #FFFFFF 0%, rgba(239, 246, 255, 0.92) 100%)",
-    borderRadius: 20,
-    padding: 16,
-    border: "1px solid rgba(147, 197, 253, 0.42)",
-    boxShadow: "0 12px 30px rgba(37, 99, 235, 0.08)",
-    borderLeft: "5px solid var(--jd-action-primary, #2563EB)",
-  },
+filterBar: {
+  background: "var(--jd-gradient-container)",
+  color: "var(--jd-text-main)",
+  borderRadius: 22,
+  padding: 18,
+  border: "1px solid var(--jd-border-accent)",
+  boxShadow: "var(--jd-shadow-card)",
+},
   header: {
     display: "flex",
     alignItems: "center",
