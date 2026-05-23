@@ -2197,14 +2197,15 @@ return (
 
 {dashboardUploadHistory.length > 0 ? (
   <section
-    style={{
-      border: "1px solid #dbeafe",
-      borderRadius: 18,
-      padding: 16,
-      background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
-      display: "grid",
-      gap: 12,
-    }}
+style={{
+  border: "1px solid var(--jd-border-accent)",
+  borderRadius: 22,
+  padding: 18,
+  background: "var(--jd-gradient-container)",
+  boxShadow: "var(--jd-shadow-card)",
+  display: "grid",
+  gap: 14,
+}}
   >
     <div>
      <div
@@ -2220,9 +2221,9 @@ return (
     <h3
       style={{
         margin: 0,
-        color: "#1d4ed8",
-        fontSize: 22,
-        fontWeight: 900,
+color: "var(--jd-text-main)",
+fontSize: 21,
+fontWeight: 850,
         letterSpacing: "-0.02em",
       }}
     >
@@ -2232,9 +2233,10 @@ return (
     <p
       style={{
         margin: "4px 0 0",
-        color: "#475569",
-        fontSize: 13,
-        lineHeight: 1.4,
+color: "var(--jd-text-secondary)",
+fontSize: 13,
+lineHeight: 1.4,
+fontWeight: 500,
       }}
     >
       Historial de archivos procesados para comparar la evolución del negocio.
@@ -2245,17 +2247,17 @@ return (
   <button
     type="button"
     onClick={() => setShowFullUploadHistory(true)}
-    style={{
-      border: "1px solid #bfdbfe",
-      background: "#ffffff",
-      color: "#1d4ed8",
-      borderRadius: 999,
-      padding: "8px 12px",
-      fontSize: 12,
-      fontWeight: 800,
-      cursor: "pointer",
-      whiteSpace: "nowrap",
-    }}
+style={{
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "rgba(109, 126, 219, 0.12)",
+  color: "var(--jd-brand-secondary)",
+  borderRadius: 999,
+  padding: "8px 12px",
+  fontSize: 12,
+  fontWeight: 750,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+}}
   >
     Ver historial completo
   </button>
@@ -2272,16 +2274,16 @@ return (
   >
     <div
       style={{
-        border: "1px solid #bfdbfe",
-        borderRadius: 14,
-        padding: 12,
-        background: "#ffffff",
+border: "1px solid var(--jd-border-accent-soft)",
+borderRadius: 16,
+padding: 12,
+background: "var(--jd-gradient-table-surface)",
       }}
     >
       <span
         style={{
           display: "block",
-          color: "#64748b",
+          color: "var(--jd-text-secondary)",
           fontSize: 11,
           fontWeight: 800,
           textTransform: "uppercase",
@@ -2290,14 +2292,14 @@ return (
       >
         Comparativo con ventas anteriores
       </span>
-      <strong style={{ color: "#1d4ed8", fontSize: 20 }}>
+      <strong style={{ color: "var(--jd-brand-secondary)", fontSize: 20 }}>
         {dashboardHistorySummary.salesChange}
       </strong>
       <span
   style={{
     display: "block",
     marginTop: 4,
-    color: "#64748b",
+    color: "var(--jd-text-secondary)",
     fontSize: 11,
     fontWeight: 700,
   }}
@@ -2317,16 +2319,16 @@ return (
 
     <div
       style={{
-        border: "1px solid #bfdbfe",
-        borderRadius: 14,
+        border: "1px solid var(--jd-border-accent-soft)",
+        borderRadius: 16,
         padding: 12,
-        background: "#ffffff",
+        background: "var(--jd-gradient-table-surface)",
       }}
     >
       <span
         style={{
           display: "block",
-          color: "#64748b",
+          color: "var(--jd-text-secondary)",
           fontSize: 11,
           fontWeight: 800,
           textTransform: "uppercase",
@@ -2335,14 +2337,14 @@ return (
       >
         Comparativo con unidades anteriores
       </span>
-      <strong style={{ color: "#1d4ed8", fontSize: 20 }}>
+      <strong style={{ color: "var(--jd-brand-secondary)", fontSize: 20 }}>
         {dashboardHistorySummary.unitsChange}
       </strong>
       <span
   style={{
     display: "block",
     marginTop: 4,
-    color: "#64748b",
+    color: "var(--jd-text-secondary)",
     fontSize: 11,
     fontWeight: 700,
   }}
@@ -2354,16 +2356,16 @@ return (
 
     <div
       style={{
-        border: "1px solid #bfdbfe",
-        borderRadius: 14,
+        border: "1px solid var(--jd-border-accent-soft)",
+        borderRadius: 16,
         padding: 12,
-        background: "#ffffff",
+        background: "var(--jd-gradient-table-surface)",
       }}
     >
       <span
         style={{
           display: "block",
-          color: "#64748b",
+          color: "var(--jd-text-secondary)",
           fontSize: 11,
           fontWeight: 800,
           textTransform: "uppercase",
@@ -2372,7 +2374,7 @@ return (
       >
         Comparativo con productos anteriores
       </span>
-      <strong style={{ color: "#1d4ed8", fontSize: 20 }}>
+      <strong style={{ color: "var(--jd-brand-secondary)", fontSize: 20 }}>
         {dashboardHistorySummary.productDelta >= 0 ? "+" : ""}
         {dashboardHistorySummary.productDelta}
       </strong>
@@ -2380,7 +2382,7 @@ return (
   style={{
     display: "block",
     marginTop: 4,
-    color: "#64748b",
+    color: "var(--jd-text-secondary)",
     fontSize: 11,
     fontWeight: 700,
   }}
@@ -2403,19 +2405,19 @@ return (
 {dashboardUploadHistory.slice(0, 2).map((item) => (
         <article
           key={item.id}
-          style={{
-            border: "1px solid #bfdbfe",
-            borderRadius: 14,
-            padding: 12,
-            background: "#ffffff",
-            display: "grid",
-            gap: 8,
-          }}
+style={{
+  border: "1px solid var(--jd-border-accent-soft)",
+  borderRadius: 16,
+  padding: 12,
+  background: "var(--jd-gradient-table-surface)",
+  display: "grid",
+  gap: 8,
+}}
         >
           <div style={{ display: "grid", gap: 2 }}>
             <strong
               style={{
-                color: "#0f172a",
+                color: "var(--jd-text-main)",
                 fontSize: 13,
                 lineHeight: 1.25,
                 overflow: "hidden",
@@ -2427,7 +2429,7 @@ return (
               {item.file_name}
             </strong>
 
-            <span style={{ color: "#64748b", fontSize: 11, fontWeight: 700 }}>
+            <span style={{ color: "var(--jd-text-secondary)", fontSize: 11, fontWeight: 700 }}>
               {new Date(item.uploaded_at).toLocaleString("es-EC")}
             </span>
           </div>
@@ -2437,7 +2439,7 @@ return (
               display: "flex",
               gap: 8,
               flexWrap: "wrap",
-              color: "#334155",
+              color: "var(--jd-text-secondary)",
               fontSize: 12,
               fontWeight: 700,
             }}
@@ -2476,9 +2478,9 @@ return (
         width: "min(980px, 100%)",
         maxHeight: "85vh",
         overflow: "auto",
-        background: "#ffffff",
+        background: "var(--jd-gradient-table-surface)",
         borderRadius: 22,
-        border: "1px solid #bfdbfe",
+        border: "1px solid var(--jd-border-accent-soft)",
         boxShadow: "0 24px 70px rgba(15, 23, 42, 0.35)",
         padding: 18,
         display: "grid",
@@ -2498,7 +2500,7 @@ return (
           <h3
             style={{
               margin: 0,
-              color: "#1d4ed8",
+              color: "var(--jd-brand-secondary)",
               fontSize: 24,
               fontWeight: 900,
               letterSpacing: "-0.02em",
@@ -2531,8 +2533,8 @@ return (
     onClick={() => setShowFullUploadHistory(false)}
     style={{
       border: "1px solid #cbd5e1",
-      background: "#ffffff",
-      color: "#0f172a",
+      background: "var(--jd-gradient-table-surface)",
+      color: "var(--jd-text-main)",
       borderRadius: 999,
       padding: "8px 12px",
       fontSize: 12,
@@ -2550,7 +2552,7 @@ return (
           <article
             key={item.id}
             style={{
-              border: "1px solid #dbeafe",
+              border: "1px solid var(--jd-border-accent-soft)",
               borderRadius: 16,
               padding: 12,
               background: "#f8faff",
@@ -2561,7 +2563,7 @@ return (
             <div style={{ display: "grid", gap: 2 }}>
               <strong
                 style={{
-                  color: "#0f172a",
+                  color: "var(--jd-text-main)",
                   fontSize: 14,
                   lineHeight: 1.25,
                 }}
@@ -2571,7 +2573,7 @@ return (
 
               <span
                 style={{
-                  color: "#64748b",
+                  color: "var(--jd-text-secondary)",
                   fontSize: 12,
                   fontWeight: 700,
                 }}
@@ -2587,11 +2589,11 @@ return (
                 gap: 8,
               }}
             >
-              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+              <span style={{ color: "var(--jd-text-secondary)", fontSize: 12, fontWeight: 800 }}>
                 Filas: {item.total_rows}
               </span>
 
-              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+              <span style={{ color: "var(--jd-text-secondary)", fontSize: 12, fontWeight: 800 }}>
                 Ventas:{" "}
                 {Number(item.total_sales).toLocaleString("es-EC", {
                   style: "currency",
@@ -2599,19 +2601,19 @@ return (
                 })}
               </span>
 
-              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+              <span style={{ color: "var(--jd-text-secondary)", fontSize: 12, fontWeight: 800 }}>
                 Unidades: {item.total_units}
               </span>
 
-              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+              <span style={{ color: "var(--jd-text-secondary)", fontSize: 12, fontWeight: 800 }}>
                 Productos: {item.products_count}
               </span>
 
-              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+              <span style={{ color: "var(--jd-text-secondary)", fontSize: 12, fontWeight: 800 }}>
                 Locales: {item.locals_count}
               </span>
 
-              <span style={{ color: "#334155", fontSize: 12, fontWeight: 800 }}>
+              <span style={{ color: "var(--jd-text-secondary)", fontSize: 12, fontWeight: 800 }}>
                 Canales: {item.channels_count}
               </span>
             </div>
@@ -3453,7 +3455,7 @@ const detailStyles: Record<string, CSSProperties> = {
     border: "1px solid rgba(255,255,255,0.22)",
     background: "rgba(255,255,255,0.10)",
     color: "#FFFFFF",
-    borderRadius: 14,
+    borderRadius: 16,
     padding: "10px 14px",
     fontSize: 13,
     fontWeight: 800,
@@ -3608,7 +3610,7 @@ actionButton: {
 },
 actionNotice: {
   padding: "10px 12px",
-  borderRadius: 14,
+  borderRadius: 16,
   background: "var(--jd-info-soft)",
   border: "1px solid var(--jd-border-accent-soft)",
   color: "var(--jd-brand-secondary)",
@@ -3925,7 +3927,7 @@ businessLocationValue: {
 businessContextWarning: {
   margin: "8px 0 12px",
   padding: "12px 14px",
-  borderRadius: 14,
+  borderRadius: 16,
   background: "rgba(251,191,36,0.16)",
   border: "1px solid rgba(245,158,11,0.28)",
   color: "#92400E",
@@ -4046,7 +4048,7 @@ emptyText: {
 
 emptyActionButton: {
   minHeight: 42,
-  borderRadius: 14,
+  borderRadius: 16,
   border: "1px solid rgba(127,178,255,0.34)",
   background: "linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)",
   color: "#FFFFFF",
@@ -4129,7 +4131,7 @@ comparisonBars: {
   justifyContent: "center",
   gap: 30,
   padding: "24px 10px 8px",
-  borderRadius: 14,
+  borderRadius: 16,
   background:
     "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
 },
@@ -4339,7 +4341,7 @@ pdfSpacerBeforeBenchmarking: {
 },
 assistantInsightItem: {
   padding: "9px 11px",
-  borderRadius: 14,
+  borderRadius: 16,
   background: "#f3f6ff",
   border: "1px solid rgba(109,126,219,0.24)",
   color: "var(--jd-text-main)",
