@@ -3571,12 +3571,7 @@ assistantFooterActions: {
   flexWrap: "wrap",
   paddingBottom: 2,
 },
-assistantGrid: {
-  display: "grid",
-  gridTemplateColumns: "minmax(280px, 0.95fr) minmax(320px, 1fr) minmax(240px, 280px)",
-  alignItems: "start",
-  columnGap: 14,
-},
+
 lockedFeatureActions: {
   display: "flex",
   gap: 10,
@@ -3620,13 +3615,7 @@ actionNotice: {
   fontSize: 13,
   fontWeight: 700,
 },
-assistantContent: {
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "flex-start",
-  paddingRight: 8,
-  paddingLeft: 0,
-},
+
 assistantPromoBadge: {
   display: "inline-flex",
   alignItems: "center",
@@ -3654,18 +3643,6 @@ actionCard: {
   borderRadius: 16,
   background: "#f3f6ff",
   border: "1px solid rgba(109,126,219,0.24)",
-},
-
-actionIcon: {
-  width: 22,
-  height: 22,
-  borderRadius: 999,
-  display: "grid",
-  placeItems: "center",
-  background: "rgba(34, 197, 94, 0.12)",
-  color: "#15803D",
-  fontSize: 14,
-  fontWeight: 900,
 },
 
 actionText: {
@@ -3740,15 +3717,6 @@ assistantInsights: {
   background: "var(--jd-gradient-table-surface)",
   border: "1px solid var(--jd-border-accent-soft)",
 },
-assistantActions: {
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  gap: 10,
-  width: "100%",
-  minWidth: 0,
-},
-
   th: {
     textAlign: "left",
     padding: "12px 14px",
