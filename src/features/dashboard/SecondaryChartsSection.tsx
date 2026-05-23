@@ -198,16 +198,17 @@ export default function SecondaryChartsSection({
         </Card>
       </div>
 
-      <Card
-        title="Ventas por canal"
-        subtitle="Identifica dónde se está generando la venta."
-        action={
-          <button type="button" style={styles.viewAllButton} onClick={onOpenChannelDetails}>
-            Ver todo
-          </button>
-        }
-        fullHeight
-      >
+<div id="ventas-por-canal" style={{ scrollMarginTop: 120 }}>
+  <Card
+    title="Ventas por canal"
+    subtitle="Identifica dónde se está generando la venta."
+    action={
+      <button type="button" style={styles.viewAllButton} onClick={onOpenChannelDetails}>
+        Ver todo
+      </button>
+    }
+    fullHeight
+  >
         <div style={styles.channelBadgeRow}>
           <span style={styles.channelBadge}>
             Medios: {channelResult.channels.length}
@@ -327,6 +328,7 @@ export default function SecondaryChartsSection({
           </div>
         )}
       </Card>
+      </div>
     </section>
   );
 }
