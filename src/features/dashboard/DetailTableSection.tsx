@@ -182,7 +182,6 @@ detailCardPro: {
   padding: 18,
   border: "1px solid rgba(109,126,219,0.16)",
   boxShadow: "0 10px 24px rgba(46,13,79,0.04)",
-  borderTop: "4px solid rgba(109,126,219,0.72)",
 },
 
   detailTopBar: {
@@ -369,7 +368,6 @@ detailBottomBar: {
   fontWeight: 800,
   background:
     "linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(240,244,255,0.96) 100%)",
-  borderTop: "1px solid rgba(61,44,141,0.07)",
 },
 
 dataRowEven: {

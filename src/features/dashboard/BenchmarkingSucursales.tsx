@@ -187,7 +187,6 @@ wrapper: {
   padding: 18,
   border: "1px solid rgba(109,126,219,0.16)",
   boxShadow: "0 10px 24px rgba(46,13,79,0.04)",
-  borderTop: "4px solid rgba(109,126,219,0.72)",
 },
   header: {
     display: "flex",
