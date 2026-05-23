@@ -498,9 +498,11 @@ function resetFlow() {
           gap: 12,
         }}
       >
-      <h1 className="jd-upload-main-title" style={uploadTitleStyle}>
-  Empecemos el análisis de tus datos
-</h1>
+      {!processedData ? (
+  <h1 className="jd-upload-main-title" style={uploadTitleStyle}>
+    Empecemos el análisis de tus datos
+  </h1>
+) : null}
 
 {!initialData ? (
   <div className="jd-upload-hero"
