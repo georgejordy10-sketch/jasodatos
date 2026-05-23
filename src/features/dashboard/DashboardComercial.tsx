@@ -25,6 +25,8 @@ import DetailTableSection from "@/features/dashboard/DetailTableSection";
 import SalesChartsSection from "@/features/dashboard/SalesChartsSection";
 import SecondaryChartsSection from "@/features/dashboard/SecondaryChartsSection";
 import UpgradeBanner from "@/features/subscription/UpgradeBanner";
+import { buildCommercialRecommendations } from "@/features/recommendations/buildCommercialRecommendations";
+import type { CommercialRecommendation } from "@/features/recommendations/types";
 type DashboardUploadHistoryItem = {
   id: string;
   file_name: string;
@@ -551,7 +553,8 @@ function buildChannelData(rows: Record<string, unknown>[]) {
 }
 function buildJasoBotInsights(
   rows: Record<string, unknown>[],
-  stockMin: number
+  stockMin: number,
+  commercialRecommendations: CommercialRecommendation[] = []
 ) {
   if (!rows.length) {
     return {
@@ -602,7 +605,9 @@ function buildJasoBotInsights(
     .sort((a, b) => a.stock - b.stock)
     .slice(0, 3);
 
-  const recomendaciones: string[] = [];
+  const recomendaciones: string[] = commercialRecommendations.map(
+  (item) => `${item.title}: ${item.message}`
+);
   const productosOrdenados = [...ventasPorProducto.entries()].sort((a, b) => b[1] - a[1]);
 
   let promoWhatsApp = "";
@@ -632,24 +637,6 @@ function buildJasoBotInsights(
     promoWhatsApp =
       "Buen día. Tenemos promociones especiales disponibles. escríbenos para conocer las mejores opciones para ti.";
   }
-
-  if (productosOrdenados.length > 1) {
-    const top = productosOrdenados[0][0];
-    const bajo = productosOrdenados[productosOrdenados.length - 1][0];
-    recomendaciones.push(`Crea combo: ${top} + ${bajo}`);
-  }
-
-  if (productosCriticos.length > 0) {
-    recomendaciones.push(`Liquida inventario: ${productosCriticos[0].producto}`);
-  }
-
-  if (lowSucursal) {
-    recomendaciones.push(`Activa promoción en ${lowSucursal[0]}`);
-  }
-
-if (topCanal && topCanal[0]) {
-  recomendaciones.push(`Potencia ventas en canal ${topCanal[0]}`);
-}
 
   const nombreProductoTop = topProducto?.[0] ?? "tu producto lder";
   const nombreSucursalTop = topSucursal?.[0] ?? "tu mejor sucursal";
@@ -1982,9 +1969,19 @@ const kpiItems = [
       "Aquí ves cuántos productos tienen pocas unidades disponibles y necesitan revisión.",
   },
 ];
-const jasoBot = useMemo(() => {
-  return buildJasoBotInsights(filteredRows, settings.defaultStockMin);
+const commercialRecommendations = useMemo<CommercialRecommendation[]>(() => {
+  return buildCommercialRecommendations({
+    rows: filteredRows,
+    stockMin: settings.defaultStockMin,
+  });
 }, [filteredRows, settings.defaultStockMin]);
+const jasoBot = useMemo(() => {
+  return buildJasoBotInsights(
+    filteredRows,
+    settings.defaultStockMin,
+    commercialRecommendations
+  );
+}, [filteredRows, settings.defaultStockMin, commercialRecommendations]);
 
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
