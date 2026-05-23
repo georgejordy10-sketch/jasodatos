@@ -120,27 +120,6 @@ export default function RecommendedActionsSection({
                 ))}
               </div>
             ) : null}
-
-            {item.anchorId && !isExportingPdf ? (
-<button
-  type="button"
-  style={styles.button}
-  onClick={() => {
-    if (!item.anchorId) return;
-
-    const target = document.getElementById(item.anchorId);
-
-    if (!target) {
-      console.warn(`No se encontró la sección destino: ${item.anchorId}`);
-      return;
-    }
-
-    target.scrollIntoView({ behavior: "smooth", block: "center" });
-  }}
->
-  Ir al análisis
-</button>
-            ) : null}
           </article>
         ))}
       </div>
@@ -253,10 +232,10 @@ typeButton: {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  minHeight: 25,
-  padding: "0 10px",
+  minHeight: 27,
+  padding: "0 11px",
   borderRadius: 999,
-  background: "#FFFFFF",
+  background: "rgba(109, 126, 219, 0.12)",
   color: "var(--jd-brand-secondary)",
   border: "1px solid var(--jd-border-accent-soft)",
   fontSize: 11,
