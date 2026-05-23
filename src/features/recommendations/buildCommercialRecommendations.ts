@@ -90,12 +90,12 @@ export function buildCommercialRecommendations(
     const [productName, stock] = criticalStockProducts[0];
 
     recommendations.push({
-      id: "liquidar-inventario",
-      type: "liquidar_inventario",
-      title: "Liquidar inventario crítico",
-      message: `${productName} tiene stock bajo o crítico. Conviene activar una salida comercial rápida antes de que pierda tracción.`,
+      id: "reponer-producto-critico",
+type: "reponer_producto",
+title: "Reponer producto crítico",
+message: `${productName} tiene stock bajo frente al mínimo configurado. Conviene revisar disponibilidad y planificar reposición antes de perder ventas.`,
       priority: stock <= 0 ? "alta" : "media",
-      actionLabel: "Ver stock",
+      actionLabel: "Ver inventario",
       anchorId: "stock-en-riesgo",
       evidence: [
         `Stock actual detectado: ${stock}`,
