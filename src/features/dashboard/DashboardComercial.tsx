@@ -563,8 +563,8 @@ function buildJasoBotInsights(
       insights: [
         "Carga un archivo para activar recomendaciones.",
         "JasoAlix analiza tus ventas, inventario y canales.",
-        "Podrs detectar productos lderes y riesgos.",
-        "Tambin sugerir acciones comerciales.",
+"Podrás detectar productos líderes y riesgos.",
+"También sugerirá acciones comerciales.",
       ],
       recomendaciones: [],
       promoWhatsApp:
@@ -607,7 +607,7 @@ function buildJasoBotInsights(
     .slice(0, 3);
 
   const recomendaciones: string[] = commercialRecommendations.map(
-  (item) => `${item.title}: ${item.message}`
+  (item) => `${item.title}. ${item.message}`
 );
   const productosOrdenados = [...ventasPorProducto.entries()].sort((a, b) => b[1] - a[1]);
 
@@ -639,21 +639,21 @@ function buildJasoBotInsights(
       "Buen día. Tenemos promociones especiales disponibles. escríbenos para conocer las mejores opciones para ti.";
   }
 
-  const nombreProductoTop = topProducto?.[0] ?? "tu producto lder";
+  const nombreProductoTop = topProducto?.[0] ?? "tu producto líder";
   const nombreSucursalTop = topSucursal?.[0] ?? "tu mejor sucursal";
   const nombreSucursalBaja = lowSucursal?.[0] ?? "tu sucursal con menor participación";
   const nombreCanalTop = topCanal?.[0] ?? "tu canal principal";
 
-  let mensajePrincipal = `Prioriza ${nombreProductoTop} como producto ancla y ejectalo primero en ${nombreSucursalTop} para acelerar ventas en ${nombreCanalTop}.`;
+  let mensajePrincipal = `Prioriza ${nombreProductoTop} como producto ancla y ejecútalo primero en ${nombreSucursalTop} para acelerar ventas en ${nombreCanalTop}.`;
 
-  if (tipoPromo === "liquidación" && productosCriticos.length > 0) {
+  if (tipoPromo === "liquidacion" && productosCriticos.length > 0) {
     mensajePrincipal = `Detectamos presión de inventario en ${productosCriticos[0].producto}. La mejor jugada ahora es activar una salida comercial rápida antes de que el inventario siga perdiendo tracción.`;
   } else if (tipoPromo === "impulso_sucursal") {
     mensajePrincipal = `Existe una oportunidad clara para recuperar desempeño en ${nombreSucursalBaja}. Activa una promoción enfocada con ${nombreProductoTop} para levantar conversión en esa sucursal.`;
   } else if (tipoPromo === "combo" && productosOrdenados.length > 1) {
     const top = productosOrdenados[0][0];
     const bajo = productosOrdenados[productosOrdenados.length - 1][0];
-    mensajePrincipal = `La mejor accin inmediata es empaquetar ${top} con ${bajo}. Ese combo puede aumentar ticket promedio y mover productos con menor traccin.`;
+    mensajePrincipal = `La mejor acción inmediata es empaquetar ${top} con ${bajo}. Ese combo puede aumentar ticket promedio y mover productos con menor tracción.`;
   } else if (tipoPromo === "producto_estrella") {
     mensajePrincipal = `Tu mejor palanca comercial hoy es ${nombreProductoTop}. Conviene destacarlo como producto ancla y usarlo para empujar más ventas en ${nombreCanalTop}.`;
   }
@@ -661,7 +661,7 @@ function buildJasoBotInsights(
   const insights: string[] = [];
 
   insights.push(`Enfócate en: ${nombreProductoTop}`);
-  insights.push(`Sucursal lder: ${nombreSucursalTop}`);
+  insights.push(`Sucursal líder: ${nombreSucursalTop}`);
   insights.push(`Sucursal a reforzar: ${nombreSucursalBaja}`);
   if (nombreCanalTop && nombreCanalTop !== "tu canal principal") {
   insights.push(`Canal con mayor aporte: ${nombreCanalTop}`);
