@@ -61,7 +61,7 @@ function Card({
     >
       <div style={styles.cardHeader}>
         <div>
-          <span style={styles.eyebrow}>Análisis visual</span>
+          <span style={styles.eyebrow}>Análisis comercial</span>
           <h3 style={styles.sectionTitle}>{title}</h3>
           {subtitle ? <p style={styles.sectionSubtitle}>{subtitle}</p> : null}
         </div>
@@ -193,7 +193,7 @@ export default function SalesChartsSection({
                   style={styles.compareButton}
                   onClick={onCompareProducts}
                 >
-                  Comparar
+                  Comparar productos
                 </button>
 
                 <button

@@ -139,7 +139,7 @@ export default function SecondaryChartsSection({
     <section style={styles.secondaryCharts}>
       <div id="stock-en-riesgo" style={{ scrollMarginTop: 120 }}>
         <Card
-          title="Inventario en observación"
+          title="Stock en riesgo"
           subtitle={`Productos bajo seguimiento · mínimo configurado: ${defaultStockMin}`}
           action={
             <button type="button" style={styles.viewAllButton} onClick={onOpenStockDetails}>
@@ -167,9 +167,9 @@ export default function SecondaryChartsSection({
                     <td style={styles.tdCompact}>No disponible</td>
                     <td style={styles.tdCompact}>{defaultStockMin}</td>
                     <td style={styles.tdCompact}>
-                      <span style={{ ...styles.statusPill, ...getStockStateStyle("Sin inventario") }}>
-                        Sin inventario cargado
-                      </span>
+                     <span style={{ ...styles.statusPill, ...getStockStateStyle("Sin inventario") }}>
+                      Sin inventario cargado
+                     </span>
                     </td>
                     <td style={styles.tdCompact}>-</td>
                   </tr>
