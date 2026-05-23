@@ -27,6 +27,7 @@ import SecondaryChartsSection from "@/features/dashboard/SecondaryChartsSection"
 import UpgradeBanner from "@/features/subscription/UpgradeBanner";
 import { buildCommercialRecommendations } from "@/features/recommendations/buildCommercialRecommendations";
 import type { CommercialRecommendation } from "@/features/recommendations/types";
+import RecommendedActionsSection from "@/features/dashboard/RecommendedActionsSection";
 type DashboardUploadHistoryItem = {
   id: string;
   file_name: string;
@@ -2189,6 +2190,10 @@ return (
 
 <KpiSection items={kpiItems} isExportingPdf={isExportingPdf} />
 <AlertsSection alerts={alerts} isExportingPdf={isExportingPdf} />
+<RecommendedActionsSection
+  recommendations={commercialRecommendations}
+  isExportingPdf={isExportingPdf}
+/>
 
 {dashboardUploadHistory.length > 0 ? (
   <section
