@@ -42,6 +42,18 @@ export default function RecommendedActionsSection({
   recommendations,
   isExportingPdf = false,
 }: Props) {
+      function irAlAnalisis(sectionId?: string) {
+    if (!sectionId) return;
+
+    const section = document.getElementById(sectionId);
+
+    if (!section) {
+      console.warn(`No se encontró la sección: ${sectionId}`);
+      return;
+    }
+
+    section.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
   if (!recommendations.length) {
     return (
       <section style={styles.wrapper}>
@@ -82,7 +94,17 @@ export default function RecommendedActionsSection({
                 Prioridad {getPriorityLabel(item.priority)}
               </span>
 
-              <span style={styles.typeBadge}>{item.actionLabel}</span>
+              {item.anchorId && !isExportingPdf ? (
+  <button
+    type="button"
+    style={styles.typeButton}
+    onClick={() => irAlAnalisis(item.anchorId ?? undefined)}
+  >
+    {item.actionLabel}
+  </button>
+) : (
+  <span style={styles.typeBadge}>{item.actionLabel}</span>
+)}
             </div>
 
             <h4 style={styles.cardTitle}>{item.title}</h4>
@@ -100,17 +122,24 @@ export default function RecommendedActionsSection({
             ) : null}
 
             {item.anchorId && !isExportingPdf ? (
-              <button
-                type="button"
-                style={styles.button}
-                onClick={() => {
-                  document
-                    .getElementById(item.anchorId ?? "")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-              >
-                Ir al análisis
-              </button>
+<button
+  type="button"
+  style={styles.button}
+  onClick={() => {
+    if (!item.anchorId) return;
+
+    const target = document.getElementById(item.anchorId);
+
+    if (!target) {
+      console.warn(`No se encontró la sección destino: ${item.anchorId}`);
+      return;
+    }
+
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+  }}
+>
+  Ir al análisis
+</button>
             ) : null}
           </article>
         ))}
@@ -220,6 +249,21 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 11,
     fontWeight: 900,
   },
+typeButton: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 25,
+  padding: "0 10px",
+  borderRadius: 999,
+  background: "#FFFFFF",
+  color: "var(--jd-brand-secondary)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  fontSize: 11,
+  fontWeight: 750,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+},
 cardTitle: {
   margin: 0,
   color: "var(--jd-text-main)",
