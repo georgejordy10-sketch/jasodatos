@@ -45,9 +45,9 @@ function KpiCard({
             onFocus={() => setShowHelp(true)}
             onBlur={() => setShowHelp(false)}
             onClick={() => setShowHelp((current) => !current)}
-            aria-label={`CÃ³mo leer este dato: ${title}`}
+            aria-label={`Cómo leer este dato: ${title}`}
           >
-            CÃ³mo leer
+            Cómo leer
 
             {showHelp ? (
               <span style={styles.kpiTooltip}>{helpText}</span>
