@@ -177,7 +177,7 @@ const styles: Record<string, CSSProperties> = {
 detailCardPro: {
   background:
     "linear-gradient(180deg, rgba(109,126,219,0.10) 0%, rgba(241,244,255,0.96) 42%, #FFFFFF 100%)",
-  color: "#0F172A",
+  color: "var(--jd-text-main)",
   borderRadius: 22,
   padding: 18,
   border: "1px solid rgba(109,126,219,0.16)",
@@ -211,14 +211,14 @@ detailCardPro: {
     margin: 0,
     fontSize: 21,
     fontWeight: 950,
-    color: "#0F172A",
+    color: "var(--jd-text-main)",
     letterSpacing: "-0.04em",
     lineHeight: 1.08,
   },
 
   subtitle: {
     margin: "4px 0 0",
-    color: "#475569",
+    color: "var(--jd-text-secondary)",
     fontSize: 13,
     fontWeight: 650,
     lineHeight: 1.35,
@@ -233,7 +233,7 @@ detailCardPro: {
   },
 
   detailTopLabel: {
-    color: "#475569",
+    color: "var(--jd-text-secondary)",
     fontSize: 12,
     fontWeight: 850,
   },
@@ -244,7 +244,7 @@ detailCardPro: {
     borderRadius: 999,
     border: "1px solid rgba(61,44,141,0.12)",
     background: "rgba(255,255,255,0.92)",
-    color: "#0F172A",
+    color: "var(--jd-text-main)",
     padding: "0 14px",
     outline: "none",
     fontWeight: 750,
@@ -253,7 +253,7 @@ detailCardPro: {
 
   pageSizeSelect: {
     background: "rgba(255,255,255,0.92)",
-    color: "#0F172A",
+    color: "var(--jd-text-main)",
     border: "1px solid rgba(61,44,141,0.12)",
     borderRadius: 999,
     minHeight: 38,
@@ -294,7 +294,7 @@ detailCardPro: {
   },
 
   pageIndicator: {
-    color: "#475569",
+    color: "var(--jd-text-secondary)",
     fontSize: 12,
     fontWeight: 850,
   },
@@ -318,7 +318,7 @@ detailTableShell: {
     width: "100%",
     minWidth: 1200,
     borderCollapse: "collapse",
-    color: "#0F172A",
+    color: "var(--jd-text-main)",
     fontSize: 13,
     background: "transparent",
   },
@@ -341,7 +341,7 @@ dataTh: {
 
   dataTd: {
     padding: "10px 10px",
-    color: "#1E293B",
+    color: "var(--jd-text-secondary)",
     borderRight: "1px solid rgba(61,44,141,0.05)",
     borderBottom: "1px solid rgba(61,44,141,0.06)",
     whiteSpace: "nowrap",
@@ -352,7 +352,7 @@ dataTh: {
 
   dataTdStrong: {
     padding: "10px 10px",
-    color: "#0F172A",
+    color: "var(--jd-text-main)",
     borderRight: "1px solid rgba(61,44,141,0.05)",
     borderBottom: "1px solid rgba(61,44,141,0.06)",
     whiteSpace: "nowrap",
@@ -363,7 +363,7 @@ dataTh: {
 
 detailBottomBar: {
   padding: "10px 12px",
-  color: "#475569",
+  color: "var(--jd-text-secondary)",
   fontSize: 12,
   fontWeight: 800,
   background:
