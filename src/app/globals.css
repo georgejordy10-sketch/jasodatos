@@ -1,4 +1,93 @@
 :root {
+    /* =========================================================
+     JasoDatos — Sistema visual oficial
+     ========================================================= */
+
+  /* Marca principal */
+  --jd-brand-primary: #2e0d4f;
+  --jd-brand-secondary: #3d2c8d;
+  --jd-brand-tertiary: #283593;
+
+  /* Acento vivo aprobado */
+  --jd-accent-main: #6d7edb;
+  --jd-accent-2: #6271d1;
+  --jd-accent-3: #5965c3;
+  --jd-accent-4: #5657b2;
+
+  /* Textos */
+  --jd-text-main: #0f172a;
+  --jd-text-secondary: #475569;
+  --jd-text-muted: #64748b;
+  --jd-text-inverse: #f8fafc;
+
+  /* Fondos base */
+  --jd-page-bg: linear-gradient(
+    180deg,
+    #f8faff 0%,
+    #eef3ff 45%,
+    #ffffff 100%
+  );
+
+  --jd-surface-main: #ffffff;
+  --jd-surface-soft: #f8faff;
+  --jd-surface-blue: #eef3ff;
+
+  /* Gradiente oscuro de marca: sidebar / hero / zonas de identidad */
+  --jd-gradient-brand-dark: linear-gradient(
+    180deg,
+    var(--jd-brand-secondary) 0%,
+    #35227b 42%,
+    var(--jd-brand-primary) 100%
+  );
+
+  /* Gradiente de acento: botones, headers de tabla, barras activas */
+  --jd-gradient-accent: linear-gradient(
+    135deg,
+    var(--jd-accent-main) 0%,
+    var(--jd-accent-2) 42%,
+    var(--jd-accent-3) 72%,
+    var(--jd-accent-4) 100%
+  );
+
+  /* Contenedores principales con #6D7EDB suavizado */
+  --jd-gradient-container: linear-gradient(
+    180deg,
+    rgba(109, 126, 219, 0.22) 0%,
+    rgba(109, 126, 219, 0.12) 30%,
+    rgba(255, 255, 255, 0.98) 100%
+  );
+
+  /* Superficie interna de tablas */
+  --jd-gradient-table-surface: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.90) 0%,
+    rgba(244, 246, 255, 0.96) 100%
+  );
+
+  /* Bordes */
+  --jd-border-accent: rgba(109, 126, 219, 0.22);
+  --jd-border-accent-soft: rgba(109, 126, 219, 0.16);
+  --jd-border-accent-subtle: rgba(109, 126, 219, 0.10);
+  --jd-border-table: rgba(61, 44, 141, 0.06);
+
+  /* Sombras */
+  --jd-shadow-card: 0 16px 36px rgba(46, 13, 79, 0.07);
+  --jd-shadow-card-strong: 0 22px 48px rgba(46, 13, 79, 0.18);
+  --jd-shadow-button: 0 12px 24px rgba(109, 126, 219, 0.20);
+
+  /* Estados */
+  --jd-success: #15803d;
+  --jd-success-soft: rgba(22, 163, 74, 0.10);
+
+  --jd-warning: #b45309;
+  --jd-warning-soft: rgba(245, 158, 11, 0.12);
+
+  --jd-danger: #b91c1c;
+  --jd-danger-soft: rgba(220, 38, 38, 0.10);
+
+  --jd-info: #4f5fc1;
+  --jd-info-soft: rgba(109, 126, 219, 0.14);
+  /*******/
   --jd-brand-primary: #2e0d4f;
   --jd-brand-secondary: #3d2c8d;
   --jd-brand-tertiary: #283593;
@@ -433,4 +522,5 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
 }
