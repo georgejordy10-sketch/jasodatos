@@ -1437,7 +1437,7 @@ async function exportarExcel() {
 const metadataRows = [
   ["Reporte comercial"],
   ["Negocio", businessName],
-  ["Fecha de generacin", fechaGeneracion],
+  ["Fecha de generación", fechaGeneracion],
   ["Moneda", currencyCode],
   ["Formato regional", locale],
   ["Canales activos", activeChannelsLabel],
@@ -1457,10 +1457,10 @@ const metadataRows = [
     "Bodega",
     "SKU",
     "Producto",
-    "Tipo_Movimiento",
+    "Tipo de movimiento",
     "Cantidad",
-    "Costo_Unitario",
-    "Precio_Unitario",
+    "Costo unitario",
+    "Precio unitario",
     "Canal",
     "Inventario",
   ];
@@ -1604,7 +1604,7 @@ const metadataRows = [
     { width: 12 },
   ];
   if (dashboardUploadHistory.length > 0) {
-    const historyWorksheet = workbook.addWorksheet("Historial de analisis", {
+    const historyWorksheet = workbook.addWorksheet("Historial de análisis", {
       views: [{ state: "frozen", ySplit: 1 }],
     });
 
@@ -1696,7 +1696,7 @@ const metadataRows = [
     ];
 
     if (dashboardHistorySummary) {
-      const comparisonWorksheet = workbook.addWorksheet("Comparativo historico", {
+      const comparisonWorksheet = workbook.addWorksheet("Comparativo histórico", {
         views: [{ state: "frozen", ySplit: 1 }],
       });
 
@@ -1705,7 +1705,7 @@ const metadataRows = [
         "Valor actual",
         "Valor anterior",
         "Resultado",
-        "Observacion",
+        "Observación",
       ]);
 
       comparisonWorksheet.addRow([
