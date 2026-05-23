@@ -113,17 +113,17 @@ export default function DetailTableSection({
           <table style={styles.dataTablePro}>
             <thead>
               <tr>
-                <th style={styles.dataTh}>fecha</th>
-                <th style={styles.dataTh}>sucursal</th>
-                <th style={styles.dataTh}>bodega</th>
-                <th style={styles.dataTh}>sku</th>
-                <th style={styles.dataTh}>producto</th>
-                <th style={styles.dataTh}>tipo_movimiento</th>
-                <th style={styles.dataTh}>cantidad</th>
-                <th style={styles.dataTh}>costo_unitario</th>
-                <th style={styles.dataTh}>precio_unitario</th>
-                <th style={styles.dataTh}>canal</th>
-                <th style={styles.dataTh}>inventario</th>
+<th style={styles.dataTh}>Fecha</th>
+<th style={styles.dataTh}>Local</th>
+<th style={styles.dataTh}>Bodega</th>
+<th style={styles.dataTh}>Código</th>
+<th style={styles.dataTh}>Producto</th>
+<th style={styles.dataTh}>Movimiento</th>
+<th style={styles.dataTh}>Cantidad</th>
+<th style={styles.dataTh}>Costo unitario</th>
+<th style={styles.dataTh}>Precio unitario</th>
+<th style={styles.dataTh}>Canal</th>
+<th style={styles.dataTh}>Inventario</th>
               </tr>
             </thead>
 
