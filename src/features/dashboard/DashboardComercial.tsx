@@ -1270,7 +1270,7 @@ const productComparisonInsight = useMemo(() => {
 
     const diffPct = ((leaderValue - secondValue) / secondValue) * 100;
 
-    return `${leader.producto} es el producto con mejor venta. está ${diffPct.toFixed(
+    return `${leader.producto} es el producto con mejor venta. Está ${diffPct.toFixed(
       0
     )}% por encima de ${second.producto}, por lo que puede usarse como gancho comercial para impulsar productos de menor rotación.`;
   }
@@ -2763,7 +2763,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
             }}
           />
           {producto}
-          <span style={styles.productChipClose}></span>
+          <span style={styles.productChipClose}>×</span>
         </button>
       ))}
     </div>
@@ -2828,7 +2828,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
 <th style={styles.productComparisonTh}>Costo promedio</th>
 <th style={styles.productComparisonTh}>Ganancia estimada</th>
 <th style={styles.productComparisonTh}>Inventario disponible</th>
-<th style={styles.productComparisonTh}>Movimiento</th>
+<th style={styles.productComparisonTh}>Rotación</th>
 <th style={styles.productComparisonTh}>Días disponibles</th>
 <th style={styles.productComparisonTh}>Rentabilidad</th>
 <th style={styles.productComparisonTh}>Cambio en ventas</th>
