@@ -157,8 +157,20 @@ if (
       productName: topProduct[0],
     });
   }
+ const hasEnoughBranches = orderedBranches.length >= 2;
+const topBranchShare =
+  topBranch && totalSales > 0 ? (topBranch[1] / totalSales) * 100 : 0;
+const lowBranchShare =
+  lowBranch && totalSales > 0 ? (lowBranch[1] / totalSales) * 100 : 0;
+const hasClearBranchGap = topBranchShare - lowBranchShare >= 20;
 
-  if (lowBranch && topBranch && lowBranch[0] !== topBranch[0]) {
+if (
+  hasEnoughBranches &&
+  hasClearBranchGap &&
+  lowBranch &&
+  topBranch &&
+  lowBranch[0] !== topBranch[0]
+) {
     recommendations.push({
       id: "impulsar-sucursal",
       type: "impulsar_sucursal",
@@ -167,10 +179,10 @@ if (
       priority: "media",
       actionLabel: "Ver sucursal",
       anchorId: "benchmarking-sucursales",
-      evidence: [
-        `${topBranch[0]} lidera el desempeño comercial.`,
-        `${lowBranch[0]} tiene el menor aporte relativo.`,
-      ],
+evidence: [
+  `${topBranch[0]} concentra ${round(topBranchShare)}% de las ventas.`,
+  `${lowBranch[0]} concentra ${round(lowBranchShare)}% de las ventas.`,
+],
       branchName: lowBranch[0],
     });
   }
