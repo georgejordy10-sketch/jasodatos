@@ -22,7 +22,7 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanFeature[]> = {
 export const PLAN_FEATURE_LABELS: Record<PlanFeature, string> = {
   alerts: "Alertas del negocio",
   benchmarking: "Desempeño entre sucursales",
-  assistant: "JasoBot Comercial",
+  assistant: "JasoAlix comercial",
   pdf_export: "Exportación a PDF",
   whatsapp_actions: "Acciones de WhatsApp",
 };
