@@ -114,9 +114,9 @@ export default function RecommendedActionsSection({
               <div style={styles.evidenceBox}>
                 <span style={styles.evidenceTitle}>Por qué se recomienda</span>
                 {item.evidence.slice(0, 2).map((evidence) => (
-                  <div key={evidence} style={styles.evidenceItem}>
-                    • {evidence}
-                  </div>
+<div key={evidence} style={styles.evidenceItem}>
+  {"\u2022"} {evidence}
+</div>
                 ))}
               </div>
             ) : null}
