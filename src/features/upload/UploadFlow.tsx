@@ -1219,9 +1219,9 @@ title={
   <div style={dashboardLayerStyle}>
          <div style={dashboardLayerHeaderStyle}>
   <div>
-    <strong style={dashboardLayerTitleStyle}>Dashboard generado</strong>
+    <strong style={dashboardLayerTitleStyle}>Dashboard listo</strong>
     <p style={dashboardLayerSubtitleStyle}>
-      El archivo fue procesado correctamente. Ahora puedes revisar los indicadores comerciales del negocio.
+      Archivo procesado correctamente.
     </p>
   </div>
 
@@ -1243,11 +1243,10 @@ title={
             <div style={historyComparisonSectionStyle}>
               <div style={historyComparisonHeaderStyle}>
                 <h3 style={historyComparisonTitleStyle}>
-                  Comparación rápida con la carga anterior
-                </h3>
-
+  Comparativo rápido
+</h3>
                 <p style={historyComparisonSubtitleStyle}>
-                  Lectura comparativa local basada en el último archivo procesado en este navegador.
+                  Comparación local con cargas anteriores de este navegador.
                 </p>
                 {selectedUploadComparison ? (
   <div style={historyComparisonReferenceStyle}>
