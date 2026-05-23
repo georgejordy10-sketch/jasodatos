@@ -44,6 +44,7 @@ const profileId: ProfileId = "comercial";
   const [initialData, setInitialData] = useState<ReadDatasetInitialResult | null>(null);
   const [confirmedMappings, setConfirmedMappings] = useState<ConfirmedMapping[]>([]);
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
+  const [activeUploadView, setActiveUploadView] = useState("general");
 const [uploadHistory, setUploadHistory] = useState<UploadHistoryItem[]>([]);
 const [historyLoaded, setHistoryLoaded] = useState(false);
 useEffect(() => {
@@ -56,6 +57,33 @@ useEffect(() => {
     setHistoryLoaded(true);
   }
 }, []);
+useEffect(() => {
+  function readUploadViewFromHash() {
+    const hash = window.location.hash.replace("#", "");
+
+    if (
+      hash === "resumen" ||
+      hash === "ventas" ||
+      hash === "inventario" ||
+      hash === "productos" ||
+      hash === "alertas" ||
+      hash === "reportes" ||
+      hash === "comparativo"
+    ) {
+      setActiveUploadView(hash);
+      return;
+    }
+
+    setActiveUploadView("general");
+  }
+
+  readUploadViewFromHash();
+
+  window.addEventListener("hashchange", readUploadViewFromHash);
+  return () => window.removeEventListener("hashchange", readUploadViewFromHash);
+}, []);
+const isUploadGeneralView = activeUploadView === "general";
+const isUploadComparativoView = activeUploadView === "comparativo";
 const [lastUploadComparison, setLastUploadComparison] = useState<{
   current: UploadHistoryItem;
   previous: UploadHistoryItem;
@@ -411,7 +439,6 @@ function clearUploadHistory() {
   try {
     window.localStorage.removeItem(UPLOAD_HISTORY_STORAGE_KEY);
   } catch {
-    // No hacemos nada si el navegador bloquea localStorage.
   }
 
   setUploadHistory([]);
@@ -1219,29 +1246,38 @@ title={
       ) : null}
         {processedData ? (
   <div style={dashboardLayerStyle}>
-         <div style={dashboardLayerHeaderStyle}>
-  <div>
-    <strong style={dashboardLayerTitleStyle}>Dashboard listo</strong>
-    <p style={dashboardLayerSubtitleStyle}>
-      Archivo procesado correctamente.
-    </p>
-  </div>
+      {isUploadGeneralView ? (
+  <div style={dashboardLayerHeaderStyle}>
+    <div>
+      <strong style={dashboardLayerTitleStyle}>Dashboard listo</strong>
+      <p style={dashboardLayerSubtitleStyle}>
+        Archivo procesado correctamente.
+      </p>
+    </div>
 
-  <button
-    type="button"
-    onClick={resetFlow}
-    style={dashboardLayerBackButtonStyle}
-  >
-    Cargar otro archivo
-  </button>
-</div>
+    <button
+      type="button"
+      onClick={resetFlow}
+      style={dashboardLayerBackButtonStyle}
+    >
+      Cargar otro archivo
+    </button>
+  </div>
+) : null}
           {processedData.rowIssues.length > 0 ? (
             <div style={analysisWarningStyle}>
               Se detectaron errores en {processedData.rowIssues.length} filas. Puedes revisar el archivo o continuar solo con las filas válidas.
             </div>
           ) : null}
-
-{lastUploadComparison ? (
+        {processedData.analytics && processedData.profileId === "comercial" ? (
+<AppShell
+  businessName="Panel comercial"
+  periodLabel="Carga y análisis"
+  planName="Análisis comercial"
+  planStatus="active"
+  showPlanBanner={false}
+>
+  {(isUploadGeneralView || isUploadComparativoView) && lastUploadComparison ? (
   <div id="comparativo" style={historyComparisonSectionStyle}>
               <div style={historyComparisonHeaderStyle}>
                 <h3 style={historyComparisonTitleStyle}>
@@ -1351,19 +1387,13 @@ title={
             </div>
           ) : null}
 
-        {processedData.analytics && processedData.profileId === "comercial" ? (
-<AppShell
-  businessName="Panel comercial"
-  periodLabel="Carga y análisis"
-  planName="Análisis comercial"
-  planStatus="active"
-  showPlanBanner={false}
->
-    <DashboardComercial
-      processedData={processedData}
-      onClearFile={resetFlow}
-      onSelectAnotherFile={resetFlow}
-    />
+{!isUploadComparativoView ? (
+  <DashboardComercial
+    processedData={processedData}
+    onClearFile={resetFlow}
+    onSelectAnotherFile={resetFlow}
+  />
+) : null}
   </AppShell>
 ) : null}
         </div>
@@ -1547,19 +1577,23 @@ const historyMetricValueStyle: React.CSSProperties = {
 };
 
 const historyComparisonSectionStyle: React.CSSProperties = {
+  borderRadius: 24,
+  padding: 20,
+  background: "var(--jd-gradient-container)",
+  border: "1px solid var(--jd-border-accent)",
+  boxShadow: "var(--jd-shadow-card)",
   display: "grid",
-  gap: 10,
-  margin: "12px 12px 4px",
+  gap: 16,
+  scrollMarginTop: 96,
 };
-
 const historyComparisonHeaderStyle: React.CSSProperties = {
   display: "grid",
-  gap: 2,
+  gap: 6,
 };
 
 const historyComparisonTitleStyle: React.CSSProperties = {
   margin: 0,
-  color: "#1D4ED8",
+  color: "var(--jd-text-main)",
   fontSize: 24,
   fontWeight: 900,
   lineHeight: 1.15,
@@ -1567,97 +1601,93 @@ const historyComparisonTitleStyle: React.CSSProperties = {
 };
 const historyComparisonSubtitleStyle: React.CSSProperties = {
   margin: 0,
-  color: "#475569",
+  color: "var(--jd-text-secondary)",
   fontSize: 13,
-  lineHeight: 1.35,
+  lineHeight: 1.4,
+  fontWeight: 650,
 };
 const historyComparisonReferenceStyle: React.CSSProperties = {
-  color: "#334155",
-  fontSize: 12,
-  fontWeight: 600,
-  lineHeight: 1.35,
-  background: "#ffffff",
-  border: "1px solid #dbeafe",
-  borderRadius: 999,
-  padding: "6px 10px",
   width: "fit-content",
-  maxWidth: "100%",
+  borderRadius: 999,
+  padding: "7px 12px",
+  background: "rgba(255,255,255,0.86)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  color: "var(--jd-text-main)",
+  fontSize: 12,
+  fontWeight: 750,
 };
 const historyComparisonGridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 180px))",
-  gap: 8,
-  justifyContent: "start",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: 12,
 };
-
 const historyComparisonCardStyle: React.CSSProperties = {
-  background: "linear-gradient(135deg, #202969 0%, #2B2F86 100%)",
-  color: "#FFFFFF",
-  borderRadius: 12,
-  padding: "10px 12px",
-  border: "1px solid rgba(255,255,255,0.12)",
-  boxShadow: "0 6px 14px rgba(17,24,39,0.10)",
+  borderRadius: 18,
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "var(--jd-gradient-table-surface)",
+  padding: 16,
   display: "grid",
-  gap: 4,
-  minHeight: 70,
+  gap: 6,
 };
 const historyComparisonLabelStyle: React.CSSProperties = {
-  color: "#D3DAFF",
-  fontSize: 11,
-  fontWeight: 700,
+  color: "var(--jd-text-secondary)",
+  fontSize: 12,
+  fontWeight: 850,
 };
 
 const historyComparisonValueStyle: React.CSSProperties = {
-  color: "#FFFFFF",
-  fontSize: 18,
-  fontWeight: 800,
-  lineHeight: 1,
+  color: "var(--jd-text-main)",
+  fontSize: 24,
+  fontWeight: 950,
+  letterSpacing: "-0.02em",
 };
 
 const historyComparisonFootStyle: React.CSSProperties = {
-  color: "#C0C9FF",
-  fontSize: 11,
-  fontWeight: 600,
+  color: "var(--jd-text-secondary)",
+  fontSize: 12,
+  fontWeight: 750,
 };
 const historyComparisonModeStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 8,
   flexWrap: "wrap",
-  marginTop: 4,
 };
-
 const historyComparisonModeLabelStyle: React.CSSProperties = {
-  color: "#475569",
+  color: "var(--jd-text-main)",
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 900,
 };
 
 const historyComparisonModeButtonStyle: React.CSSProperties = {
-  border: "1px solid #c7d2fe",
-  background: "#ffffff",
-  color: "#334155",
+  minHeight: 34,
   borderRadius: 999,
-  padding: "6px 10px",
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "rgba(255,255,255,0.86)",
+  color: "var(--jd-brand-secondary)",
+  padding: "0 14px",
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 850,
   cursor: "pointer",
 };
 
 const historyComparisonModeButtonActiveStyle: React.CSSProperties = {
-  background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
-  color: "#ffffff",
-  border: "1px solid transparent",
+  background:
+    "linear-gradient(135deg, #4F46E5 0%, #3D2C8D 65%, #2E0D4F 100%)",
+  border: "1px solid rgba(79,70,229,0.22)",
+  color: "#FFFFFF",
+  boxShadow: "0 10px 20px rgba(61,44,141,0.16)",
 };
 
 const historyComparisonEmptyStyle: React.CSSProperties = {
-  border: "1px dashed #c7d2fe",
-  borderRadius: 12,
-  padding: 12,
-  color: "#475569",
-  background: "#f8faff",
+  borderRadius: 18,
+  border: "1px dashed var(--jd-border-accent-soft)",
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(241,244,255,0.88) 100%)",
+  color: "var(--jd-text-secondary)",
+  padding: 16,
   fontSize: 13,
-  fontWeight: 600,
+  fontWeight: 700,
 };
 
 const analysisResultCompactStyle: React.CSSProperties = {

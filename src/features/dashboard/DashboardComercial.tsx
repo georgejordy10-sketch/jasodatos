@@ -692,6 +692,14 @@ type BusinessCrmData = {
   commercial_notes: string | null;
   last_contact_at: string | null;
 };
+type DashboardSectionView =
+  | "general"
+  | "resumen"
+  | "ventas"
+  | "inventario"
+  | "productos"
+  | "alertas"
+  | "reportes";
 export default function DashboardComercial({
   processedData,
   onClearFile,
@@ -730,6 +738,8 @@ const [dashboardUploadHistory, setDashboardUploadHistory] = useState<
   DashboardUploadHistoryItem[]
 >([]);
 const [showFullUploadHistory, setShowFullUploadHistory] = useState(false);
+const [activeSectionView, setActiveSectionView] =
+  useState<DashboardSectionView>("general");
 const dashboardHistorySummary = useMemo(() => {
   const [latest, previous] = dashboardUploadHistory;
 
@@ -827,6 +837,34 @@ useEffect(() => {
     isMounted = false;
   };
 }, [currentBusinessSlug]);
+useEffect(() => {
+  function readSectionFromHash() {
+    const hash = window.location.hash.replace("#", "");
+
+    if (
+      hash === "resumen" ||
+      hash === "ventas" ||
+      hash === "inventario" ||
+      hash === "productos" ||
+      hash === "alertas" ||
+      hash === "reportes"
+    ) {
+      setActiveSectionView(hash);
+      return;
+    }
+
+    setActiveSectionView("general");
+  }
+
+  readSectionFromHash();
+
+  window.addEventListener("hashchange", readSectionFromHash);
+  return () => window.removeEventListener("hashchange", readSectionFromHash);
+}, []);
+function shouldShowSection(section: DashboardSectionView) {
+  return activeSectionView === "general" || activeSectionView === section;
+}
+const isGeneralView = activeSectionView === "general";
 useEffect(() => {
   let cancelled = false;
 
@@ -2084,18 +2122,20 @@ function openSalesWhatsapp() {
 return (
   <div id="dashboard-export">
     <div style={styles.page}>
-<HeroHeader
-  businessName={businessDisplayName}
-  filteredCount={filteredRows.length}
-  fileName={processedData.fileName}
-  planLabel={planLabel}
-  onSelectAnotherFile={onSelectAnotherFile}
-  onExportExcel={exportarExcel}
-  onClearFile={onClearFile}
-  onOpenPlans={() => setPlansOpen(true)}
-  onOpenSettings={() => setSettingsOpen(true)}
-/>
-{businessLocationLabel ? (
+{isGeneralView ? (
+  <HeroHeader
+    businessName={businessDisplayName}
+    filteredCount={filteredRows.length}
+    fileName={processedData.fileName}
+    planLabel={planLabel}
+    onSelectAnotherFile={onSelectAnotherFile}
+    onExportExcel={exportarExcel}
+    onClearFile={onClearFile}
+    onOpenPlans={() => setPlansOpen(true)}
+    onOpenSettings={() => setSettingsOpen(true)}
+  />
+) : null}
+{isGeneralView && businessLocationLabel ? (
   <div style={styles.businessLocationBar}>
     <span style={styles.businessLocationLabel}>Ubicación del negocio</span>
     <strong style={styles.businessLocationValue}>
@@ -2103,31 +2143,33 @@ return (
     </strong>
   </div>
 ) : null}
-{!isExportingPdf ? (
+{isGeneralView && !isExportingPdf ? (
   <UpgradeBanner
     currentPlan={currentPlan}
     planLabel={planLabel}
     onOpenPlans={() => setPlansOpen(true)}
   />
 ) : null}
-{businessContextMessage ? (
+{isGeneralView && businessContextMessage ? (
   <div style={styles.businessContextWarning}>
     {businessContextMessage}
   </div>
 ) : null}
-<FilterBar
-  selectedSucursal={selectedSucursal}
-  selectedProducto={selectedProducto}
-  sucursalOptions={sucursalOptions}
-  productoOptions={productoOptions}
-  fromDate={fromDate}
-  toDate={toDate}
-  onChangeSucursal={setSelectedSucursal}
-  onChangeProducto={setSelectedProducto}
-  onChangeFromDate={setFromDate}
-  onChangeToDate={setToDate}
-  onClearFilters={clearFilters}
-/>
+{isGeneralView ? (
+  <FilterBar
+    selectedSucursal={selectedSucursal}
+    selectedProducto={selectedProducto}
+    sucursalOptions={sucursalOptions}
+    productoOptions={productoOptions}
+    fromDate={fromDate}
+    toDate={toDate}
+    onChangeSucursal={setSelectedSucursal}
+    onChangeProducto={setSelectedProducto}
+    onChangeFromDate={setFromDate}
+    onChangeToDate={setToDate}
+    onClearFilters={clearFilters}
+  />
+) : null}
 <ProfileSettingsPanel
   open={settingsOpen}
   onClose={() => setSettingsOpen(false)}
@@ -2187,20 +2229,26 @@ return (
     }
   />
 ) : null}
-<div id="resumen" style={{ scrollMarginTop: 96 }}>
-  <KpiSection items={kpiItems} isExportingPdf={isExportingPdf} />
-</div>
+{shouldShowSection("resumen") ? (
+  <div id="resumen" style={{ scrollMarginTop: 96 }}>
+    <KpiSection items={kpiItems} isExportingPdf={isExportingPdf} />
+  </div>
+) : null}
 
-<div id="alertas" style={{ scrollMarginTop: 96 }}>
-  <AlertsSection alerts={alerts} isExportingPdf={isExportingPdf} />
-</div>
+{shouldShowSection("alertas") ? (
+  <div id="alertas" style={{ scrollMarginTop: 96 }}>
+    <AlertsSection alerts={alerts} isExportingPdf={isExportingPdf} />
+  </div>
+) : null}
 
-<RecommendedActionsSection
-  recommendations={commercialRecommendations}
-  isExportingPdf={isExportingPdf}
-/>
+{activeSectionView === "general" ? (
+  <RecommendedActionsSection
+    recommendations={commercialRecommendations}
+    isExportingPdf={isExportingPdf}
+  />
+) : null}
 
-{dashboardUploadHistory.length > 0 ? (  
+{activeSectionView === "general" && dashboardUploadHistory.length > 0 ? (  
 <section
     style={{
   border: "1px solid var(--jd-border-accent)",
@@ -2628,28 +2676,36 @@ color: "var(--jd-brand-secondary)",
     </div>
   </div>
 ) : null}
-<div id="ventas" style={{ scrollMarginTop: 96 }}>
-  <SalesChartsSection
-    tendenciaVentas={tendenciaVentas}
-    topProductos={topProductos}
-    ventasTotales={ventasTotales}
-    axisWidth={axisWidth}
-    tooltipStyle={tooltipStyle}
-    colors={COLORS}
-    formatCompactMoney={formatCompactMoney}
-    formatMoney={(value) =>
-      formatMoney(value, settings.locale, settings.currencyCode)
-    }
-    isExportingPdf={isExportingPdf}
-    onCompareProducts={() => {
-      startProductComparison();
-      focusProductComparison();
-    }}
-    onOpenProductDetails={() => {
-      setDetailModal("products");
-    }}
-  />
-</div>
+{shouldShowSection("ventas") ? (
+  <div id="ventas" style={{ scrollMarginTop: 96 }}>
+    <SalesChartsSection
+      tendenciaVentas={tendenciaVentas}
+      topProductos={topProductos}
+      ventasTotales={ventasTotales}
+      axisWidth={axisWidth}
+      tooltipStyle={tooltipStyle}
+      colors={COLORS}
+      formatCompactMoney={formatCompactMoney}
+      formatMoney={(value) =>
+        formatMoney(value, settings.locale, settings.currencyCode)
+      }
+      isExportingPdf={isExportingPdf}
+     onCompareProducts={() => {
+  startProductComparison();
+  setActiveSectionView("productos");
+  window.location.hash = "productos";
+
+  window.setTimeout(() => {
+    focusProductComparison();
+  }, 80);
+}}
+      onOpenProductDetails={() => {
+        setDetailModal("products");
+      }}
+    />
+  </div>
+) : null}
+{shouldShowSection("productos") ? (
 <section
   id="productos"
   ref={productComparisonRef}
@@ -2967,31 +3023,34 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     </div>
   ) : null}
 </section>
-<div id="inventario" style={{ scrollMarginTop: 96 }}>
-  <SecondaryChartsSection
-    defaultStockMin={settings.defaultStockMin}
-    stockRiskRows={stockRiskRows}
-    activeChannelsCount={activeChannels.length}
-    activeChannelsLabel={activeChannelsLabel}
-    channelResult={channelResult}
-    axisWidth={axisWidth}
-    tooltipStyle={tooltipStyle}
-    colors={COLORS}
-    formatCompactMoney={formatCompactMoney}
-    formatMoney={(value) =>
-      formatMoney(value, settings.locale, settings.currencyCode)
-    }
-    onOpenStockDetails={() => {
-      console.log("ABRIR MODAL INVENTARIO");
-      setDetailModal("stock");
-    }}
-    onOpenChannelDetails={() => {
-      console.log("ABRIR MODAL CHANNELS");
-      setDetailModal("channels");
-    }}
-  />
-</div>
-{settings.showBenchmarking && hasMultipleLocals ? (
+) : null}
+{shouldShowSection("inventario") ? (
+  <div id="inventario" style={{ scrollMarginTop: 96 }}>
+    <SecondaryChartsSection
+      defaultStockMin={settings.defaultStockMin}
+      stockRiskRows={stockRiskRows}
+      activeChannelsCount={activeChannels.length}
+      activeChannelsLabel={activeChannelsLabel}
+      channelResult={channelResult}
+      axisWidth={axisWidth}
+      tooltipStyle={tooltipStyle}
+      colors={COLORS}
+      formatCompactMoney={formatCompactMoney}
+      formatMoney={(value) =>
+        formatMoney(value, settings.locale, settings.currencyCode)
+      }
+      onOpenStockDetails={() => {
+        console.log("ABRIR MODAL INVENTARIO");
+        setDetailModal("stock");
+      }}
+      onOpenChannelDetails={() => {
+        console.log("ABRIR MODAL CHANNELS");
+        setDetailModal("channels");
+      }}
+    />
+  </div>
+) : null}
+{isGeneralView && settings.showBenchmarking && hasMultipleLocals ? (
   canUseBenchmarking ? (
     <>
       {isExportingPdf ? <div style={styles.pdfSpacerBeforeBenchmarking} /> : null}
@@ -3020,7 +3079,8 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     />
   )
 ) : null}
-  {settings.showAssistant &&
+  {isGeneralView &&
+  settings.showAssistant &&
   (canUseAssistant ? (
     <>
       {isExportingPdf ? (
@@ -3177,27 +3237,29 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
       onContactSales={openSalesWhatsapp}
     />
   ))}
-<div id="reportes" style={{ scrollMarginTop: 96 }}>
-  <DetailTableSection
-    searchedRowsCount={searchedRows.length}
-    paginatedRows={paginatedRows}
-    pageSize={pageSize}
-    currentPage={currentPage}
-    totalPages={totalPages}
-    searchTerm={searchTerm}
-    onSearchTermChange={setSearchTerm}
-    onPageSizeChange={setPageSize}
-    onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-    onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-    toDateKey={toDateKey}
-    toText={toText}
-    toNumber={toNumber}
-    formatInt={(value) => formatInt(value)}
-    formatMoney={(value) =>
-      formatMoney(value, settings.locale, settings.currencyCode)
-    }
-  />
-</div>
+{shouldShowSection("reportes") ? (
+  <div id="reportes" style={{ scrollMarginTop: 96 }}>
+    <DetailTableSection
+      searchedRowsCount={searchedRows.length}
+      paginatedRows={paginatedRows}
+      pageSize={pageSize}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      searchTerm={searchTerm}
+      onSearchTermChange={setSearchTerm}
+      onPageSizeChange={setPageSize}
+      onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+      onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+      toDateKey={toDateKey}
+      toText={toText}
+      toNumber={toNumber}
+      formatInt={(value) => formatInt(value)}
+      formatMoney={(value) =>
+        formatMoney(value, settings.locale, settings.currencyCode)
+      }
+    />
+  </div>
+) : null}
 <style jsx global>{`
   input::placeholder {
     color: rgba(255, 255, 255, 0.88);
@@ -3954,10 +4016,9 @@ businessContextWarning: {
 productComparisonCard: {
   borderRadius: 24,
   padding: 20,
-  background:
-    "linear-gradient(135deg, rgba(31,42,117,0.98) 0%, rgba(41,49,138,0.98) 100%)",
-  border: "1px solid rgba(127,178,255,0.24)",
-  boxShadow: "0 18px 42px rgba(10,17,70,0.22)",
+  background: "var(--jd-gradient-container)",
+  border: "1px solid var(--jd-border-accent)",
+  boxShadow: "var(--jd-shadow-card)",
   display: "grid",
   gap: 16,
 },
@@ -3984,7 +4045,7 @@ productComparisonTitleRow: {
 
 productComparisonTitle: {
   margin: 0,
-  color: "#FFFFFF",
+  color: "var(--jd-text-main)",
   fontSize: 22,
   fontWeight: 900,
   letterSpacing: "-0.02em",
@@ -3992,9 +4053,9 @@ productComparisonTitle: {
 
 productComparisonSubtitle: {
   margin: "5px 0 0",
-  color: "#DCE6FF",
+  color: "var(--jd-text-secondary)",
   fontSize: 13,
-  fontWeight: 600,
+  fontWeight: 650,
   maxWidth: 860,
 },
 comparisonHeaderActions: {
@@ -4006,30 +4067,30 @@ comparisonHeaderActions: {
 
 metricSelectorLabel: {
   display: "grid",
-  gap: 5,
-  color: "#DCE6FF",
-  fontSize: 11,
-  fontWeight: 900,
+  gap: 6,
+  color: "var(--jd-text-secondary)",
+  fontSize: 12,
+  fontWeight: 800,
 },
 
 metricSelector: {
   minHeight: 38,
   borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.18)",
-  background: "rgba(255,255,255,0.10)",
-  color: "#FFFFFF",
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "rgba(255,255,255,0.92)",
+  color: "var(--jd-text-main)",
   padding: "0 12px",
   fontSize: 12,
-  fontWeight: 900,
+  fontWeight: 850,
   outline: "none",
 },
 
 clearComparisonButton: {
   minHeight: 38,
   borderRadius: 999,
-  border: "1px solid rgba(255,255,255,0.18)",
-  background: "rgba(255,255,255,0.08)",
-  color: "#FFFFFF",
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "rgba(255,255,255,0.82)",
+  color: "var(--jd-brand-secondary)",
   padding: "0 14px",
   fontSize: 12,
   fontWeight: 900,
@@ -4038,8 +4099,9 @@ clearComparisonButton: {
 
 productComparisonEmpty: {
   borderRadius: 18,
-  border: "1px dashed rgba(191,208,255,0.32)",
-  background: "rgba(15,23,42,0.18)",
+  border: "1px dashed var(--jd-border-accent-soft)",
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(241,244,255,0.88) 100%)",
   padding: 18,
   display: "flex",
   justifyContent: "space-between",
@@ -4050,30 +4112,32 @@ productComparisonEmpty: {
 
 emptyTitle: {
   margin: 0,
-  color: "#FFFFFF",
-  fontSize: 16,
+  color: "var(--jd-text-main)",
+  fontSize: 15,
   fontWeight: 900,
 },
 
 emptyText: {
   margin: "6px 0 0",
-  color: "#C7D2FE",
+  color: "var(--jd-text-secondary)",
   fontSize: 13,
+  fontWeight: 650,
   lineHeight: 1.45,
-  fontWeight: 600,
+  maxWidth: 880,
 },
 
 emptyActionButton: {
   minHeight: 42,
-  borderRadius: 16,
-  border: "1px solid rgba(127,178,255,0.34)",
-  background: "linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)",
+  borderRadius: 14,
+  border: "1px solid rgba(79,70,229,0.20)",
+  background:
+    "linear-gradient(135deg, #4F46E5 0%, #3D2C8D 65%, #2E0D4F 100%)",
   color: "#FFFFFF",
-  padding: "0 16px",
+  padding: "0 18px",
   fontSize: 13,
   fontWeight: 900,
   cursor: "pointer",
-  boxShadow: "0 12px 24px rgba(59,130,246,0.22)",
+  boxShadow: "0 10px 20px rgba(61,44,141,0.16)",
 },
 
 productChipsRow: {
@@ -4085,9 +4149,9 @@ productChipsRow: {
 productChip: {
   minHeight: 34,
   borderRadius: 999,
-  border: "1px solid rgba(127,178,255,0.28)",
-  background: "rgba(255,255,255,0.10)",
-  color: "#FFFFFF",
+  border: "1px solid rgba(109,126,219,0.28)",
+  background: "rgba(255,255,255,0.86)",
+  color: "var(--jd-text-main)",
   padding: "0 12px",
   display: "inline-flex",
   alignItems: "center",
@@ -4120,9 +4184,8 @@ productComparisonGrid: {
 
 productComparisonChartBox: {
   borderRadius: 18,
-  border: "1px solid rgba(255,255,255,0.12)",
-  background:
-    "linear-gradient(180deg, rgba(15,23,42,0.24) 0%, rgba(15,23,42,0.10) 100%)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "var(--jd-gradient-table-surface)",
   padding: 16,
   display: "grid",
   gap: 8,
@@ -4130,13 +4193,13 @@ productComparisonChartBox: {
 
 productComparisonBlockTitle: {
   margin: 0,
-  color: "#FFFFFF",
+  color: "var(--jd-text-main)",
   fontSize: 15,
   fontWeight: 900,
 },
 
 productComparisonMiniText: {
-  color: "#BFD0FF",
+  color: "var(--jd-text-secondary)",
   fontSize: 12,
   fontWeight: 700,
 },
@@ -4150,7 +4213,8 @@ comparisonBars: {
   padding: "24px 10px 8px",
   borderRadius: 16,
   background:
-    "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+    "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(241,244,255,0.88) 100%)",
+  border: "1px solid rgba(109,126,219,0.12)",
 },
 
 comparisonBarItem: {
@@ -4162,31 +4226,30 @@ comparisonBarItem: {
 },
 
 comparisonBarValue: {
-  color: "#FFFFFF",
+  color: "var(--jd-text-main)",
   fontSize: 12,
-  fontWeight: 600,
+  fontWeight: 750,
   lineHeight: 1.1,
 },
 
 comparisonBar: {
   width: 54,
-  borderRadius: "2px 2px 0 0",
-  boxShadow: "0 14px 28px rgba(0,0,0,0.24)",
+  borderRadius: "6px 6px 0 0",
+  boxShadow: "0 12px 24px rgba(46,13,79,0.14)",
 },
 
 comparisonBarLabel: {
-  color: "#FFFFFF",
+  color: "var(--jd-text-main)",
   fontSize: 11,
-  fontWeight: 600,
+  fontWeight: 700,
   lineHeight: 1.15,
   textAlign: "center",
 },
 
 productComparisonTableBox: {
   borderRadius: 18,
-  border: "1px solid rgba(255,255,255,0.14)",
-  background:
-    "linear-gradient(180deg, rgba(15,23,42,0.22) 0%, rgba(15,23,42,0.08) 100%)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "var(--jd-gradient-table-surface)",
   padding: 16,
   display: "grid",
   gap: 12,
@@ -4208,40 +4271,41 @@ productComparisonTable: {
 productComparisonTh: {
   padding: "10px 12px",
   textAlign: "left",
-  color: "#FFFFFF",
+  color: "#F8FAFC",
   fontSize: 11,
-  fontWeight: 650,
+  fontWeight: 800,
   lineHeight: 1.2,
   letterSpacing: "0.01em",
-  background: "rgba(255,255,255,0.06)",
-  borderBottom: "1px solid rgba(255,255,255,0.18)",
+  background:
+    "linear-gradient(135deg, #6d7edb 0%, #6271d1 42%, #5965c3 72%, #5657b2 100%)",
+  borderBottom: "1px solid rgba(61,44,141,0.12)",
   whiteSpace: "normal",
 },
 
 productComparisonTd: {
   padding: "10px 12px",
-  borderBottom: "1px solid rgba(255,255,255,0.16)",
-  color: "#FFFFFF",
+  borderBottom: "1px solid rgba(61,44,141,0.08)",
+  color: "var(--jd-text-main)",
   fontSize: 12,
-  fontWeight: 500,
+  fontWeight: 700,
   lineHeight: 1.25,
   verticalAlign: "middle",
 },
 productComparisonTotalTd: {
   padding: "12px",
-  color: "#FFFFFF",
+  color: "var(--jd-text-main)",
   fontSize: 12,
-  fontWeight: 750,
-  borderBottom: "1px solid rgba(255,255,255,0.16)",
-  background: "rgba(255,255,255,0.04)",
+  fontWeight: 900,
+  borderBottom: "1px solid rgba(61,44,141,0.10)",
+  background: "rgba(109,126,219,0.10)",
 },
 
 productInsightBox: {
   borderRadius: 16,
-  border: "1px solid rgba(34,197,94,0.26)",
+  border: "1px solid rgba(34,197,94,0.22)",
   background:
-    "linear-gradient(135deg, rgba(20,83,45,0.32) 0%, rgba(15,23,42,0.18) 100%)",
-  color: "#FFFFFF",
+    "linear-gradient(135deg, rgba(236,253,245,0.96) 0%, rgba(240,253,250,0.92) 100%)",
+  color: "var(--jd-text-main)",
   padding: "14px 16px",
   fontSize: 13,
   fontWeight: 800,
@@ -4275,7 +4339,7 @@ insightTitle: {
 
 insightText: {
   margin: 0,
-  color: "#FFFFFF",
+  color: "var(--jd-text-main)",
   fontSize: 13,
   fontWeight: 800,
   lineHeight: 1.45,
@@ -4287,12 +4351,11 @@ productCellInline: {
 },
 
 productCellText: {
-  color: "#FFFFFF",
+  color: "var(--jd-text-main)",
   fontSize: 12,
-  fontWeight: 600,
+  fontWeight: 800,
   lineHeight: 1.25,
 },
-
 productDot: {
   width: "8px",
   height: "8px",
@@ -4345,9 +4408,9 @@ insightBadge: {
   width: "fit-content",
   borderRadius: 999,
   padding: "6px 12px",
-  background: "rgba(34,197,94,0.16)",
-  border: "1px solid rgba(34,197,94,0.28)",
-  color: "#BBF7D0",
+  background: "rgba(34,197,94,0.12)",
+  border: "1px solid rgba(34,197,94,0.22)",
+  color: "#047857",
   fontSize: 11,
   fontWeight: 900,
   textTransform: "uppercase",

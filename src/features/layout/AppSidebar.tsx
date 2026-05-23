@@ -1,4 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 const navItems = [
+  { label: "Vista general", href: "/cargas#general" },
   { label: "Resumen", href: "/cargas#resumen" },
   { label: "Comparativo", href: "/cargas#comparativo" },
   { label: "Ventas", href: "/cargas#ventas" },
@@ -15,6 +20,24 @@ type AppSidebarProps = {
 };
 
 export function AppSidebar({ onNavigate, isDrawer = false }: AppSidebarProps) {
+  const [activeTarget, setActiveTarget] = useState("#general");
+
+  useEffect(() => {
+    function updateActiveTarget() {
+      if (window.location.pathname.startsWith("/admin")) {
+        setActiveTarget("/admin/clientes");
+        return;
+      }
+
+      setActiveTarget(window.location.hash || "#general");
+    }
+
+    updateActiveTarget();
+
+    window.addEventListener("hashchange", updateActiveTarget);
+    return () => window.removeEventListener("hashchange", updateActiveTarget);
+  }, []);
+
   return (
     <aside
       style={{
@@ -63,14 +86,21 @@ export function AppSidebar({ onNavigate, isDrawer = false }: AppSidebarProps) {
           gap: "8px",
         }}
       >
-        {navItems.map((item, index) => {
-          const isActive = index === 0;
+      {navItems.map((item) => {
+  const itemTarget = item.href.includes("#")
+    ? `#${item.href.split("#")[1]}`
+    : item.href;
+
+  const isActive = activeTarget === itemTarget;
 
           return (
             <a
               key={item.label}
               href={item.href}
-              onClick={onNavigate}
+              onClick={() => {
+  setActiveTarget(itemTarget);
+  onNavigate?.();
+}}
               style={{
                 display: "flex",
                 alignItems: "center",
