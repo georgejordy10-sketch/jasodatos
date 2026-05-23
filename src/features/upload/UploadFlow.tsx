@@ -1560,7 +1560,7 @@ const historyComparisonHeaderStyle: React.CSSProperties = {
 const historyComparisonTitleStyle: React.CSSProperties = {
   margin: 0,
   color: "#1D4ED8",
-  fontSize: 30,
+  fontSize: 24,
   fontWeight: 900,
   lineHeight: 1.15,
   letterSpacing: "-0.02em",
