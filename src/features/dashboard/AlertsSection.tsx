@@ -57,7 +57,7 @@ const styles: Record<string, CSSProperties> = {
     color: "#FFFFFF",
   },
   modulePlanText: {
-    color: "#1E2670",
+    color: "var(--jd-brand-secondary)",
     fontSize: 14,
     fontWeight: 800,
     letterSpacing: "-0.01em",
