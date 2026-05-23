@@ -3012,141 +3012,146 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
         <div style={styles.pdfSpacerBeforeAssistant} />
       ) : null}
 
-      <div style={styles.assistantCard}>
-        <div style={styles.assistantGrid}>
-          <div style={styles.assistantContent}>
-            <div style={styles.assistantHeader}>
-              <span style={styles.assistantTitle}>Asistente comercial JasoAlix</span>
+    <div style={styles.assistantCard}>
+  <div style={styles.assistantTop}>
+    <div>
+      <div style={styles.assistantHeader}>
+        <span style={styles.assistantTitle}>Asistente comercial JasoAlix</span>
 
-              {!isExportingPdf ? (
-                <>
-                  <ActivePlanBadge tone="pro">Incluido en Crecimiento</ActivePlanBadge>
+        {!isExportingPdf ? (
+          <>
+            <ActivePlanBadge tone="pro">Incluido en Crecimiento</ActivePlanBadge>
 
-                  {canUseWhatsappByPlan ? (
-                    <ActivePlanBadge tone="ultra">WhatsApp en Control</ActivePlanBadge>
-                  ) : (
-                    <ActivePlanBadge tone="basic">WhatsApp bloqueado</ActivePlanBadge>
-                  )}
-                  <span style={styles.assistantPromoBadge}>
-  {jasoBot.tipoPromo === "combo"
-    ? "Combo sugerido"
-    : jasoBot.tipoPromo === "liquidacion"
-    ? "Inventario"
-    : jasoBot.tipoPromo === "impulso_sucursal"
-    ? "Sucursal"
-    : jasoBot.tipoPromo === "producto_estrella"
-    ? "Producto destacado"
-    : "Sugerencia"}
-</span>
-                </>
-              ) : null}
-            </div>
+            {canUseWhatsappByPlan ? (
+              <ActivePlanBadge tone="ultra">WhatsApp en Control</ActivePlanBadge>
+            ) : (
+              <ActivePlanBadge tone="basic">WhatsApp bloqueado</ActivePlanBadge>
+            )}
 
-            <div style={styles.assistantText}>
-              {jasoBot.mensajePrincipal}
-              <br />
-              <strong>
-                JasoAlix resume una acción comercial. Tú decides si la usas, la ajustas o la envías a tus clientes.
-              </strong>
-            </div>
+            <span style={styles.assistantPromoBadge}>
+              {jasoBot.tipoPromo === "combo"
+                ? "Combo sugerido"
+                : jasoBot.tipoPromo === "liquidacion"
+                ? "Inventario"
+                : jasoBot.tipoPromo === "impulso_sucursal"
+                ? "Sucursal"
+                : jasoBot.tipoPromo === "producto_estrella"
+                ? "Producto destacado"
+                : "Sugerencia"}
+            </span>
+          </>
+        ) : null}
+      </div>
 
-            <div style={styles.assistantChannelRow}>
-              <span style={styles.assistantChannelBadge}>
-                {activeChannels.length === 0
-                  ? "Sin canales habilitados"
-                  : `Canales activos: ${activeChannels.length}/3`}
-              </span>
+      <p style={styles.assistantText}>
+        {jasoBot.mensajePrincipal}
+      </p>
 
-              <span style={styles.assistantChannelText}>
-                {!hasValidWhatsapp
-                  ? "Configura un WhatsApp válido en Configuración del negocio para habilitar el envío."
-                  : activeChannels.length === 0
-                  ? "Activa al menos un canal desde Configuración del negocio."
-                  : secondaryActiveChannelsLabel
-                  ? `Canal prioritario activo: ${topActiveChannelLabel} · Otros canales activos: ${secondaryActiveChannelsLabel}`
-                  : `Canal prioritario activo: ${topActiveChannelLabel}`}
-              </span>
-            </div>
-          </div>
+      <p style={styles.assistantHelperText}>
+        JasoAlix resume las acciones recomendadas y te ayuda a preparar mensajes comerciales.
+      </p>
+    </div>
 
-          <div style={styles.assistantInsights}>
-{jasoBot.insights.map((item, index) => (
-  <div key={`${item}-${index}`} style={styles.assistantInsightItem}>
-    {item}
+    <div style={styles.assistantChannelRow}>
+      <span style={styles.assistantChannelBadge}>
+        {activeChannels.length === 0
+          ? "Sin canales habilitados"
+          : `Canales activos: ${activeChannels.length}/3`}
+      </span>
+
+      <span style={styles.assistantChannelText}>
+        {!hasValidWhatsapp
+          ? "Configura un WhatsApp válido en Configuración del negocio para habilitar el envío."
+          : activeChannels.length === 0
+          ? "Activa al menos un canal desde Configuración del negocio."
+          : secondaryActiveChannelsLabel
+          ? `Canal prioritario activo: ${topActiveChannelLabel} · Otros canales activos: ${secondaryActiveChannelsLabel}`
+          : `Canal prioritario activo: ${topActiveChannelLabel}`}
+      </span>
+    </div>
   </div>
-))}
-            <div style={styles.actionsGrid}>
-              {jasoBot.recomendaciones?.map((item) => (
-                <div key={item} style={styles.actionCard}>
-                  <div style={styles.actionIcon}>•</div>
-                  <div style={styles.actionText}>{item}</div>
 
-                  {!isExportingPdf ? (
-                    <button
-                      style={styles.actionButton}
-                      onClick={() => usarAccion(item)}
-                    >
-                      Copiar mensaje para campaña
-                    </button>
-                  ) : null}
-                </div>
-              ))}
+  <div style={styles.assistantBody}>
+    <div style={styles.assistantInsights}>
+      {jasoBot.insights.slice(0, 4).map((item, index) => (
+        <div key={`${item}-${index}`} style={styles.assistantInsightItem}>
+          {item}
+        </div>
+      ))}
+    </div>
 
-              {!isExportingPdf && actionNotice ? (
-                <div style={styles.actionNotice}>{actionNotice}</div>
-              ) : null}
-            </div>
-          </div>
+    <div style={styles.actionsGrid}>
+      {jasoBot.recomendaciones?.slice(0, 3).map((item) => (
+        <div key={item} style={styles.actionCard}>
+          <div style={styles.actionText}>{item}</div>
 
           {!isExportingPdf ? (
-            <div style={styles.assistantActions}>
-              <div style={styles.modulePlanRow}>
-<ActivePlanBadge tone="pro">PDF en Crecimiento</ActivePlanBadge>
-<ActivePlanBadge tone="ultra">WhatsApp en Control</ActivePlanBadge>
-              </div>
-
-              <button
-                style={{
-                  ...styles.whatsappButton,
-                  ...(!canUseWhatsappActions ? styles.disabledButton : null),
-                }}
-                onClick={enviarPromoWhatsApp}
-                disabled={!canUseWhatsappActions}
-                title={whatsappDisabledReason}
-              >
-                {!canUseWhatsappByPlan
-                  ? "Disponible en plan Control"
-                  : !hasValidWhatsapp
-                  ? "Configura tu número celular para activar el envío a WhatsApp"
-                  : "Preparar campaña para WhatsApp"}
-              </button>
-
-              <button
-                style={{
-                  ...styles.shareButton,
-                  ...(!(canExportPdf && canUseWhatsappInputs)
-                    ? styles.disabledButton
-                    : null),
-                }}
-                onClick={() => {
-                  exportarPDF();
-                  setTimeout(() => {
-                    enviarWhatsApp();
-                  }, 900);
-                }}
-                disabled={!(canExportPdf && canUseWhatsappInputs)}
-                title={pdfDisabledReason}
-              >
-                {!canExportPdf
-                  ? "Disponible desde el plan Pro"
-                  : !hasValidWhatsapp
-                  ? "Configura tu número celular para activar el envío a WhatsApp"
-                  : "Compartir PDF por WhatsApp"}
-              </button>
-            </div>
+            <button
+              style={styles.actionButton}
+              onClick={() => usarAccion(item)}
+            >
+              Copiar mensaje
+            </button>
           ) : null}
         </div>
+      ))}
+
+      {!isExportingPdf && actionNotice ? (
+        <div style={styles.actionNotice}>{actionNotice}</div>
+      ) : null}
+    </div>
+  </div>
+
+  {!isExportingPdf ? (
+    <div style={styles.assistantFooter}>
+      <div style={styles.modulePlanRow}>
+        <ActivePlanBadge tone="pro">PDF en Crecimiento</ActivePlanBadge>
+        <ActivePlanBadge tone="ultra">WhatsApp en Control</ActivePlanBadge>
       </div>
+
+      <div style={styles.assistantFooterActions}>
+        <button
+          style={{
+            ...styles.whatsappButton,
+            ...(!canUseWhatsappActions ? styles.disabledButton : null),
+          }}
+          onClick={enviarPromoWhatsApp}
+          disabled={!canUseWhatsappActions}
+          title={whatsappDisabledReason}
+        >
+          {!canUseWhatsappByPlan
+            ? "Disponible en plan Control"
+            : !hasValidWhatsapp
+            ? "Configura tu número celular"
+            : "Preparar campaña"}
+        </button>
+
+        <button
+          style={{
+            ...styles.shareButton,
+            ...(!(canExportPdf && canUseWhatsappInputs)
+              ? styles.disabledButton
+              : null),
+          }}
+          onClick={() => {
+            exportarPDF();
+            setTimeout(() => {
+              enviarWhatsApp();
+            }, 900);
+          }}
+          disabled={!(canExportPdf && canUseWhatsappInputs)}
+          title={pdfDisabledReason}
+        >
+          {!canExportPdf
+            ? "Disponible desde Crecimiento"
+            : !hasValidWhatsapp
+            ? "Configura tu número celular"
+            : "Compartir PDF"}
+        </button>
+      </div>
+    </div>
+  ) : null}
+</div>
     </>
   ) : (
     <LockedFeatureCard
@@ -3523,11 +3528,40 @@ assistantCard: {
   background: "var(--jd-gradient-container)",
   color: "var(--jd-text-main)",
   borderRadius: 22,
-  padding: 16,
+  padding: 18,
   border: "1px solid var(--jd-border-accent)",
   boxShadow: "var(--jd-shadow-card)",
+  display: "grid",
+  gap: 14,
 },
-
+assistantTop: {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1.4fr) minmax(260px, 0.8fr)",
+  gap: 14,
+  alignItems: "start",
+},
+assistantBody: {
+  display: "grid",
+  gridTemplateColumns: "minmax(220px, 0.75fr) minmax(0, 1.25fr)",
+  gap: 14,
+  alignItems: "start",
+},
+assistantFooter: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  flexWrap: "wrap",
+  paddingTop: 12,
+  borderTop: "1px solid var(--jd-border-accent-soft)",
+},
+assistantFooterActions: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: 10,
+  flexWrap: "wrap",
+},
 assistantGrid: {
   display: "grid",
   gridTemplateColumns: "minmax(280px, 0.95fr) minmax(320px, 1fr) minmax(240px, 280px)",
@@ -3555,7 +3589,7 @@ lockedFeatureSalesButton: {
   boxShadow: "0 10px 20px rgba(16,185,129,0.18)",
 },
 actionButton: {
-  minHeight: 32,
+  minHeight: 30,
   width: "fit-content",
   maxWidth: "100%",
   padding: "0 12px",
@@ -3588,13 +3622,13 @@ assistantPromoBadge: {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  minHeight: 28,
-  padding: "0 12px",
+  minHeight: 26,
+  padding: "0 10px",
   borderRadius: 999,
   background: "var(--jd-info-soft)",
   color: "var(--jd-brand-secondary)",
   border: "1px solid var(--jd-border-accent-soft)",
-  fontSize: 12,
+  fontSize: 11,
   fontWeight: 750,
   width: "fit-content",
 },
@@ -3604,9 +3638,9 @@ actionsGrid: {
 },
 actionCard: {
   display: "grid",
-  gridTemplateColumns: "18px minmax(0, 1fr)",
+  gridTemplateColumns: "minmax(0, 1fr) auto",
   gap: 10,
-  alignItems: "flex-start",
+  alignItems: "center",
   padding: 14,
   borderRadius: 16,
   background: "rgba(255,255,255,0.86)",
@@ -3629,7 +3663,7 @@ actionText: {
   color: "var(--jd-text-main)",
   fontSize: 13,
   lineHeight: 1.45,
-  fontWeight: 650,
+  fontWeight: 550,
 },
 assistantHeader: {
   display: "flex",
@@ -3638,60 +3672,61 @@ assistantHeader: {
   marginBottom: 10,
   flexWrap: "wrap",
 },
+
 assistantTitle: {
   fontSize: 21,
-  fontWeight: 950,
+  fontWeight: 850,
   color: "var(--jd-text-main)",
   lineHeight: 1.08,
-  letterSpacing: "-0.04em",
+  letterSpacing: "-0.035em",
 },
 
 assistantText: {
-  color: "var(--jd-text-secondary)",
+  color: "var(--jd-text-main)",
   fontSize: 14,
   lineHeight: 1.5,
   margin: 0,
-  maxWidth: 720,
-  fontWeight: 650,
+  maxWidth: 760,
+  fontWeight: 600,
 },
-
+assistantHelperText: {
+  color: "var(--jd-text-secondary)",
+  fontSize: 13,
+  lineHeight: 1.45,
+  margin: "8px 0 0",
+  fontWeight: 500,
+},
 whatsappButton: {
   background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
   color: "#FFFFFF",
   border: "1px solid rgba(34,197,94,0.26)",
-  borderRadius: 16,
-  minHeight: 46,
+  borderRadius: 999,
+  minHeight: 38,
   padding: "0 14px",
-  width: "100%",
-  fontWeight: 900,
-  fontSize: 13,
+  width: "fit-content",
+  fontWeight: 800,
+  fontSize: 12,
   cursor: "pointer",
-  boxShadow: "0 10px 22px rgba(34,197,94,0.18)",
-  transition: "all 0.2s ease",
+  boxShadow: "0 10px 22px rgba(34,197,94,0.12)",
 },
+
 shareButton: {
   background: "var(--jd-gradient-accent)",
   color: "#FFFFFF",
   border: "1px solid rgba(255,255,255,0.18)",
-  borderRadius: 16,
-  minHeight: 46,
+  borderRadius: 999,
+  minHeight: 38,
   padding: "0 14px",
-  width: "100%",
-  fontWeight: 900,
-  fontSize: 13,
+  width: "fit-content",
+  fontWeight: 800,
+  fontSize: 12,
   cursor: "pointer",
   boxShadow: "var(--jd-shadow-button)",
 },
 assistantInsights: {
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "flex-start",
+  display: "grid",
   gap: 8,
-  fontSize: 13,
-  fontWeight: 750,
-  color: "var(--jd-text-main)",
-  lineHeight: 1.4,
-  padding: 14,
+  padding: 12,
   borderRadius: 18,
   background: "var(--jd-gradient-table-surface)",
   border: "1px solid var(--jd-border-accent-soft)",
@@ -3721,7 +3756,6 @@ assistantActions: {
 assistantChannelRow: {
   display: "grid",
   gap: 8,
-  marginTop: 12,
   padding: 12,
   borderRadius: 16,
   background: "var(--jd-gradient-table-surface)",
@@ -3732,14 +3766,14 @@ assistantChannelBadge: {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  minHeight: 28,
-  padding: "0 12px",
+  minHeight: 26,
+  padding: "0 10px",
   borderRadius: 999,
   background: "var(--jd-info-soft)",
   border: "1px solid var(--jd-border-accent-soft)",
   color: "var(--jd-info)",
-  fontSize: 12,
-  fontWeight: 900,
+  fontSize: 11,
+  fontWeight: 800,
   width: "fit-content",
 },
 
@@ -3747,7 +3781,7 @@ assistantChannelText: {
   color: "var(--jd-text-secondary)",
   fontSize: 13,
   lineHeight: 1.45,
-  fontWeight: 650,
+  fontWeight: 500,
 },
 
 disabledButton: {
@@ -4334,7 +4368,7 @@ assistantInsightItem: {
   color: "var(--jd-text-secondary)",
   fontSize: 12,
   lineHeight: 1.35,
-  fontWeight: 600,
+  fontWeight: 500,
 },
 };
 
