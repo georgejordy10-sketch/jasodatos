@@ -3104,7 +3104,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
 
           <div style={styles.assistantInsights}>
             {jasoBot.insights.map((item) => (
-              <div key={item}>• {item}</div>
+              <div style={styles.actionIcon}>•</div>
             ))}
 
             <div style={styles.actionsGrid}>
@@ -4356,6 +4356,7 @@ pdfSpacerBeforeBenchmarking: {
   height: 0,
 },
 };
+
 
 
 

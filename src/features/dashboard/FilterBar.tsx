@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { CSSProperties } from "react";
 
@@ -83,7 +83,7 @@ export default function FilterBar({
   onClearFilters,
 }: Props) {
   return (
-    <section style={styles.filterBar} aria-label="Filtros del análisis">
+    <section style={styles.filterBar} aria-label="Filtros del anÃ¡lisis">
       <div style={styles.header}>
         <div style={styles.titleWrap}>
           <span style={styles.accentDot} />
@@ -142,8 +142,7 @@ filterBar: {
     width: 10,
     height: 10,
     borderRadius: 999,
-    background:
-      "linear-gradient(135deg, var(--jd-action-primary, #2563EB) 0%, var(--jd-action-premium, #7C3AED) 100%)",
+    background: "var(--jd-gradient-accent)",
     boxShadow: "0 0 0 5px rgba(37, 99, 235, 0.10)",
   },
   title: {
@@ -177,7 +176,7 @@ filterBar: {
     minHeight: 42,
     padding: "0 13px",
     fontWeight: 750,
-    border: "1px solid var(--jd-border, #E2E8F0)",
+    border: "1px solid var(--jd-border-accent-soft)",
     outline: "none",
     boxShadow: "0 7px 16px rgba(15, 23, 42, 0.04)",
   },

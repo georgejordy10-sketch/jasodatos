@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, type CSSProperties } from "react";
 
@@ -45,9 +45,9 @@ function KpiCard({
             onFocus={() => setShowHelp(true)}
             onBlur={() => setShowHelp(false)}
             onClick={() => setShowHelp((current) => !current)}
-            aria-label={`Cómo leer este dato: ${title}`}
+            aria-label={`CÃ³mo leer este dato: ${title}`}
           >
-            Cómo leer
+            CÃ³mo leer
 
             {showHelp ? (
               <span style={styles.kpiTooltip}>{helpText}</span>
