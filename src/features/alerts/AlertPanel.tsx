@@ -16,23 +16,23 @@ function severityLabel(severity: AlertSeverity): string {
 function severityStyles(severity: AlertSeverity): CSSProperties {
   if (severity === "alta") {
     return {
-      background: "rgba(220, 38, 38, 0.10)",
-      color: "#B91C1C",
+      background: "var(--jd-danger-soft)",
+      color: "var(--jd-danger)",
       border: "1px solid rgba(220, 38, 38, 0.18)",
     };
   }
 
   if (severity === "media") {
     return {
-      background: "rgba(245, 158, 11, 0.12)",
-      color: "#B45309",
+      background: "var(--jd-warning-soft)",
+      color: "var(--jd-warning)",
       border: "1px solid rgba(245, 158, 11, 0.22)",
     };
   }
 
   return {
-    background: "rgba(22, 163, 74, 0.10)",
-    color: "#15803D",
+    background: "var(--jd-success-soft)",
+    color: "var(--jd-success)",
     border: "1px solid rgba(22, 163, 74, 0.18)",
   };
 }
@@ -160,15 +160,15 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
 
 const styles: Record<string, CSSProperties> = {
   card: {
-    background:
-      "linear-gradient(135deg, #FFFFFF 0%, rgba(248, 250, 252, 0.96) 100%)",
+    background: "var(--jd-gradient-container)",
     borderRadius: 22,
     padding: 18,
-    border: "1px solid var(--jd-border, #E2E8F0)",
-    boxShadow: "0 14px 34px rgba(15, 23, 42, 0.07)",
+    border: "1px solid var(--jd-border-accent)",
+    boxShadow: "var(--jd-shadow-card)",
     display: "grid",
     gap: 14,
   },
+
   header: {
     display: "flex",
     alignItems: "flex-start",
@@ -176,11 +176,13 @@ const styles: Record<string, CSSProperties> = {
     gap: 14,
     flexWrap: "wrap",
   },
+
   headerCopy: {
     display: "grid",
     gap: 5,
     minWidth: 0,
   },
+
   eyebrow: {
     display: "inline-flex",
     alignItems: "center",
@@ -188,27 +190,30 @@ const styles: Record<string, CSSProperties> = {
     minHeight: 26,
     padding: "0 11px",
     borderRadius: 999,
-    background: "rgba(61, 44, 141, 0.08)",
-    color: "var(--jd-brand-secondary, #3D2C8D)",
-    border: "1px solid rgba(61, 44, 141, 0.14)",
+    background: "var(--jd-info-soft)",
+    color: "var(--jd-info)",
+    border: "1px solid var(--jd-border-accent-soft)",
     fontSize: 11,
-    fontWeight: 850,
+    fontWeight: 900,
   },
+
   title: {
     margin: 0,
-    color: "var(--jd-text-main, #0F172A)",
+    color: "var(--jd-text-main)",
     fontSize: 22,
-    fontWeight: 900,
+    fontWeight: 950,
     lineHeight: 1.08,
     letterSpacing: "-0.035em",
   },
+
   subtitle: {
     margin: 0,
-    color: "var(--jd-text-secondary, #475569)",
+    color: "var(--jd-text-secondary)",
     fontSize: 14,
     fontWeight: 600,
     lineHeight: 1.4,
   },
+
   counterWrap: {
     minWidth: 72,
     minHeight: 58,
@@ -216,28 +221,32 @@ const styles: Record<string, CSSProperties> = {
     display: "grid",
     placeItems: "center",
     gap: 2,
-    background:
-      "linear-gradient(135deg, rgba(46, 13, 79, 0.06) 0%, rgba(40, 53, 147, 0.08) 100%)",
-    border: "1px solid rgba(61, 44, 141, 0.12)",
+    background: "var(--jd-gradient-table-surface)",
+    border: "1px solid var(--jd-border-accent-soft)",
     padding: "8px 12px",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72)",
   },
+
   counter: {
-    color: "var(--jd-brand-secondary, #3D2C8D)",
+    color: "var(--jd-brand-secondary)",
     fontSize: 22,
     fontWeight: 950,
     lineHeight: 1,
   },
+
   counterLabel: {
-    color: "var(--jd-text-muted, #64748B)",
+    color: "var(--jd-text-muted)",
     fontSize: 11,
     fontWeight: 750,
     lineHeight: 1,
   },
+
   summaryRow: {
     display: "flex",
     gap: 8,
     flexWrap: "wrap",
   },
+
   summaryPill: {
     borderRadius: 999,
     padding: "7px 12px",
@@ -248,40 +257,45 @@ const styles: Record<string, CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
   },
+
   emptyState: {
     minHeight: 68,
     display: "grid",
     placeItems: "center",
-    color: "var(--jd-text-secondary, #475569)",
-    border: "1px dashed rgba(148, 163, 184, 0.50)",
+    color: "var(--jd-text-secondary)",
+    border: "1px dashed rgba(109,126,219,0.35)",
     borderRadius: 16,
-    background: "rgba(248, 250, 252, 0.80)",
+    background: "rgba(255,255,255,0.72)",
     padding: 14,
     textAlign: "center",
     fontSize: 14,
     fontWeight: 600,
   },
+
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
     gap: 12,
   },
-  alertCard: {
-    borderRadius: 18,
-    padding: 16,
-    background: "#FFFFFF",
-    border: "1px solid var(--jd-border, #E2E8F0)",
-    display: "grid",
-    gap: 10,
-    minHeight: 148,
-    boxShadow: "0 10px 24px rgba(15, 23, 42, 0.05)",
-  },
+
+alertCard: {
+  borderRadius: 18,
+  padding: 16,
+  background: "var(--jd-gradient-container)",
+  border: "1px solid var(--jd-border-accent)",
+  display: "grid",
+  gap: 10,
+  minHeight: 148,
+  boxShadow: "var(--jd-shadow-card)",
+},
+
   alertTop: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
   },
+
   severityBadge: {
     borderRadius: 999,
     padding: "6px 11px",
@@ -290,47 +304,53 @@ const styles: Record<string, CSSProperties> = {
     letterSpacing: 0.2,
     lineHeight: 1,
   },
+
   contentBlock: {
     display: "grid",
     gap: 7,
   },
+
   alertTitle: {
     margin: 0,
-    color: "var(--jd-text-main, #0F172A)",
+    color: "var(--jd-text-main)",
     fontSize: 17,
     fontWeight: 900,
     lineHeight: 1.2,
     letterSpacing: "-0.02em",
   },
+
   alertMessage: {
     margin: 0,
-    color: "var(--jd-text-secondary, #475569)",
+    color: "var(--jd-text-secondary)",
     fontSize: 14,
     fontWeight: 600,
     lineHeight: 1.45,
   },
+
   actionsRow: {
     display: "flex",
     justifyContent: "flex-end",
     marginTop: "auto",
   },
-  actionButton: {
-    border: "1px solid rgba(61, 44, 141, 0.18)",
-    background:
-      "linear-gradient(135deg, rgba(61, 44, 141, 0.08) 0%, rgba(124, 58, 237, 0.10) 100%)",
-    color: "var(--jd-brand-secondary, #3D2C8D)",
-    borderRadius: 999,
-    padding: "8px 12px",
-    fontSize: 12,
-    fontWeight: 900,
-    cursor: "pointer",
-    textDecoration: "none",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+
+actionButton: {
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "#FFFFFF",
+  color: "var(--jd-brand-secondary)",
+  borderRadius: 999,
+  padding: "8px 12px",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.06)",
+},
+
   noAction: {
-    color: "var(--jd-text-muted, #64748B)",
+    color: "var(--jd-text-muted)",
     fontSize: 12,
     fontWeight: 700,
   },
