@@ -210,15 +210,15 @@ export default function SalesChartsSection({
         >
           <div style={styles.pieLayout}>
             <div style={styles.pieBox}>
-              <div style={{ width: "100%", height: 330 }}>
+              <div style={{ width: "100%", height: 260 }}>
                 <ResponsiveContainer>
                   <PieChart>
                     <Pie
                       data={topProductos}
                       dataKey="ventas"
                       nameKey="producto"
-                      innerRadius={78}
-                      outerRadius={128}
+                      innerRadius={72}
+                      outerRadius={114}
                       paddingAngle={1.5}
                       stroke="#FFFFFF"
                       strokeWidth={2}
@@ -276,126 +276,140 @@ export default function SalesChartsSection({
     </section>
   );
 }
-
 const styles: Record<string, CSSProperties> = {
   mainCharts: {
     display: "grid",
     gridTemplateColumns: "1.15fr 1fr",
-    gap: 14,
+    gap: 10,
     alignItems: "stretch",
   },
-card: {
-  background: "var(--jd-gradient-container)",
-  color: "var(--jd-text-main)",
-  borderRadius: 22,
-  padding: 18,
-  border: "1px solid var(--jd-border-accent)",
-  boxShadow: "var(--jd-shadow-card)",
-},
+
+  card: {
+    background: "var(--jd-gradient-container)",
+    color: "var(--jd-text-main)",
+    borderRadius: 18,
+    padding: "12px 14px",
+    border: "1px solid var(--jd-border-accent)",
+    boxShadow: "var(--jd-shadow-card)",
+  },
+
   cardHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 12,
-    gap: 12,
+    marginBottom: 7,
+    gap: 8,
     flexWrap: "wrap",
   },
-eyebrow: {
-  display: "inline-flex",
-  alignItems: "center",
-  minHeight: 24,
-  padding: "0 10px",
-  borderRadius: 999,
-  background: "var(--jd-info-soft)",
-  color: "var(--jd-info)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  fontSize: 11,
-  fontWeight: 900,
-  marginBottom: 8,
-},
-sectionTitle: {
-  margin: 0,
-  fontSize: 21,
-  fontWeight: 950,
-  color: "var(--jd-text-main)",
-  letterSpacing: "-0.04em",
-  lineHeight: 1.08,
-},
-sectionSubtitle: {
-  margin: "4px 0 0",
-  color: "var(--jd-text-secondary)",
-  fontSize: 13,
-  lineHeight: 1.35,
-  fontWeight: 650,
-},
+
+  eyebrow: {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: 20,
+    padding: "0 8px",
+    borderRadius: 999,
+    background: "var(--jd-info-soft)",
+    color: "var(--jd-info)",
+    border: "1px solid var(--jd-border-accent-soft)",
+    fontSize: 9,
+    fontWeight: 900,
+    marginBottom: 5,
+  },
+
+  sectionTitle: {
+    margin: 0,
+    fontSize: 18,
+    fontWeight: 900,
+    color: "var(--jd-text-main)",
+    letterSpacing: "-0.03em",
+    lineHeight: 1.05,
+  },
+
+  sectionSubtitle: {
+    margin: "3px 0 0",
+    color: "var(--jd-text-secondary)",
+    fontSize: 11,
+    lineHeight: 1.25,
+    fontWeight: 650,
+  },
+
   chartTopBar: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
-    gap: 12,
+    marginBottom: 5,
+    gap: 8,
     flexWrap: "wrap",
   },
+
   customLegend: {
     display: "flex",
-    gap: 14,
+    gap: 10,
     alignItems: "center",
   },
+
   customLegendItem: {
     display: "flex",
     alignItems: "center",
-    gap: 7,
+    gap: 6,
     color: "var(--jd-text-secondary, #475569)",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 800,
   },
-legendLineSolid: {
-  width: 22,
-  height: 3,
-  borderRadius: 999,
-  background: "var(--jd-accent-main)",
-},
+
+  legendLineSolid: {
+    width: 18,
+    height: 3,
+    borderRadius: 999,
+    background: "var(--jd-accent-main)",
+  },
+
   legendLineDashed: {
-    width: 22,
+    width: 18,
     height: 0,
   },
-totalPill: {
-  display: "grid",
-  gap: 2,
-  minWidth: 112,
-  justifyItems: "center",
-  padding: "8px 11px",
-  borderRadius: 14,
-  background: "rgba(255,255,255,0.86)",
-  color: "var(--jd-text-main)",
-  fontSize: 11,
-  fontWeight: 750,
-  border: "1px solid var(--jd-border-accent-soft)",
-  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
-},
-chartBox: {
-  width: "100%",
-  height: 300,
-  borderRadius: 18,
-  background: "var(--jd-gradient-table-surface)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  padding: "10px 8px 4px",
-},
-  pieLayout: {
+
+  totalPill: {
     display: "grid",
-    gridTemplateColumns: "310px minmax(0, 1fr)",
-    gap: 14,
-    alignItems: "center",
-    minHeight: 100,
+    gap: 1,
+    minWidth: 102,
+    justifyItems: "center",
+    padding: "6px 9px",
+    borderRadius: 12,
+    background: "rgba(255,255,255,0.86)",
+    color: "var(--jd-text-main)",
+    fontSize: 10,
+    fontWeight: 750,
+    border: "1px solid var(--jd-border-accent-soft)",
+    boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
   },
-  pieBox: {
-    position: "relative",
-    width: 300,
-    height: 330,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+
+  chartBox: {
+    width: "100%",
+    height: 230,
+    borderRadius: 14,
+    background: "var(--jd-gradient-table-surface)",
+    border: "1px solid var(--jd-border-accent-soft)",
+    padding: "6px 6px 2px",
   },
+
+pieLayout: {
+  display: "grid",
+  gridTemplateColumns: "270px minmax(0, 1fr)",
+  gap: 10,
+  alignItems: "center",
+  minHeight: 0,
+},
+pieBox: {
+  position: "relative",
+  width: 270,
+  height: 260,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "visible",
+},
+
   pieCenterOverlay: {
     position: "absolute",
     inset: 0,
@@ -404,87 +418,97 @@ chartBox: {
     textAlign: "center",
     pointerEvents: "none",
   },
+
   pieCenterLabel: {
     color: "var(--jd-text-secondary, #475569)",
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: 800,
   },
+
   pieCenterValue: {
     color: "var(--jd-text-main, #0F172A)",
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: 950,
-    lineHeight: 1.1,
+    lineHeight: 1.05,
   },
+
   pieCenterSub: {
     color: "var(--jd-text-muted, #64748B)",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 800,
   },
+
   legendColumn: {
     display: "grid",
-    gap: 10,
+    gap: 7,
     alignContent: "center",
     alignSelf: "stretch",
     paddingLeft: 0,
   },
-  legendItem: {
-    display: "grid",
-    gridTemplateColumns: "10px minmax(0, 1fr) 52px",
-    alignItems: "center",
-    gap: 10,
-    color: "var(--jd-text-main, #0F172A)",
-    fontSize: 14,
-  },
+
+legendItem: {
+  display: "grid",
+  gridTemplateColumns: "9px minmax(180px, auto) 42px",
+  alignItems: "center",
+  justifyContent: "start",
+  gap: 8,
+  color: "var(--jd-text-main, #0F172A)",
+  fontSize: 12,
+},
   legendDot: {
-    width: 9,
-    height: 9,
+    width: 8,
+    height: 8,
     borderRadius: 999,
   },
+
   legendLabel: {
     color: "var(--jd-text-secondary, #475569)",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 650,
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
-  legendPct: {
-    color: "var(--jd-text-main, #0F172A)",
-    fontSize: 13,
-    fontWeight: 900,
-    textAlign: "right",
-    justifySelf: "end",
-  },
+
+legendPct: {
+  color: "var(--jd-text-main, #0F172A)",
+  fontSize: 12,
+  fontWeight: 900,
+  textAlign: "left",
+  justifySelf: "start",
+},
   productActions: {
     display: "flex",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
     flexWrap: "wrap",
   },
-compareButton: {
-  minHeight: 34,
-  borderRadius: 999,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "#FFFFFF",
-  color: "var(--jd-brand-secondary)",
-  padding: "0 13px",
-  fontSize: 12,
-  fontWeight: 900,
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
-},
-viewAllButton: {
-  minHeight: 34,
-  padding: "0 13px",
-  borderRadius: 999,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "#FFFFFF",
-  color: "var(--jd-brand-secondary)",
-  fontSize: 12,
-  fontWeight: 900,
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
-},
+
+  compareButton: {
+    minHeight: 30,
+    borderRadius: 999,
+    border: "1px solid var(--jd-border-accent-soft)",
+    background: "#FFFFFF",
+    color: "var(--jd-brand-secondary)",
+    padding: "0 11px",
+    fontSize: 11,
+    fontWeight: 900,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
+  },
+
+  viewAllButton: {
+    minHeight: 30,
+    padding: "0 11px",
+    borderRadius: 999,
+    border: "1px solid var(--jd-border-accent-soft)",
+    background: "#FFFFFF",
+    color: "var(--jd-brand-secondary)",
+    fontSize: 11,
+    fontWeight: 900,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
+  },
 };

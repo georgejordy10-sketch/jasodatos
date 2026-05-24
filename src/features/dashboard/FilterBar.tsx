@@ -83,14 +83,18 @@ export default function FilterBar({
   onClearFilters,
 }: Props) {
   return (
-    <section style={styles.filterBar} aria-label="Filtros del anÃ¡lisis">
+    <section style={styles.filterBar} aria-label="Filtros del análisis">
       <div style={styles.header}>
         <div style={styles.titleWrap}>
           <span style={styles.accentDot} />
           <h2 style={styles.title}>Filtros</h2>
         </div>
 
-        <button type="button" style={styles.clearButtonTop} onClick={onClearFilters}>
+        <button
+          type="button"
+          style={styles.clearButtonTop}
+          onClick={onClearFilters}
+        >
           Limpiar filtros
         </button>
       </div>
@@ -110,87 +114,108 @@ export default function FilterBar({
           onChange={onChangeProducto}
         />
 
-        <FilterDate label="Desde" value={fromDate} onChange={onChangeFromDate} />
-        <FilterDate label="Hasta" value={toDate} onChange={onChangeToDate} />
+        <FilterDate
+          label="Desde"
+          value={fromDate}
+          onChange={onChangeFromDate}
+        />
+
+        <FilterDate
+          label="Hasta"
+          value={toDate}
+          onChange={onChangeToDate}
+        />
       </div>
     </section>
   );
 }
-
 const styles: Record<string, CSSProperties> = {
-filterBar: {
-  background: "var(--jd-gradient-container)",
-  color: "var(--jd-text-main)",
-  borderRadius: 22,
-  padding: 18,
-  border: "1px solid var(--jd-border-accent)",
-  boxShadow: "var(--jd-shadow-card)",
-},
+  filterBar: {
+    background: "var(--jd-gradient-container)",
+    color: "var(--jd-text-main)",
+    borderRadius: 16,
+    padding: "7px 10px",
+    border: "1px solid var(--jd-border-accent)",
+    boxShadow: "var(--jd-shadow-card)",
+    display: "grid",
+    gap: 5,
+  },
+
   header: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 12,
+    gap: 8,
     flexWrap: "wrap",
   },
+
   titleWrap: {
     display: "inline-flex",
     alignItems: "center",
-    gap: 9,
+    gap: 7,
   },
+
   accentDot: {
-    width: 10,
-    height: 10,
+    width: 8,
+    height: 8,
     borderRadius: 999,
     background: "var(--jd-gradient-accent)",
-    boxShadow: "0 0 0 5px rgba(37, 99, 235, 0.10)",
+    boxShadow: "0 0 0 4px rgba(37, 99, 235, 0.10)",
   },
+
   title: {
     margin: 0,
     color: "var(--jd-text-main, #0F172A)",
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: 900,
-    lineHeight: 1.1,
-    letterSpacing: "-0.03em",
+    lineHeight: 1,
+    letterSpacing: "-0.02em",
   },
+
   controlsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 10,
+    gap: 7,
   },
+
   filterBox: {
     display: "grid",
-    gap: 6,
+    gap: 2,
     minWidth: 0,
   },
+
   filterLabel: {
     color: "var(--jd-text-secondary, #475569)",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 850,
+    lineHeight: 1,
   },
+
   filterControl: {
     width: "100%",
     background: "#FFFFFF",
     color: "var(--jd-text-main, #0F172A)",
-    borderRadius: 13,
-    minHeight: 42,
-    padding: "0 13px",
+    borderRadius: 10,
+    minHeight: 31,
+    padding: "0 10px",
     fontWeight: 750,
+    fontSize: 12,
     border: "1px solid var(--jd-border-accent-soft)",
     outline: "none",
-    boxShadow: "0 7px 16px rgba(15, 23, 42, 0.04)",
+    boxShadow: "0 5px 12px rgba(15, 23, 42, 0.025)",
   },
+
   clearButtonTop: {
-    minHeight: 36,
+    minHeight: 26,
     borderRadius: 999,
     border: "1px solid rgba(61, 44, 141, 0.18)",
     background: "#FFFFFF",
     color: "var(--jd-brand-secondary, #3D2C8D)",
     fontWeight: 900,
-    fontSize: 12,
+    fontSize: 11,
     cursor: "pointer",
-    padding: "0 14px",
+    padding: "0 12px",
     whiteSpace: "nowrap",
-    boxShadow: "0 8px 18px rgba(15, 23, 42, 0.05)",
+    boxShadow: "0 6px 14px rgba(15, 23, 42, 0.035)",
   },
 };

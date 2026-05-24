@@ -63,6 +63,7 @@ useEffect(() => {
 
     if (
       hash === "resumen" ||
+      hash === "acciones" ||
       hash === "ventas" ||
       hash === "inventario" ||
       hash === "productos" ||
@@ -1289,7 +1290,9 @@ title={
                 {selectedUploadComparison ? (
   <div style={historyComparisonReferenceStyle}>
     Comparando contra:{" "}
-    <strong>{selectedUploadComparison.previous.fileName}</strong>
+   <span style={{ fontWeight: 500 }}>
+  {selectedUploadComparison.previous.fileName}
+</span>
     {" · "}
     {new Date(selectedUploadComparison.previous.uploadedAt).toLocaleString("es-EC")}
   </div>
@@ -1607,45 +1610,60 @@ const historyComparisonSubtitleStyle: React.CSSProperties = {
   fontWeight: 650,
 };
 const historyComparisonReferenceStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
   width: "fit-content",
+  maxWidth: "100%",
+  padding: "5px 10px",
   borderRadius: 999,
-  padding: "7px 12px",
-  background: "rgba(255,255,255,0.86)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  color: "var(--jd-text-main)",
-  fontSize: 12,
-  fontWeight: 750,
+  background: "rgba(255, 255, 255, 0.52)",
+  color: "var(--jd-text-secondary)",
+  fontSize: 11,
+  fontWeight: 500,
+  lineHeight: 1.2,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
 };
 const historyComparisonGridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: 12,
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  gap: 8,
 };
 const historyComparisonCardStyle: React.CSSProperties = {
-  borderRadius: 18,
   border: "1px solid var(--jd-border-accent-soft)",
+  borderRadius: 12,
+  padding: "8px 10px",
   background: "var(--jd-gradient-table-surface)",
-  padding: 16,
   display: "grid",
-  gap: 6,
+  gap: 3,
+  minHeight: 66,
+  alignContent: "center",
 };
 const historyComparisonLabelStyle: React.CSSProperties = {
+  display: "block",
   color: "var(--jd-text-secondary)",
-  fontSize: 12,
-  fontWeight: 850,
+  fontSize: 13,
+  fontWeight: 900,
+  lineHeight: 1.1,
+  letterSpacing: "-0.01em",
 };
 
 const historyComparisonValueStyle: React.CSSProperties = {
+  display: "block",
   color: "var(--jd-text-main)",
-  fontSize: 24,
-  fontWeight: 950,
-  letterSpacing: "-0.02em",
+  fontSize: 22,
+  fontWeight: 850,
+  lineHeight: 1.05,
+  letterSpacing: "-0.03em",
 };
 
 const historyComparisonFootStyle: React.CSSProperties = {
+  display: "block",
   color: "var(--jd-text-secondary)",
-  fontSize: 12,
-  fontWeight: 750,
+  fontSize: 11,
+  fontWeight: 700,
+  lineHeight: 1.15,
 };
 const historyComparisonModeStyle: React.CSSProperties = {
   display: "flex",
