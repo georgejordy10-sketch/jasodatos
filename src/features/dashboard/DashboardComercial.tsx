@@ -696,11 +696,13 @@ type DashboardSectionView =
   | "general"
   | "resumen"
   | "acciones"
+  | "comparativo"
+  | "alertas"
   | "ventas"
   | "inventario"
   | "productos"
-  | "alertas"
-  | "reportes";
+  | "reportes"
+  | "configuracion";
 export default function DashboardComercial({
   processedData,
   onClearFile,
@@ -839,32 +841,43 @@ useEffect(() => {
   };
 }, [currentBusinessSlug]);
 useEffect(() => {
-  function readSectionFromHash() {
-    const hash = window.location.hash.replace("#", "");
+function readSectionFromHash() {
+  const hash = window.location.hash.replace("#", "");
 
-    if (
-      hash === "resumen" ||
-      hash === "acciones" ||
-      hash === "ventas" ||
-      hash === "inventario" ||
-      hash === "productos" ||
-      hash === "alertas" ||
-      hash === "reportes"
-    ) {
-      setActiveSectionView(hash);
-      return;
-    }
-
+  if (hash === "configuracion") {
+    setSettingsOpen(true);
     setActiveSectionView("general");
+    return;
   }
 
-  readSectionFromHash();
+  if (
+    hash === "resumen" ||
+    hash === "acciones" ||
+    hash === "comparativo" ||
+    hash === "ventas" ||
+    hash === "inventario" ||
+    hash === "productos" ||
+    hash === "alertas" ||
+    hash === "reportes"
+  ) {
+    setActiveSectionView(hash);
+    return;
+  }
 
-  window.addEventListener("hashchange", readSectionFromHash);
-  return () => window.removeEventListener("hashchange", readSectionFromHash);
+  setActiveSectionView("general");
+}
+
+readSectionFromHash();
+
+window.addEventListener("hashchange", readSectionFromHash);
+return () => window.removeEventListener("hashchange", readSectionFromHash);
 }, []);
 function shouldShowSection(section: DashboardSectionView) {
-  return activeSectionView === "general" || activeSectionView === section;
+  if (activeSectionView === "general") {
+    return section !== "reportes";
+  }
+
+  return activeSectionView === section;
 }
 const isGeneralView = activeSectionView === "general";
 useEffect(() => {
@@ -2023,6 +2036,9 @@ const jasoBot = useMemo(() => {
     commercialRecommendations
   );
 }, [filteredRows, settings.defaultStockMin, commercialRecommendations]);
+
+const mainRecommendation = commercialRecommendations[0] ?? null;
+const secondaryRecommendations = commercialRecommendations.slice(1, 3);
 
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
@@ -3213,78 +3229,99 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
         </div>
       ))}
     </div>
-
     <div style={styles.actionsGrid}>
-      {jasoBot.recomendaciones?.slice(0, 3).map((item) => (
-        <div key={item} style={styles.actionCard}>
-          <div style={styles.actionText}>{item}</div>
+  {mainRecommendation ? (
+    <div style={styles.priorityActionCard}>
+      <div style={styles.priorityActionHeader}>
+        <span style={styles.priorityActionBadge}>Prioridad ahora</span>
+        <span style={styles.priorityActionType}>
+          {mainRecommendation.type}
+        </span>
+      </div>
+
+      <h3 style={styles.priorityActionTitle}>
+        {mainRecommendation.title}
+      </h3>
+
+      <p style={styles.priorityActionText}>
+        {mainRecommendation.message}
+      </p>
+
+      {!isExportingPdf ? (
+        <button
+          style={styles.priorityActionButton}
+          onClick={() =>
+            usarAccion(`${mainRecommendation.title}. ${mainRecommendation.message}`)
+          }
+        >
+          Copiar acción principal
+        </button>
+      ) : null}
+    </div>
+  ) : null}
+
+  {secondaryRecommendations.length > 0 ? (
+    <div style={styles.secondaryActionsList}>
+      {secondaryRecommendations.map((item) => (
+        <div key={`${item.title}-${item.type}`} style={styles.secondaryActionCard}>
+          <div>
+            <strong style={styles.secondaryActionTitle}>{item.title}</strong>
+            <p style={styles.secondaryActionText}>{item.message}</p>
+          </div>
 
           {!isExportingPdf ? (
             <button
               style={styles.actionButton}
-              onClick={() => usarAccion(item)}
+              onClick={() => usarAccion(`${item.title}. ${item.message}`)}
             >
-              Copiar mensaje
+              Copiar
             </button>
           ) : null}
         </div>
       ))}
-
-      {!isExportingPdf && actionNotice ? (
-        <div style={styles.actionNotice}>{actionNotice}</div>
-      ) : null}
-    </div>
-  </div>
-
-  {!isExportingPdf ? (
-    <div style={styles.assistantFooter}>
-      <div style={styles.modulePlanRow}>
-        <ActivePlanBadge tone="pro">PDF en Plan Crecimiento</ActivePlanBadge>
-        <ActivePlanBadge tone="ultra">WhatsApp en plan Control</ActivePlanBadge>
-      </div>
-
-      <div style={styles.assistantFooterActions}>
-        <button
-          style={{
-            ...styles.whatsappButton,
-            ...(!canUseWhatsappActions ? styles.disabledButton : null),
-          }}
-          onClick={enviarPromoWhatsApp}
-          disabled={!canUseWhatsappActions}
-          title={whatsappDisabledReason}
-        >
-          {!canUseWhatsappByPlan
-            ? "Disponible en plan Control"
-            : !hasValidWhatsapp
-            ? "Configura tu número celular"
-            : "Preparar campaña"}
-        </button>
-
-        <button
-          style={{
-            ...styles.shareButton,
-            ...(!(canExportPdf && canUseWhatsappInputs)
-              ? styles.disabledButton
-              : null),
-          }}
-          onClick={() => {
-            exportarPDF();
-            setTimeout(() => {
-              enviarWhatsApp();
-            }, 900);
-          }}
-          disabled={!(canExportPdf && canUseWhatsappInputs)}
-          title={pdfDisabledReason}
-        >
-          {!canExportPdf
-            ? "Disponible desde Crecimiento"
-            : !hasValidWhatsapp
-            ? "Configura tu número celular"
-            : "Compartir PDF"}
-        </button>
-      </div>
     </div>
   ) : null}
+      {!isExportingPdf && actionNotice ? (
+    <div style={styles.actionNotice}>{actionNotice}</div>
+  ) : null}
+</div>
+</div>
+
+{!isExportingPdf ? (
+  <div style={styles.assistantFooter}>
+    <div style={styles.assistantFooterActions}>
+      <button
+        type="button"
+        style={styles.assistantPdfButton}
+        onClick={() => setPlansOpen(true)}
+      >
+        PDF en Plan Crecimiento
+      </button>
+
+      <button
+        type="button"
+        style={styles.assistantWhatsappButton}
+        onClick={() => setPlansOpen(true)}
+      >
+        WhatsApp en plan Control
+      </button>
+    </div>
+
+    <div style={styles.assistantFooterActions}>
+      <span style={styles.assistantControlBadge}>
+        Disponible en plan Control
+      </span>
+
+      <button
+        type="button"
+        style={styles.assistantShareButton}
+        onClick={exportarPDF}
+      >
+        Compartir PDF
+      </button>
+    </div>
+  </div>
+) : null}
 </div>
     </>
   ) : (
@@ -3691,26 +3728,6 @@ assistantBody: {
   background: "#d8e1ff",
   border: "1px solid rgba(109,126,219,0.24)",
 },
-assistantFooter: {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  
-  flexWrap: "wrap",
-  marginTop: 2,
-  padding: "18px 10px 4px",
-  borderTop: "1px solid rgba(109,126,219,0.24)",
-  background: "#d8e1ff",
-  borderRadius: "0 0 18px 18px",
-},
-assistantFooterActions: {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "flex-end",
-  gap: 10,
-  flexWrap: "wrap",
-  paddingBottom: 2,
-},
 
 lockedFeatureActions: {
   display: "flex",
@@ -3871,34 +3888,40 @@ assistantInsights: {
     verticalAlign: "middle",
   },
 assistantChannelRow: {
+  minWidth: 420,
+  maxWidth: 680,
+  padding: "14px 16px",
+  borderRadius: 18,
+  background:
+    "linear-gradient(135deg, rgba(239,246,255,0.96) 0%, rgba(248,250,252,0.92) 100%)",
+  border: "2px solid rgba(37,99,235,0.42)",
+  boxShadow:
+    "0 12px 28px rgba(37,99,235,0.08), inset 0 1px 0 rgba(255,255,255,0.85)",
   display: "grid",
   gap: 8,
-  padding: 12,
-  borderRadius: 16,
-  background: "linear-gradient(135deg, rgba(109, 126, 219, 0.12) 0%, rgba(255,255,255,0.92) 100%)",
-  border: "1px solid rgba(109, 126, 219, 0.20)",
 },
 
 assistantChannelBadge: {
+  width: "fit-content",
+  minHeight: 24,
+  padding: "0 11px",
+  borderRadius: 999,
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  minHeight: 26,
-  padding: "0 10px",
-  borderRadius: 999,
-  background: "var(--jd-info-soft)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  color: "var(--jd-info)",
+  background: "rgba(37,99,235,0.12)",
+  color: "#1D4ED8",
+  border: "1px solid rgba(37,99,235,0.24)",
   fontSize: 11,
-  fontWeight: 800,
-  width: "fit-content",
+  fontWeight: 900,
+  whiteSpace: "nowrap",
 },
 
 assistantChannelText: {
-  color: "var(--jd-text-secondary)",
-  fontSize: 13,
-  lineHeight: 1.45,
-  fontWeight: 500,
+  color: "var(--jd-text-main)",
+  fontSize: 12,
+  fontWeight: 650,
+  lineHeight: 1.35,
 },
 
 disabledButton: {
@@ -3915,7 +3938,6 @@ lockedFeatureCard: {
   border: "1px solid rgba(255,255,255,0.12)",
   boxShadow: "0 12px 24px rgba(17,24,39,0.10)",
   display: "grid",
-  
 },
 
 lockedFeatureBadge: {
@@ -4073,13 +4095,13 @@ businessContextWarning: {
   fontWeight: 800,
 },
 productComparisonCard: {
-  borderRadius: 24,
-  padding: 20,
+  borderRadius: 18,
+  padding: "12px 14px",
   background: "var(--jd-gradient-container)",
   border: "1px solid var(--jd-border-accent)",
   boxShadow: "var(--jd-shadow-card)",
   display: "grid",
-  gap: 16,
+  gap: 10,
 },
 productComparisonHighlight: {
   outline: "5px solid rgba(34, 197, 94, 0.98)",
@@ -4091,7 +4113,7 @@ productComparisonHeader: {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "flex-start",
-  gap: 14,
+  gap: 10,
   flexWrap: "wrap",
 },
 
@@ -4105,53 +4127,55 @@ productComparisonTitleRow: {
 productComparisonTitle: {
   margin: 0,
   color: "var(--jd-text-main)",
-  fontSize: 22,
+  fontSize: 18,
   fontWeight: 900,
-  letterSpacing: "-0.02em",
+  letterSpacing: "-0.03em",
+  lineHeight: 1.05,
 },
 
 productComparisonSubtitle: {
-  margin: "5px 0 0",
+  margin: "3px 0 0",
   color: "var(--jd-text-secondary)",
-  fontSize: 13,
+  fontSize: 11,
   fontWeight: 650,
   maxWidth: 860,
+  lineHeight: 1.25,
 },
 comparisonHeaderActions: {
   display: "flex",
   alignItems: "flex-end",
-  gap: 10,
+  gap: 8,
   flexWrap: "wrap",
 },
 
 metricSelectorLabel: {
   display: "grid",
-  gap: 6,
+  gap: 4,
   color: "var(--jd-text-secondary)",
-  fontSize: 12,
+  fontSize: 11,
   fontWeight: 800,
 },
 
 metricSelector: {
-  minHeight: 38,
-  borderRadius: 12,
+  minHeight: 34,
+  borderRadius: 11,
   border: "1px solid var(--jd-border-accent-soft)",
   background: "rgba(255,255,255,0.92)",
   color: "var(--jd-text-main)",
-  padding: "0 12px",
-  fontSize: 12,
+  padding: "0 10px",
+  fontSize: 11,
   fontWeight: 850,
   outline: "none",
 },
 
 clearComparisonButton: {
-  minHeight: 38,
+  minHeight: 34,
   borderRadius: 999,
   border: "1px solid var(--jd-border-accent-soft)",
   background: "rgba(255,255,255,0.82)",
   color: "var(--jd-brand-secondary)",
-  padding: "0 14px",
-  fontSize: 12,
+  padding: "0 12px",
+  fontSize: 11,
   fontWeight: 900,
   cursor: "pointer",
 },
@@ -4201,22 +4225,21 @@ emptyActionButton: {
 
 productChipsRow: {
   display: "flex",
-  gap: 8,
+  gap: 6,
   flexWrap: "wrap",
 },
-
 productChip: {
-  minHeight: 34,
+  minHeight: 28,
   borderRadius: 999,
   border: "1px solid rgba(109,126,219,0.28)",
   background: "rgba(255,255,255,0.86)",
   color: "var(--jd-text-main)",
-  padding: "0 12px",
+  padding: "0 10px",
   display: "inline-flex",
   alignItems: "center",
-  gap: 8,
-  fontSize: 12,
-  fontWeight: 900,
+  gap: 6,
+  fontSize: 11,
+  fontWeight: 850,
   cursor: "pointer",
 },
 
@@ -4236,82 +4259,84 @@ productChipClose: {
 
 productComparisonGrid: {
   display: "grid",
-  gridTemplateColumns: "0.7fr 1.3fr",
-  gap: 16,
+  gridTemplateColumns: "1fr 0.92fr",
+  gap: 12,
   alignItems: "stretch",
 },
 
 productComparisonChartBox: {
-  borderRadius: 18,
+  borderRadius: 16,
   border: "1px solid var(--jd-border-accent-soft)",
   background: "var(--jd-gradient-table-surface)",
-  padding: 16,
+  padding: "12px 14px",
   display: "grid",
-  gap: 8,
+  gap: 6,
 },
 
 productComparisonBlockTitle: {
   margin: 0,
   color: "var(--jd-text-main)",
-  fontSize: 15,
+  fontSize: 14,
   fontWeight: 900,
 },
 
 productComparisonMiniText: {
   color: "var(--jd-text-secondary)",
-  fontSize: 12,
+  fontSize: 11,
   fontWeight: 700,
 },
 
 comparisonBars: {
-  minHeight: 250,
+  minHeight: 180,
   display: "flex",
   alignItems: "flex-end",
   justifyContent: "center",
-  gap: 30,
-  padding: "24px 10px 8px",
-  borderRadius: 16,
+  gap: 56,
+  padding: "14px 8px 6px",
+  borderRadius: 14,
   background:
     "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(241,244,255,0.88) 100%)",
   border: "1px solid rgba(109,126,219,0.12)",
+  overflowX: "auto",
 },
 
 comparisonBarItem: {
   display: "grid",
   justifyItems: "center",
   alignItems: "end",
-  gap: 8,
-  minWidth: 96,
+  gap: 6,
+  minWidth: 90,
 },
 
 comparisonBarValue: {
   color: "var(--jd-text-main)",
-  fontSize: 12,
+  fontSize: 11,
   fontWeight: 750,
   lineHeight: 1.1,
 },
 
 comparisonBar: {
-  width: 54,
+  width: 42,
   borderRadius: "6px 6px 0 0",
-  boxShadow: "0 12px 24px rgba(46,13,79,0.14)",
+  boxShadow: "0 10px 20px rgba(46,13,79,0.12)",
 },
-
 comparisonBarLabel: {
   color: "var(--jd-text-main)",
-  fontSize: 11,
+  fontSize: 10,
   fontWeight: 700,
-  lineHeight: 1.15,
+  lineHeight: 1.1,
   textAlign: "center",
+  maxWidth: 76,
+  minHeight: 24,
+  overflow: "hidden",
 },
 
 productComparisonTableBox: {
-  borderRadius: 18,
+  borderRadius: 16,
   border: "1px solid var(--jd-border-accent-soft)",
   background: "var(--jd-gradient-table-surface)",
-  padding: 16,
+  padding: "12px",
   display: "grid",
-  
   minWidth: 0,
   overflow: "hidden",
 },
@@ -4360,19 +4385,19 @@ productComparisonTotalTd: {
 },
 
 productInsightBox: {
-  borderRadius: 16,
+  borderRadius: 14,
   border: "1px solid rgba(34,197,94,0.22)",
   background:
     "linear-gradient(135deg, rgba(236,253,245,0.96) 0%, rgba(240,253,250,0.92) 100%)",
   color: "var(--jd-text-main)",
-  padding: "14px 16px",
-  fontSize: 13,
-  fontWeight: 800,
+  padding: "10px 12px",
+  fontSize: 12,
+  fontWeight: 600,
   display: "grid",
   gridTemplateColumns: "auto 1fr",
   alignItems: "start",
-  gap: 10,
-  lineHeight: 1.45,
+  gap: 8,
+  lineHeight: 1.35,
 },
 insightIcon: {
   width: 24,
@@ -4399,9 +4424,9 @@ insightTitle: {
 insightText: {
   margin: 0,
   color: "var(--jd-text-main)",
-  fontSize: 13,
-  fontWeight: 800,
-  lineHeight: 1.45,
+  fontSize: 12,
+  fontWeight: 600,
+  lineHeight: 1.35,
 },
 productCellInline: {
   display: "inline-flex",
@@ -4466,12 +4491,12 @@ pdfSpacerBeforeAssistant: {
 insightBadge: {
   width: "fit-content",
   borderRadius: 999,
-  padding: "6px 12px",
+  padding: "5px 10px",
   background: "rgba(34,197,94,0.12)",
   border: "1px solid rgba(34,197,94,0.22)",
   color: "#047857",
-  fontSize: 11,
-  fontWeight: 900,
+  fontSize: 10,
+  fontWeight: 850,
   textTransform: "uppercase",
   letterSpacing: "0.04em",
 },
@@ -4487,6 +4512,193 @@ assistantInsightItem: {
   fontSize: 12,
   lineHeight: 1.35,
   fontWeight: 500,
+},
+priorityActionCard: {
+  display: "grid",
+  gap: 8,
+  padding: "14px 16px",
+  borderRadius: 18,
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(239,242,255,0.92) 100%)",
+  border: "1px solid rgba(91,104,255,0.30)",
+  boxShadow:
+    "0 14px 32px rgba(61,44,141,0.10), inset 0 1px 0 rgba(255,255,255,0.82)",
+},
+
+priorityActionHeader: {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  flexWrap: "wrap",
+},
+
+priorityActionBadge: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 24,
+  padding: "0 10px",
+  borderRadius: 999,
+  background: "rgba(220,38,38,0.10)",
+  color: "#B91C1C",
+  border: "1px solid rgba(220,38,38,0.18)",
+  fontSize: 11,
+  fontWeight: 900,
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+},
+
+priorityActionType: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 24,
+  padding: "0 10px",
+  borderRadius: 999,
+  background: "var(--jd-info-soft)",
+  color: "var(--jd-info)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  fontSize: 11,
+  fontWeight: 850,
+},
+
+priorityActionTitle: {
+  margin: 0,
+  color: "var(--jd-text-main)",
+  fontSize: 18,
+  fontWeight: 950,
+  lineHeight: 1.12,
+  letterSpacing: "-0.02em",
+},
+
+priorityActionText: {
+  margin: 0,
+  color: "var(--jd-text-secondary)",
+  fontSize: 13,
+  fontWeight: 600,
+  lineHeight: 1.4,
+},
+
+priorityActionButton: {
+  width: "fit-content",
+  minHeight: 34,
+  padding: "0 13px",
+  borderRadius: 999,
+  border: "1px solid rgba(91,104,255,0.22)",
+  background: "var(--jd-gradient-accent)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  boxShadow: "0 10px 22px rgba(61,44,141,0.14)",
+},
+
+secondaryActionsList: {
+  display: "grid",
+  gap: 8,
+},
+
+secondaryActionCard: {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) auto",
+  gap: 10,
+  alignItems: "center",
+  padding: "10px 12px",
+  borderRadius: 14,
+  background: "rgba(255,255,255,0.72)",
+  border: "1px solid rgba(109,126,219,0.18)",
+},
+
+secondaryActionTitle: {
+  display: "block",
+  color: "var(--jd-text-main)",
+  fontSize: 13,
+  fontWeight: 850,
+  lineHeight: 1.2,
+},
+
+secondaryActionText: {
+  margin: "3px 0 0",
+  color: "var(--jd-text-secondary)",
+  fontSize: 12,
+  fontWeight: 550,
+  lineHeight: 1.35,
+},
+assistantFooter: {
+  marginTop: 12,
+  padding: "14px 16px",
+  borderRadius: 0,
+  background: "rgba(255,255,255,0.18)",
+  borderTop: "1px solid rgba(109,126,219,0.18)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  flexWrap: "wrap",
+},
+
+assistantFooterActions: {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  flexWrap: "wrap",
+},
+
+assistantPdfButton: {
+  minHeight: 36,
+  padding: "0 18px",
+  borderRadius: 999,
+  border: "1px solid rgba(91,104,255,0.22)",
+  background: "var(--jd-gradient-accent)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  boxShadow: "0 10px 22px rgba(61,44,141,0.16)",
+  whiteSpace: "nowrap",
+},
+
+assistantWhatsappButton: {
+  minHeight: 36,
+  padding: "0 18px",
+  borderRadius: 999,
+  border: "1px solid rgba(34,197,94,0.22)",
+  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  boxShadow: "0 10px 22px rgba(22,163,74,0.16)",
+  whiteSpace: "nowrap",
+},
+
+assistantControlBadge: {
+  minHeight: 36,
+  padding: "0 18px",
+  borderRadius: 999,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  border: "1px solid rgba(34,197,94,0.18)",
+  background: "rgba(34,197,94,0.38)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 900,
+  whiteSpace: "nowrap",
+},
+
+assistantShareButton: {
+  minHeight: 36,
+  padding: "0 18px",
+  borderRadius: 999,
+  border: "1px solid rgba(91,104,255,0.22)",
+  background: "var(--jd-gradient-accent)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  boxShadow: "0 10px 22px rgba(61,44,141,0.16)",
+  whiteSpace: "nowrap",
 },
 };
 

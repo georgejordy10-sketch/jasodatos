@@ -3,7 +3,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 
 import { AppSidebar } from "./AppSidebar";
-import { AppTopbar } from "./AppTopbar";
 import { PlanStatusBanner } from "./PlanStatusBanner";
 
 type AppShellProps = {
@@ -34,8 +33,6 @@ function useIsMobile(breakpoint = 900) {
 
 export function AppShell({
   children,
-  businessName = "JasoDatos",
-  periodLabel = "Período actual",
   planName = "basic",
   planStatus = "trial",
   showPlanBanner = true,
@@ -126,20 +123,13 @@ export function AppShell({
           flexDirection: "column",
         }}
       >
-        <AppTopbar
-          businessName={businessName}
-          periodLabel={periodLabel}
-          isMobile={isMobile}
-          onOpenSidebar={() => setIsSidebarOpen(true)}
-        />
-
-        <div
-          style={{
-            padding: isMobile ? "14px" : "24px",
-            display: "grid",
-            gap: isMobile ? "14px" : "20px",
-          }}
-        >
+       <div
+  style={{
+    padding: isMobile ? "0 14px 14px" : "0 24px 24px",
+    display: "grid",
+    gap: isMobile ? "14px" : "20px",
+  }}
+>
           {showPlanBanner ? (
   <PlanStatusBanner planName={planName} planStatus={planStatus} />
 ) : null}

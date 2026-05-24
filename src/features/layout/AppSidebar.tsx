@@ -12,7 +12,8 @@ const navItems = [
   { label: "Inventario", href: "/cargas#inventario" },
   { label: "Productos", href: "/cargas#productos" },
   { label: "Archivo", href: "/cargas#reportes" },
-];
+  { label: "Configuración", href: "/cargas#configuracion" },
+];  
 
 type AppSidebarProps = {
   onNavigate?: () => void;

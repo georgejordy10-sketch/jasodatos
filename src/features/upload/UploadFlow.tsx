@@ -61,19 +61,20 @@ useEffect(() => {
   function readUploadViewFromHash() {
     const hash = window.location.hash.replace("#", "");
 
-    if (
-      hash === "resumen" ||
-      hash === "acciones" ||
-      hash === "ventas" ||
-      hash === "inventario" ||
-      hash === "productos" ||
-      hash === "alertas" ||
-      hash === "reportes" ||
-      hash === "comparativo"
-    ) {
-      setActiveUploadView(hash);
-      return;
-    }
+if (
+  hash === "resumen" ||
+  hash === "acciones" ||
+  hash === "ventas" ||
+  hash === "inventario" ||
+  hash === "productos" ||
+  hash === "alertas" ||
+  hash === "reportes" ||
+  hash === "comparativo" ||
+  hash === "configuracion"
+) {
+  setActiveUploadView(hash);
+  return;
+}
 
     setActiveUploadView("general");
   }
@@ -514,18 +515,17 @@ function resetFlow() {
     fileInputRef.current.value = "";
   }
 }
-
-  return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <div
-        style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
-          padding: 16,
-          display: "grid",
-          gap: 12,
-        }}
-      >
+return (
+  <div style={{ display: "grid", gap: processedData ? 0 : 16 }}>
+    <div
+      style={{
+        border: processedData ? 0 : "1px solid #e5e7eb",
+        borderRadius: processedData ? 0 : 12,
+        padding: processedData ? 0 : 16,
+        display: "grid",
+        gap: processedData ? 0 : 12,
+      }}
+    >
       {!processedData ? (
   <h1 className="jd-upload-main-title" style={uploadTitleStyle}>
     Empecemos el análisis de tus datos
@@ -1247,24 +1247,6 @@ title={
       ) : null}
         {processedData ? (
   <div style={dashboardLayerStyle}>
-      {isUploadGeneralView ? (
-  <div style={dashboardLayerHeaderStyle}>
-    <div>
-      <strong style={dashboardLayerTitleStyle}>Dashboard listo</strong>
-      <p style={dashboardLayerSubtitleStyle}>
-        Archivo procesado correctamente.
-      </p>
-    </div>
-
-    <button
-      type="button"
-      onClick={resetFlow}
-      style={dashboardLayerBackButtonStyle}
-    >
-      Cargar otro archivo
-    </button>
-  </div>
-) : null}
           {processedData.rowIssues.length > 0 ? (
             <div style={analysisWarningStyle}>
               Se detectaron errores en {processedData.rowIssues.length} filas. Puedes revisar el archivo o continuar solo con las filas válidas.
@@ -1778,18 +1760,20 @@ const clearHistoryButtonStyle: React.CSSProperties = {
 };
 const dashboardLayerStyle: React.CSSProperties = {
   display: "grid",
-  gap: 16,
+  gap: 0,
+  marginTop: 0,
+  paddingTop: 0,
 };
 
 const dashboardLayerHeaderStyle: React.CSSProperties = {
   display: "flex",
+  alignItems: "center",
   justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 16,
+  gap: 12,
   flexWrap: "wrap",
   border: "1px solid #dbeafe",
-  borderRadius: 18,
-  padding: 16,
+  borderRadius: 0,
+  padding: "10px 16px",
   background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
 };
 
