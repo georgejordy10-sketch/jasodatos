@@ -357,7 +357,7 @@ shareTrack: {
   borderRadius: 999,
   background: "rgba(148, 163, 184, 0.18)",
   overflow: "hidden",
-},
+},  
 shareFill: {
   height: "100%",
   borderRadius: 999,

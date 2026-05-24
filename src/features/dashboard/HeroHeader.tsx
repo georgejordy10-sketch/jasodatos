@@ -143,46 +143,48 @@ bottomRow: {
     letterSpacing: "0.02em",
   },
 
-  brandRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 14,
-    minWidth: 0,
-  },
+brandRow: {
+  display: "flex",
+  alignItems: "center",
+  gap: 14,
+},
 
-  brandIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 16,
-    display: "grid",
-    placeItems: "center",
-    fontWeight: 900,
-    background: "var(--jd-gradient-brand-dark)",
-    color: "#FFFFFF",
-    boxShadow: "0 12px 26px rgba(61, 44, 141, 0.22)",
-    flex: "0 0 auto",
-  },
+brandIcon: {
+  width: 58,
+  height: 58,
+  borderRadius: 16,
+  background: "linear-gradient(135deg, #2E0D4F 0%, #3D2C8D 100%)",
+  color: "#FFFFFF",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: 20,
+  fontWeight: 950,
+  boxShadow: "0 14px 28px rgba(46, 13, 79, 0.18)",
+  flexShrink: 0,
+},
 
   titleBlock: {
     minWidth: 0,
   },
 
-  brandTitle: {
-    margin: 0,
-    fontSize: 30,
-    lineHeight: 1.02,
-    fontWeight: 950,
-    letterSpacing: "-0.05em",
-    color: "var(--jd-text-main)",
-  },
+brandTitle: {
+  margin: 0,
+  color: "var(--jd-text-main)",
+  fontSize: 46,
+  fontWeight: 950,
+  lineHeight: 0.95,
+  letterSpacing: "-0.065em",
+  textTransform: "capitalize",
+},
 
-  brandSubtitle: {
-    margin: "6px 0 0",
-    color: "var(--jd-text-secondary)",
-    fontSize: 14,
-    lineHeight: 1.35,
-    fontWeight: 650,
-  },
+brandSubtitle: {
+  margin: "6px 0 0",
+  color: "var(--jd-text-secondary)",
+  fontSize: 13,
+  fontWeight: 650,
+  lineHeight: 1.25,
+},
 
 actionsPanel: {
   display: "flex",
