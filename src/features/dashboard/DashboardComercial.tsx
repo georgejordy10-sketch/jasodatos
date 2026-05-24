@@ -695,6 +695,7 @@ type BusinessCrmData = {
 type DashboardSectionView =
   | "general"
   | "resumen"
+  | "acciones"
   | "ventas"
   | "inventario"
   | "productos"
@@ -843,6 +844,7 @@ useEffect(() => {
 
     if (
       hash === "resumen" ||
+      hash === "acciones" ||
       hash === "ventas" ||
       hash === "inventario" ||
       hash === "productos" ||
@@ -2241,276 +2243,333 @@ return (
   </div>
 ) : null}
 
-{activeSectionView === "general" ? (
-  <RecommendedActionsSection
-    recommendations={commercialRecommendations}
-    isExportingPdf={isExportingPdf}
-  />
-) : null}
-
-{activeSectionView === "general" && dashboardUploadHistory.length > 0 ? (  
-<section
-    style={{
-  border: "1px solid var(--jd-border-accent)",
-  borderRadius: 22,
-  padding: 18,
-  background: "var(--jd-gradient-container)",
-  boxShadow: "var(--jd-shadow-card)",
-  display: "grid",
-  gap: 14,
-}}
-  >
-    <div>
-     <div
-  style={{
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 12,
-    flexWrap: "wrap",
-  }}
->
-  <div>
-    <h3
-      style={{
-        margin: 0,
-color: "var(--jd-text-main)",
-fontSize: 21,
-fontWeight: 850,
-        letterSpacing: "-0.02em",
-      }}
-    >
-      Historial reciente de análisis
-    </h3>
-
-    <p
-      style={{
-        margin: "4px 0 0",
-color: "var(--jd-text-secondary)",
-fontSize: 13,
-lineHeight: 1.4,
-fontWeight: 500,
-      }}
-    >
-      Historial de archivos procesados para comparar la evolución del negocio.
-    </p>
+{shouldShowSection("acciones") ? (
+  <div id="acciones" style={{ scrollMarginTop: 96 }}>
+    <RecommendedActionsSection
+      recommendations={commercialRecommendations}
+      isExportingPdf={isExportingPdf}
+    />
   </div>
-
-{dashboardUploadHistory.length > 2 ? (
-  <button
-    type="button"
-    onClick={() => setShowFullUploadHistory(true)}
-style={{
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "rgba(109, 126, 219, 0.12)",
-  color: "var(--jd-brand-secondary)",
-  borderRadius: 999,
-  padding: "8px 12px",
-  fontSize: 12,
-  fontWeight: 750,
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-}}
-  >
-    Ver historial completo
-  </button>
 ) : null}
-</div>
-      {dashboardHistorySummary ? (
-  <div
+{activeSectionView === "general" && dashboardUploadHistory.length > 0 ? (
+  <section
     style={{
+      border: "1px solid var(--jd-border-accent)",
+      borderRadius: 18,
+      padding: "12px 14px",
+      background: "var(--jd-gradient-container)",
+      boxShadow: "var(--jd-shadow-card)",
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: 10,
-      marginTop: 12,
+      gap: 9,
     }}
   >
     <div
       style={{
-border: "1px solid var(--jd-border-accent-soft)",
-borderRadius: 16,
-padding: 12,
-background: "var(--jd-gradient-table-surface)",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: 8,
+        flexWrap: "wrap",
+      }}
+    >
+      <div>
+        <h3
+          style={{
+            margin: 0,
+            color: "var(--jd-text-main)",
+            fontSize: 16,
+            fontWeight: 900,
+            letterSpacing: "-0.02em",
+            lineHeight: 1.05,
+          }}
+        >
+          Historial reciente de análisis
+        </h3>
+
+        <p
+          style={{
+            margin: "2px 0 0",
+            color: "var(--jd-text-secondary)",
+            fontSize: 11,
+            lineHeight: 1.25,
+            fontWeight: 600,
+          }}
+        >
+          Comparación rápida entre la carga actual y la carga anterior.
+        </p>
+      </div>
+
+      {dashboardUploadHistory.length > 2 ? (
+        <button
+          type="button"
+          onClick={() => setShowFullUploadHistory(true)}
+          style={{
+            border: "1px solid var(--jd-border-accent-soft)",
+            background: "rgba(109, 126, 219, 0.12)",
+            color: "var(--jd-brand-secondary)",
+            borderRadius: 999,
+            padding: "5px 9px",
+            fontSize: 11,
+            fontWeight: 850,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Ver historial completo
+        </button>
+      ) : null}
+    </div>
+{dashboardHistorySummary ? (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+      gap: 7,
+    }}
+  >
+    <div
+      style={{
+        border: "1px solid var(--jd-border-accent-soft)",
+        borderRadius: 12,
+        padding: "8px 10px",
+        background: "var(--jd-gradient-table-surface)",
+        display: "grid",
+        gap: 3,
+        minHeight: 66,
       }}
     >
       <span
         style={{
           display: "block",
           color: "var(--jd-text-secondary)",
-          fontSize: 11,
-          fontWeight: 800,
+          fontSize: 9,
+          fontWeight: 850,
           textTransform: "uppercase",
           letterSpacing: "0.04em",
+          lineHeight: 1.1,
         }}
       >
-        Comparativo con ventas anteriores
+        Ventas vs anterior
       </span>
-      <strong style={{ color: "var(--jd-brand-secondary)", fontSize: 20 }}>
+
+<strong
+  style={{
+    color: "var(--jd-brand-secondary)",
+    fontSize: 18,
+    fontWeight: 750,
+    lineHeight: 1.05,
+    letterSpacing: "-0.02em",
+  }}
+>
         {dashboardHistorySummary.salesChange}
       </strong>
+
       <span
-  style={{
-    display: "block",
-    marginTop: 4,
-    color: "var(--jd-text-secondary)",
-    fontSize: 11,
-    fontWeight: 700,
-  }}
->
-  Actual:{" "}
-  {dashboardHistorySummary.currentSales.toLocaleString("es-EC", {
-    style: "currency",
-    currency: "USD",
-  })}{" "}
-  · Anterior:{" "}
-  {dashboardHistorySummary.previousSales.toLocaleString("es-EC", {
-    style: "currency",
-    currency: "USD",
-  })}
-</span>
+        style={{
+          display: "block",
+          color: "var(--jd-text-main)",
+          fontSize: 12,
+          fontWeight: 850,
+          lineHeight: 1.2,
+        }}
+      >
+        Actual:{" "}
+        {dashboardHistorySummary.currentSales.toLocaleString("es-EC", {
+          style: "currency",
+          currency: "USD",
+        })}{" "}
+        · Anterior:{" "}
+        {dashboardHistorySummary.previousSales.toLocaleString("es-EC", {
+          style: "currency",
+          currency: "USD",
+        })}
+      </span>
     </div>
 
     <div
       style={{
         border: "1px solid var(--jd-border-accent-soft)",
-        borderRadius: 16,
-        padding: 12,
+        borderRadius: 12,
+        padding: "8px 10px",
         background: "var(--jd-gradient-table-surface)",
+        display: "grid",
+        gap: 3,
+        minHeight: 66,
       }}
     >
       <span
         style={{
           display: "block",
           color: "var(--jd-text-secondary)",
-          fontSize: 11,
-          fontWeight: 800,
+          fontSize: 9,
+          fontWeight: 850,
           textTransform: "uppercase",
           letterSpacing: "0.04em",
+          lineHeight: 1.1,
         }}
       >
-        Comparativo con unidades anteriores
+        Unidades vs anterior
       </span>
-      <strong style={{ color: "var(--jd-brand-secondary)", fontSize: 20 }}>
+
+<strong
+  style={{
+    color: "var(--jd-brand-secondary)",
+    fontSize: 18,
+    fontWeight: 750,
+    lineHeight: 1.05,
+    letterSpacing: "-0.02em",
+  }}
+>
         {dashboardHistorySummary.unitsChange}
       </strong>
+
       <span
-  style={{
-    display: "block",
-    marginTop: 4,
-    color: "var(--jd-text-secondary)",
-    fontSize: 11,
-    fontWeight: 700,
-  }}
->
-  Actual: {dashboardHistorySummary.currentUnits} · Anterior:{" "}
-  {dashboardHistorySummary.previousUnits}
-</span>
+        style={{
+          display: "block",
+          color: "var(--jd-text-main)",
+          fontSize: 12,
+          fontWeight: 850,
+          lineHeight: 1.2,
+        }}
+      >
+        Actual: {dashboardHistorySummary.currentUnits} · Anterior:{" "}
+        {dashboardHistorySummary.previousUnits}
+      </span>
     </div>
 
     <div
       style={{
         border: "1px solid var(--jd-border-accent-soft)",
-        borderRadius: 16,
-        padding: 12,
+        borderRadius: 12,
+        padding: "8px 10px",
         background: "var(--jd-gradient-table-surface)",
+        display: "grid",
+        gap: 3,
+        minHeight: 66,
       }}
     >
       <span
         style={{
           display: "block",
           color: "var(--jd-text-secondary)",
-          fontSize: 11,
-          fontWeight: 800,
+          fontSize: 9,
+          fontWeight: 850,
           textTransform: "uppercase",
           letterSpacing: "0.04em",
+          lineHeight: 1.1,
         }}
       >
-        Comparativo con productos anteriores
+        Productos vs anterior
       </span>
-      <strong style={{ color: "var(--jd-brand-secondary)", fontSize: 20 }}>
+
+<strong
+  style={{
+    color: "var(--jd-brand-secondary)",
+    fontSize: 18,
+    fontWeight: 750,
+    lineHeight: 1.05,
+    letterSpacing: "-0.02em",
+  }}
+>
         {dashboardHistorySummary.productDelta >= 0 ? "+" : ""}
         {dashboardHistorySummary.productDelta}
       </strong>
+
       <span
-  style={{
-    display: "block",
-    marginTop: 4,
-    color: "var(--jd-text-secondary)",
-    fontSize: 11,
-    fontWeight: 700,
-  }}
->
-  Actual: {dashboardHistorySummary.currentProducts} · Anterior:{" "}
-  {dashboardHistorySummary.previousProducts}
-</span>
-    </div>
-  </div>
-) : null}
+        style={{
+          display: "block",
+          color: "var(--jd-text-secondary)",
+          fontSize: 12,
+          fontWeight: 850,
+          lineHeight: 1.25,
+        }}
+      >
+        Actual: {dashboardHistorySummary.currentProducts} · Anterior:{" "}
+        {dashboardHistorySummary.previousProducts}
+      </span>
     </div>
 
     <div
       style={{
+        border: "1px solid var(--jd-border-accent-soft)",
+        borderRadius: 12,
+        padding: "8px 10px",
+        background: "var(--jd-gradient-table-surface)",
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: 10,
+        gap: 3,
+        minHeight: 66,
       }}
     >
-{dashboardUploadHistory.slice(0, 2).map((item) => (
-        <article
-          key={item.id}
-style={{
-  border: "1px solid var(--jd-border-accent-soft)",
-  borderRadius: 16,
-  padding: 12,
-  background: "var(--jd-gradient-table-surface)",
-  display: "grid",
-  gap: 8,
-}}
+      <span
+        style={{
+          display: "block",
+          color: "var(--jd-text-secondary)",
+          fontSize: 9,
+          fontWeight: 850,
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+          lineHeight: 1.1,
+        }}
+      >
+        Última carga de archivos
+      </span>
+
+      <span
+        style={{
+          color: "var(--jd-text-main)",
+          fontSize: 10,
+          fontWeight: 500,
+          lineHeight: 1.15,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+        title={dashboardUploadHistory[0]?.file_name}
+      >
+        {dashboardUploadHistory[0]?.file_name}
+      </span>
+
+      <span
+        style={{
+          color: "var(--jd-text-secondary)",
+          fontSize: 9,
+          fontWeight: 500,
+          lineHeight: 1.2,
+        }}
+      >
+        {dashboardUploadHistory[0]
+          ? new Date(dashboardUploadHistory[0].uploaded_at).toLocaleString(
+              "es-EC"
+            )
+          : ""}
+        {" · "}
+        {dashboardUploadHistory[0]?.total_rows} filas
+        {" · "}
+        {dashboardUploadHistory[0]?.total_units} unidades
+        {" · "}
+        {dashboardUploadHistory[0]?.products_count} productos
+      </span>
+
+      {dashboardUploadHistory[1] ? (
+        <span
+          style={{
+            color: "var(--jd-text-muted)",
+            fontSize: 9,
+            fontWeight: 500,
+            lineHeight: 1.2,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={dashboardUploadHistory[1].file_name}
         >
-          <div style={{ display: "grid", gap: 2 }}>
-            <strong
-              style={{
-                color: "var(--jd-text-main)",
-                fontSize: 13,
-                lineHeight: 1.25,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-              title={item.file_name}
-            >
-              {item.file_name}
-            </strong>
-
-            <span style={{ color: "var(--jd-text-secondary)", fontSize: 11, fontWeight: 700 }}>
-              {new Date(item.uploaded_at).toLocaleString("es-EC")}
-            </span>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              color: "var(--jd-text-secondary)",
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            <span>{item.total_rows} filas</span>
-            <span>
-              {Number(item.total_sales).toLocaleString("es-EC", {
-                style: "currency",
-                currency: "USD",
-              })}
-            </span>
-            <span>{item.total_units} unidades</span>
-            <span>{item.products_count} productos</span>
-          </div>
-        </article>
-      ))}
+          Anterior: {dashboardUploadHistory[1].file_name}
+        </span>
+      ) : null}
     </div>
-  </section>
+  </div>
+) : null}
+</section>
 ) : null}
 {showFullUploadHistory ? (
   <div
@@ -2545,7 +2604,7 @@ style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          gap: 12,
+          
           flexWrap: "wrap",
         }}
       >
@@ -3563,7 +3622,7 @@ const detailStyles: Record<string, CSSProperties> = {
   td: {
     padding: "12px 14px",
     fontSize: 13,
-    fontWeight: 700,
+    fontWeight: 800,
     color: "#FFFFFF",
     borderBottom: "1px solid rgba(255,255,255,0.08)",
     verticalAlign: "top",
@@ -3636,9 +3695,9 @@ assistantFooter: {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  gap: 12,
+  
   flexWrap: "wrap",
-  marginTop: 4,
+  marginTop: 2,
   padding: "18px 10px 4px",
   borderTop: "1px solid rgba(109,126,219,0.24)",
   background: "#d8e1ff",
@@ -3694,7 +3753,7 @@ actionNotice: {
   border: "1px solid var(--jd-border-accent-soft)",
   color: "var(--jd-brand-secondary)",
   fontSize: 13,
-  fontWeight: 700,
+  fontWeight: 800,
 },
 
 assistantPromoBadge: {
@@ -3803,7 +3862,7 @@ assistantInsights: {
     padding: "12px 14px",
     color: "#BFC8FF",
     borderBottom: "1px solid rgba(255,255,255,0.10)",
-    fontWeight: 700,
+    fontWeight: 800,
   },
   td: {
     padding: "12px 14px",
@@ -3856,7 +3915,7 @@ lockedFeatureCard: {
   border: "1px solid rgba(255,255,255,0.12)",
   boxShadow: "0 12px 24px rgba(17,24,39,0.10)",
   display: "grid",
-  gap: 12,
+  
 },
 
 lockedFeatureBadge: {
@@ -3872,7 +3931,7 @@ lockedFeatureBadge: {
 
 lockedFeatureTitle: {
   margin: 0,
-  fontSize: 20,
+  fontSize: 15,
   fontWeight: 800,
   color: "#FFFFFF",
 },
@@ -3906,7 +3965,7 @@ lockedFeatureFooter: {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  gap: 12,
+  
   flexWrap: "wrap",
 },
 
@@ -3933,7 +3992,7 @@ lockedFeatureButton: {
 modulePlanRow: {
   display: "inline-flex",
   alignItems: "center",
-  gap: 12,
+  
   flexWrap: "wrap",
   margin: "0 0 12px 4px",
   padding: 0,
@@ -4252,7 +4311,7 @@ productComparisonTableBox: {
   background: "var(--jd-gradient-table-surface)",
   padding: 16,
   display: "grid",
-  gap: 12,
+  
   minWidth: 0,
   overflow: "hidden",
 },

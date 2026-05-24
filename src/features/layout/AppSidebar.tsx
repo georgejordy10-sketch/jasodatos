@@ -5,13 +5,13 @@ import { useEffect, useState } from "react";
 const navItems = [
   { label: "Vista general", href: "/cargas#general" },
   { label: "Resumen", href: "/cargas#resumen" },
+  { label: "Acciones", href: "/cargas#acciones" },
   { label: "Comparativo", href: "/cargas#comparativo" },
+  { label: "Alertas", href: "/cargas#alertas" },
   { label: "Ventas", href: "/cargas#ventas" },
   { label: "Inventario", href: "/cargas#inventario" },
   { label: "Productos", href: "/cargas#productos" },
-  { label: "Alertas", href: "/cargas#alertas" },
-  { label: "Reportes", href: "/cargas#reportes" },
-  { label: "Admin", href: "/admin/clientes" },
+  { label: "Archivo", href: "/cargas#reportes" },
 ];
 
 type AppSidebarProps = {

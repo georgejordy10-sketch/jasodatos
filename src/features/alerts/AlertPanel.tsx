@@ -159,104 +159,102 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
 }
 
 const styles: Record<string, CSSProperties> = {
-  card: {
-    background: "var(--jd-gradient-container)",
-    borderRadius: 22,
-    padding: 18,
-    border: "1px solid var(--jd-border-accent)",
-    boxShadow: "var(--jd-shadow-card)",
-    display: "grid",
-    gap: 14,
-  },
+card: {
+  background: "var(--jd-gradient-container)",
+  borderRadius: 18,
+  padding: "12px 14px",
+  border: "1px solid var(--jd-border-accent)",
+  boxShadow: "var(--jd-shadow-card)",
+  display: "grid",
+  gap: 8,
+},
 
-  header: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 14,
-    flexWrap: "wrap",
-  },
+header: {
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: 10,
+  flexWrap: "wrap",
+},
 
-  headerCopy: {
-    display: "grid",
-    gap: 5,
-    minWidth: 0,
-  },
+headerCopy: {
+  display: "grid",
+  gap: 3,
+  minWidth: 0,
+},
 
-  eyebrow: {
-    display: "inline-flex",
-    alignItems: "center",
-    width: "fit-content",
-    minHeight: 26,
-    padding: "0 11px",
-    borderRadius: 999,
-    background: "var(--jd-info-soft)",
-    color: "var(--jd-info)",
-    border: "1px solid var(--jd-border-accent-soft)",
-    fontSize: 11,
-    fontWeight: 900,
-  },
+ eyebrow: {
+  display: "inline-flex",
+  alignItems: "center",
+  width: "fit-content",
+  minHeight: 22,
+  padding: "0 9px",
+  borderRadius: 999,
+  background: "var(--jd-info-soft)",
+  color: "var(--jd-info)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  fontSize: 10,
+  fontWeight: 900,
+},
 
-  title: {
-    margin: 0,
-    color: "var(--jd-text-main)",
-    fontSize: 22,
-    fontWeight: 950,
-    lineHeight: 1.08,
-    letterSpacing: "-0.035em",
-  },
+title: {
+  margin: 0,
+  color: "var(--jd-text-main)",
+  fontSize: 16,
+  fontWeight: 950,
+  lineHeight: 1.02,
+  letterSpacing: "-0.025em",
+},
+subtitle: {
+  margin: 0,
+  color: "var(--jd-text-secondary)",
+  fontSize: 11,
+  fontWeight: 600,
+  lineHeight: 1.25,
+},
 
-  subtitle: {
-    margin: 0,
-    color: "var(--jd-text-secondary)",
-    fontSize: 14,
-    fontWeight: 600,
-    lineHeight: 1.4,
-  },
+counterWrap: {
+  minWidth: 50,
+  minHeight: 38,
+  borderRadius: 12,
+  display: "grid",
+  placeItems: "center",
+  gap: 0,
+  background: "var(--jd-gradient-table-surface)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  padding: "5px 8px",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72)",
+},
 
-  counterWrap: {
-    minWidth: 72,
-    minHeight: 58,
-    borderRadius: 18,
-    display: "grid",
-    placeItems: "center",
-    gap: 2,
-    background: "var(--jd-gradient-table-surface)",
-    border: "1px solid var(--jd-border-accent-soft)",
-    padding: "8px 12px",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72)",
-  },
+counter: {
+  color: "var(--jd-brand-secondary)",
+  fontSize: 16,
+  fontWeight: 950,
+  lineHeight: 1,
+},
+counterLabel: {
+  color: "var(--jd-text-muted)",
+  fontSize: 9,
+  fontWeight: 750,
+  lineHeight: 1,
+},
 
-  counter: {
-    color: "var(--jd-brand-secondary)",
-    fontSize: 22,
-    fontWeight: 950,
-    lineHeight: 1,
-  },
+summaryRow: {
+  display: "flex",
+  gap: 6,
+  flexWrap: "wrap",
+},
 
-  counterLabel: {
-    color: "var(--jd-text-muted)",
-    fontSize: 11,
-    fontWeight: 750,
-    lineHeight: 1,
-  },
-
-  summaryRow: {
-    display: "flex",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-
-  summaryPill: {
-    borderRadius: 999,
-    padding: "7px 12px",
-    fontSize: 12,
-    fontWeight: 850,
-    lineHeight: 1,
-    minHeight: 32,
-    display: "inline-flex",
-    alignItems: "center",
-  },
+summaryPill: {
+  borderRadius: 999,
+  padding: "4px 8px",
+  fontSize: 9,
+  fontWeight: 850,
+  lineHeight: 1,
+  minHeight: 20,
+  display: "inline-flex",
+  alignItems: "center",
+},
 
   emptyState: {
     minHeight: 68,
@@ -272,23 +270,22 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 600,
   },
 
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: 12,
-  },
+grid: {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+  gap: 8,
+},
 
 alertCard: {
-  borderRadius: 18,
-  padding: 16,
+  borderRadius: 14,
+  padding: "10px 11px",
   background: "var(--jd-gradient-container)",
   border: "1px solid var(--jd-border-accent)",
   display: "grid",
-  gap: 10,
-  minHeight: 148,
+  gap: 5,
+  minHeight: 82,
   boxShadow: "var(--jd-shadow-card)",
 },
-
   alertTop: {
     display: "flex",
     alignItems: "center",
@@ -296,36 +293,36 @@ alertCard: {
     gap: 8,
   },
 
-  severityBadge: {
-    borderRadius: 999,
-    padding: "6px 11px",
-    fontSize: 11,
-    fontWeight: 900,
-    letterSpacing: 0.2,
-    lineHeight: 1,
-  },
+severityBadge: {
+  borderRadius: 999,
+  padding: "4px 8px",
+  fontSize: 9,
+  fontWeight: 900,
+  letterSpacing: 0.2,
+  lineHeight: 1,
+},
 
-  contentBlock: {
-    display: "grid",
-    gap: 7,
-  },
+contentBlock: {
+  display: "grid",
+  gap: 3,
+},
 
-  alertTitle: {
-    margin: 0,
-    color: "var(--jd-text-main)",
-    fontSize: 17,
-    fontWeight: 900,
-    lineHeight: 1.2,
-    letterSpacing: "-0.02em",
-  },
+alertTitle: {
+  margin: 0,
+  color: "var(--jd-text-main)",
+  fontSize: 13,
+  fontWeight: 900,
+  lineHeight: 1.12,
+  letterSpacing: "-0.01em",
+},
 
-  alertMessage: {
-    margin: 0,
-    color: "var(--jd-text-secondary)",
-    fontSize: 14,
-    fontWeight: 600,
-    lineHeight: 1.45,
-  },
+alertMessage: {
+  margin: 0,
+  color: "var(--jd-text-secondary)",
+  fontSize: 11,
+  fontWeight: 600,
+  lineHeight: 1.25,
+},
 
   actionsRow: {
     display: "flex",
@@ -338,8 +335,8 @@ actionButton: {
   background: "rgba(109, 126, 219, 0.12)",
   color: "var(--jd-brand-secondary)",
   borderRadius: 999,
-  padding: "8px 12px",
-  fontSize: 12,
+  padding: "5px 9px",
+  fontSize: 10,
   fontWeight: 900,
   cursor: "pointer",
   textDecoration: "none",
@@ -348,10 +345,9 @@ actionButton: {
   justifyContent: "center",
   boxShadow: "0 8px 18px rgba(46, 13, 79, 0.06)",
 },
-
-  noAction: {
-    color: "var(--jd-text-muted)",
-    fontSize: 12,
-    fontWeight: 700,
-  },
+noAction: {
+  color: "var(--jd-text-muted)",
+  fontSize: 11,
+  fontWeight: 700,
+},
 };
