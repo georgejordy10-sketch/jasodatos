@@ -141,13 +141,12 @@ const styles: Record<string, CSSProperties> = {
     gap: 5,
   },
 
-  header: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    flexWrap: "wrap",
-  },
+header: {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: 10,
+},
 
   titleWrap: {
     display: "inline-flex",
@@ -184,13 +183,14 @@ const styles: Record<string, CSSProperties> = {
     minWidth: 0,
   },
 
-  filterLabel: {
-    color: "var(--jd-text-secondary, #475569)",
-    fontSize: 10,
-    fontWeight: 850,
-    lineHeight: 1,
-  },
-
+filterLabel: {
+  color: "rgba(255,255,255,0.86)",
+  fontSize: 14,
+  fontWeight: 400,
+  lineHeight: 1,
+  paddingLeft: 8,
+  transform: "translateY(-2px)",
+},
   filterControl: {
     width: "100%",
 background: "rgba(255,255,255,0.92)",
@@ -206,16 +206,17 @@ color: "#111827",
   },
 
 clearButtonTop: {
-  minHeight: 26,
+  minHeight: 28,
   borderRadius: 999,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "rgba(255,255,255,0.08)",
-  color: "var(--jd-text-main)",
-  fontWeight: 900,
-  fontSize: 11,
+  border: "1px solid rgba(255,255,255,0.86)",
+  background: "rgba(56, 189, 248, 0.18)",
+  color: "#FFFFFF",
+  fontWeight: 500,
+  fontSize: 12,
   cursor: "pointer",
-  padding: "0 12px",
+  padding: "0 14px",
   whiteSpace: "nowrap",
-  boxShadow: "0 6px 14px rgba(0, 0, 0, 0.10)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
 },
 };

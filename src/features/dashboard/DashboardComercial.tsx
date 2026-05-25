@@ -2384,26 +2384,29 @@ return (
   </div>
 ) : null}
 {activeSectionView === "general" && dashboardUploadHistory.length > 0 ? (
-  <section
-    style={{
-      border: "1px solid var(--jd-border-accent)",
-      borderRadius: 18,
-      padding: "12px 14px",
-      background: "var(--jd-gradient-container)",
-      boxShadow: "var(--jd-shadow-card)",
-      display: "grid",
-      gap: 9,
-    }}
-  >
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        gap: 8,
-        flexWrap: "wrap",
-      }}
-    >
+<section
+  style={{
+    border: "1px solid rgba(255,255,255,0.42)",
+    borderRadius: 18,
+    padding: "18px",
+    background: "var(--jd-gradient-container)",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.04)",
+    display: "grid",
+    gap: 14,
+    maxWidth: "calc(100% - 48px)",
+    margin: "0 auto",
+  }}
+>
+<div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 8,
+    flexWrap: "wrap",
+  }}
+>
       <div>
         <h3
           style={{
@@ -2462,15 +2465,16 @@ style={{
     }}
   >
     <div
-      style={{
-        border: "1px solid var(--jd-border-accent-soft)",
-        borderRadius: 12,
-        padding: "8px 10px",
-        background: "var(--jd-gradient-table-surface)",
-        display: "grid",
-        gap: 3,
-        minHeight: 66,
-      }}
+style={{
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: 14,
+  padding: "10px 12px",
+  background: "rgba(255,255,255,0.08)",
+  display: "grid",
+  gap: 4,
+  minHeight: 74,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+}}
     >
       <span
 style={{
@@ -2497,15 +2501,15 @@ style={{
         {dashboardHistorySummary.salesChange}
       </strong>
 
-      <span
-        style={{
-          display: "block",
-color: "#7DD3FC",
-fontSize: 12,
-fontWeight: 500,
-lineHeight: 1.2,
-        }}
-      >
+<span
+  style={{
+    display: "block",
+    color: "#86EFAC",
+    fontSize: 13,
+    fontWeight: 600,
+    lineHeight: 1.25,
+  }}
+>
         Actual:{" "}
         {dashboardHistorySummary.currentSales.toLocaleString("es-EC", {
           style: "currency",
@@ -2520,15 +2524,16 @@ lineHeight: 1.2,
     </div>
 
     <div
-      style={{
-        border: "1px solid var(--jd-border-accent-soft)",
-        borderRadius: 12,
-        padding: "8px 10px",
-        background: "var(--jd-gradient-table-surface)",
-        display: "grid",
-        gap: 3,
-        minHeight: 66,
-      }}
+style={{
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: 14,
+  padding: "10px 12px",
+  background: "rgba(255,255,255,0.08)",
+  display: "grid",
+  gap: 4,
+  minHeight: 74,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+}}
     >
       <span
 style={{
@@ -2555,30 +2560,31 @@ style={{
         {dashboardHistorySummary.unitsChange}
       </strong>
 
-      <span
-        style={{
-          display: "block",
-color: "#7DD3FC",
-fontSize: 12,
-fontWeight: 500,
-lineHeight: 1.2,
-        }}
-      >
+<span
+  style={{
+    display: "block",
+    color: "#86EFAC",
+    fontSize: 13,
+    fontWeight: 600,
+    lineHeight: 1.25,
+  }}
+>
         Actual: {dashboardHistorySummary.currentUnits} · Anterior:{" "}
         {dashboardHistorySummary.previousUnits}
       </span>
     </div>
 
     <div
-      style={{
-        border: "1px solid var(--jd-border-accent-soft)",
-        borderRadius: 12,
-        padding: "8px 10px",
-        background: "var(--jd-gradient-table-surface)",
-        display: "grid",
-        gap: 3,
-        minHeight: 66,
-      }}
+style={{
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: 14,
+  padding: "10px 12px",
+  background: "rgba(255,255,255,0.08)",
+  display: "grid",
+  gap: 4,
+  minHeight: 74,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+}}
     >
       <span
 style={{
@@ -2621,15 +2627,16 @@ lineHeight: 1.25,
     </div>
 
     <div
-      style={{
-        border: "1px solid var(--jd-border-accent-soft)",
-        borderRadius: 12,
-        padding: "8px 10px",
-        background: "var(--jd-gradient-table-surface)",
-        display: "grid",
-        gap: 3,
-        minHeight: 66,
-      }}
+style={{
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: 14,
+  padding: "10px 12px",
+  background: "rgba(255,255,255,0.08)",
+  display: "grid",
+  gap: 4,
+  minHeight: 74,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+}}
     >
       <span
 style={{
@@ -2645,15 +2652,15 @@ style={{
       </span>
 
       <span
-        style={{
-          color: "var(--jd-text-main)",
-          fontSize: 10,
-          fontWeight: 500,
-          lineHeight: 1.15,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
+style={{
+  color: "#86EFAC",
+  fontSize: 12,
+  fontWeight: 600,
+  lineHeight: 1.2,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+}}
         title={dashboardUploadHistory[0]?.file_name}
       >
         {dashboardUploadHistory[0]?.file_name}
@@ -2682,15 +2689,15 @@ style={{
 
       {dashboardUploadHistory[1] ? (
         <span
-          style={{
-            color: "var(--jd-text-muted)",
-            fontSize: 9,
-            fontWeight: 500,
-            lineHeight: 1.2,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
+style={{
+  color: "rgba(255,255,255,0.72)",
+  fontSize: 10,
+  fontWeight: 400,
+  lineHeight: 1.2,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+}}
           title={dashboardUploadHistory[1].file_name}
         >
           Anterior: {dashboardUploadHistory[1].file_name}

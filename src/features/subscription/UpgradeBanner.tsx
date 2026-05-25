@@ -82,25 +82,27 @@ export default function UpgradeBanner({
 }
 
 const styles: Record<string, CSSProperties> = {
-  wrapper: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
-    padding: "10px 14px",
-    borderRadius: 16,
-    background:
-      "linear-gradient(135deg, rgba(238, 242, 255, 0.94) 0%, rgba(224, 231, 255, 0.82) 100%)",
-    border: "1px solid rgba(79, 70, 229, 0.14)",
-    boxShadow: "0 8px 18px rgba(79, 70, 229, 0.06)",
-  },
-  wrapperUltra: {
-    background:
-      "linear-gradient(135deg, rgba(240, 253, 244, 0.94) 0%, rgba(220, 252, 231, 0.78) 100%)",
-    border: "1px solid rgba(34, 197, 94, 0.18)",
-    boxShadow: "0 8px 18px rgba(34, 197, 94, 0.06)",
-  },
+wrapper: {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
+  padding: "10px 14px",
+  borderRadius: 16,
+  background: "rgba(56, 189, 248, 0.18)",
+  border: "1px solid rgba(125, 211, 252, 0.36)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.06)",
+  color: "#FFFFFF",
+},
+wrapperUltra: {
+  background: "rgba(56, 189, 248, 0.18)",
+  border: "1px solid rgba(125, 211, 252, 0.36)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.06)",
+  color: "#FFFFFF",
+},
   content: {
     display: "flex",
     alignItems: "center",
@@ -108,60 +110,64 @@ const styles: Record<string, CSSProperties> = {
     flexWrap: "wrap",
     minWidth: 0,
   },
-  badge: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 26,
-    padding: "0 12px",
-    borderRadius: 999,
-    fontSize: 11,
-    fontWeight: 900,
-    color: "#FFFFFF",
-    whiteSpace: "nowrap",
-  },
+badge: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 26,
+  padding: "0 12px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 600,
+  color: "#1E3A8A",
+  whiteSpace: "nowrap",
+  border: "1px solid rgba(30, 58, 138, 0.42)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.18), 0 0 10px rgba(30,58,138,0.08)",
+},
   badgeBasic: {
     background: "linear-gradient(135deg, #475569 0%, #64748B 100%)",
   },
   badgePro: {
     background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)",
   },
-  badgeUltra: {
-    background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
-  },
+badgeUltra: {
+  background: "rgba(30, 58, 138, 0.12)",
+  color: "#1E3A8A",
+},
   textBlock: {
     display: "grid",
     gap: 2,
     minWidth: 0,
   },
-  title: {
-    margin: 0,
-    color: "var(--jd-brand-secondary, #3D2C8D)",
-    fontSize: 15,
-    fontWeight: 900,
-    letterSpacing: "-0.015em",
-    lineHeight: 1.18,
-  },
-  subtitle: {
-    margin: 0,
-    color: "var(--jd-text-secondary, #475569)",
-    fontSize: 12.5,
-    lineHeight: 1.35,
-    fontWeight: 650,
-    maxWidth: 680,
-  },
-  button: {
-    minHeight: 36,
-    padding: "0 14px",
-    borderRadius: 999,
-    border: "1px solid rgba(79, 70, 229, 0.18)",
-    background:
-      "linear-gradient(135deg, var(--jd-action-primary, #2563EB) 0%, var(--jd-action-premium, #7C3AED) 100%)",
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: 900,
-    cursor: "pointer",
-    boxShadow: "0 8px 18px rgba(68, 96, 255, 0.14)",
-    whiteSpace: "nowrap",
-  },
+title: {
+  margin: 0,
+  color: "#1E3A8A",
+  fontSize: 15,
+  fontWeight: 700,
+  letterSpacing: "-0.015em",
+  lineHeight: 1.18,
+},
+subtitle: {
+  margin: 0,
+  color: "rgba(30, 58, 138, 0.82)",
+  fontSize: 12.5,
+  lineHeight: 1.35,
+  fontWeight: 400,
+  maxWidth: 680,
+},
+button: {
+  minHeight: 36,
+  padding: "0 16px",
+  borderRadius: 999,
+  border: "1px solid rgba(30, 58, 138, 0.46)",
+  background: "rgba(30, 58, 138, 0.12)",
+  color: "#1E3A8A",
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: "pointer",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.16), 0 0 10px rgba(30,58,138,0.08)",
+  whiteSpace: "nowrap",
+},
 };
