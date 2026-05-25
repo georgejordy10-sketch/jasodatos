@@ -102,24 +102,24 @@ return (
 }
 
 const styles: Record<string, CSSProperties> = {
-  hero: {
-    display: "grid",
-    gap: 14,
-    background: "var(--jd-gradient-container)",
-    color: "var(--jd-text-main)",
-    borderRadius: 22,
-    padding: "16px 18px",
-    border: "1px solid var(--jd-border-accent)",
-    boxShadow: "var(--jd-shadow-card)",
-    position: "relative",
-    overflow: "hidden",
-  },
+hero: {
+  borderRadius: 18,
+  padding: "18px",
+  background: "var(--jd-gradient-container)",
+  border: "1px solid var(--jd-border-accent)",
+  boxShadow: "var(--jd-shadow-card)",
+  display: "grid",
+  gap: 16,
+  overflow: "hidden",
+},
 
 bottomRow: {
-  display: "grid",
-  gridTemplateColumns: "220px minmax(0, 1fr)",
-  gap: 18,
-  alignItems: "center",
+  display: "flex",
+  alignItems: "flex-end",
+  justifyContent: "space-between",
+  gap: 14,
+  flexWrap: "wrap",
+  minWidth: 0,
 },
 
   brandArea: {
@@ -147,6 +147,8 @@ brandRow: {
   display: "flex",
   alignItems: "center",
   gap: 14,
+  minWidth: 0,
+  flexWrap: "wrap",
 },
 
 brandIcon: {
@@ -164,18 +166,20 @@ brandIcon: {
   flexShrink: 0,
 },
 
-  titleBlock: {
-    minWidth: 0,
-  },
+titleBlock: {
+  minWidth: 0,
+  flex: "1 1 240px",
+},
 
 brandTitle: {
   margin: 0,
   color: "var(--jd-text-main)",
-  fontSize: 46,
+  fontSize: "clamp(28px, 8vw, 46px)",
   fontWeight: 950,
   lineHeight: 0.95,
-  letterSpacing: "-0.065em",
+  letterSpacing: "-0.06em",
   textTransform: "capitalize",
+  overflowWrap: "anywhere",
 },
 
 brandSubtitle: {
@@ -184,6 +188,7 @@ brandSubtitle: {
   fontSize: 13,
   fontWeight: 650,
   lineHeight: 1.25,
+  maxWidth: "100%",
 },
 
 actionsPanel: {
@@ -191,21 +196,19 @@ actionsPanel: {
   alignItems: "center",
   justifyContent: "flex-end",
   gap: 10,
-  padding: 0,
-  background: "transparent",
-  border: "none",
-  boxShadow: "none",
-  minWidth: 0,
   flexWrap: "wrap",
+  minWidth: 0,
+  flex: "1 1 320px",
 },
 primaryButton: {
-  background: "rgba(255,255,255,0.72)",
-  color: "var(--jd-brand-secondary)",
+  background: "rgba(255,255,255,0.10)",
+  color: "var(--jd-text-main)",
   border: "1px solid var(--jd-border-accent-soft)",
   borderRadius: 12,
   minHeight: 42,
-  minWidth: 190,
-  padding: "0 18px",
+  minWidth: 140,
+  maxWidth: "100%",
+  padding: "0 16px",
   fontWeight: 900,
   fontSize: 13,
   cursor: "pointer",
@@ -214,12 +217,13 @@ primaryButton: {
 },
 
 secondaryButton: {
-  background: "rgba(255,255,255,0.72)",
+  background: "rgba(255,255,255,0.10)",
   color: "var(--jd-brand-secondary)",
   border: "1px solid var(--jd-border-accent-soft)",
   borderRadius: 12,
   minHeight: 42,
   minWidth: 120,
+  maxWidth: "100%",
   padding: "0 14px",
   fontWeight: 850,
   fontSize: 12,
@@ -235,6 +239,7 @@ planButton: {
   borderRadius: 12,
   minHeight: 42,
   minWidth: 110,
+  maxWidth: "100%",
   padding: "0 14px",
   fontWeight: 900,
   fontSize: 12,
@@ -245,10 +250,10 @@ planButton: {
 
 metaGrid: {
   display: "grid",
-  gridTemplateColumns: "220px",
-  gap: 8,
-  alignItems: "stretch",
-  width: "fit-content",
+  gridTemplateColumns: "minmax(0, 1fr)",
+  gap: 10,
+  minWidth: 0,
+  flex: "1 1 220px",
 },
 
 planMetaCard: {

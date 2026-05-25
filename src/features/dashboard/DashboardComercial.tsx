@@ -924,33 +924,74 @@ if (!response.ok) {
   };
 }, [currentBusinessSlug]);
 const {
-  data: businessPlanData,
+  data: businessPlan,
   loading: businessPlanLoading,
   error: businessPlanError,
 } = useBusinessPlan(currentBusinessSlug || null);
 
-const currentPlan = businessPlanData?.currentPlan ?? "basic";
+const isLocalDemoUltra =
+  typeof window !== "undefined" &&
+  window.location.hostname === "localhost";
+
+const businessPlanAny = businessPlan as
+  | {
+      plan?: SubscriptionPlan;
+      currentPlan?: SubscriptionPlan;
+      subscription_plan?: SubscriptionPlan;
+      businessName?: string;
+      business_name?: string;
+      ciudad?: string;
+      provincia?: string;
+      pais?: string;
+      business?: {
+        plan?: SubscriptionPlan;
+        businessName?: string;
+        business_name?: string;
+        ciudad?: string;
+        provincia?: string;
+        pais?: string;
+      };
+    }
+  | null
+  | undefined;
+const currentPlan: SubscriptionPlan = isLocalDemoUltra
+  ? "ultra"
+  : (businessPlanAny?.plan ??
+      businessPlanAny?.currentPlan ??
+      businessPlanAny?.subscription_plan ??
+      businessPlanAny?.business?.plan ??
+      "basic");
+
 const businessContextMessage = !currentBusinessSlug
   ? "Este dashboard no está vinculado a un negocio. Ingresa desde el botón generado al crear la prueba gratis."
   : businessPlanError
   ? "No se encontró el negocio vinculado a esta URL. Revisa que el enlace tenga el código correcto del negocio."
   : "";
 const planLabel = PLAN_LABELS[currentPlan];
+
 const businessDisplayName =
   settings.businessName?.trim() ||
   businessCrmData?.business_name?.trim() ||
-  businessPlanData?.businessName ||
+  businessPlanAny?.businessName ||
+  businessPlanAny?.business_name ||
+  businessPlanAny?.business?.businessName ||
+  businessPlanAny?.business?.business_name ||
   "JasoDatos";
 
 const businessLocationLabel = [
-  businessPlanData?.ciudad,
-  businessPlanData?.provincia,
-  businessPlanData?.pais,
+  businessPlanAny?.ciudad ?? businessPlanAny?.business?.ciudad,
+  businessPlanAny?.provincia ?? businessPlanAny?.business?.provincia,
+  businessPlanAny?.pais ?? businessPlanAny?.business?.pais,
 ]
   .map((value) => (typeof value === "string" ? value.trim() : ""))
   .filter(Boolean)
   .join("  ");
+
 function hasFeature(feature: PlanFeature): boolean {
+  if (isLocalDemoUltra) {
+    return true;
+  }
+
   return PLAN_FEATURES[currentPlan].includes(feature);
 }
 
@@ -962,7 +1003,6 @@ const canUseWhatsappByPlan = hasFeature("whatsapp_actions");
 function setCurrentPlan(_plan: SubscriptionPlan) {
   setPlansOpen(true);
 }
-
 const channelsEnabled: Record<ChannelKey, boolean> =
   "channelsEnabled" in settings &&
   typeof settings.channelsEnabled === "object" &&
@@ -2039,7 +2079,83 @@ const jasoBot = useMemo(() => {
 
 const mainRecommendation = commercialRecommendations[0] ?? null;
 const secondaryRecommendations = commercialRecommendations.slice(1, 3);
+function normalizeWhatsappForShare(value?: string | null) {
+  const digits = String(value ?? "").replace(/\D/g, "");
 
+  if (!digits) return "";
+
+  if (digits.startsWith("593")) {
+    return digits;
+  }
+
+  if (digits.startsWith("0")) {
+    return `593${digits.slice(1)}`;
+  }
+
+  return digits;
+}
+
+function shareJasoAlixByWhatsapp() {
+  if (!canUseWhatsappByPlan) {
+    setPlansOpen(true);
+    return;
+  }
+
+  const settingsAny = settings as {
+    commercialWhatsapp?: string;
+    whatsapp?: string;
+    ownerWhatsapp?: string;
+  };
+
+  const businessCrmAny = businessCrmData as
+    | {
+        commercial_whatsapp?: string;
+        owner_whatsapp?: string;
+      }
+    | null
+    | undefined;
+
+  const whatsappNumber = normalizeWhatsappForShare(
+    settingsAny.commercialWhatsapp ||
+      settingsAny.whatsapp ||
+      settingsAny.ownerWhatsapp ||
+      businessCrmAny?.commercial_whatsapp ||
+      businessCrmAny?.owner_whatsapp
+  );
+
+  if (!whatsappNumber) {
+    setSettingsOpen(true);
+    return;
+  }
+
+  const secondaryText =
+    secondaryRecommendations.length > 0
+      ? secondaryRecommendations
+          .map((item, index) => `${index + 1}. ${item.title}: ${item.message}`)
+          .join("\n")
+      : "Sin acciones secundarias detectadas.";
+
+  const message = [
+    `JasoAlix - resumen comercial`,
+    ``,
+    `Negocio: ${businessDisplayName}`,
+    ``,
+    `Diagnóstico: ${jasoBot.mensajePrincipal}`,
+    ``,
+    mainRecommendation
+      ? `Prioridad ahora: ${mainRecommendation.title}\n${mainRecommendation.message}`
+      : `Prioridad ahora: no disponible`,
+    ``,
+    `Acciones secundarias:`,
+    secondaryText,
+  ].join("\n");
+
+  window.open(
+    `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
   setActionNotice(`Campaña copiada. Puedes pegarla en WhatsApp, redes sociales o una lista de clientes: ${texto}`);
@@ -3172,11 +3288,17 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
           <>
             <ActivePlanBadge tone="pro">Incluido en Crecimiento</ActivePlanBadge>
 
-            {canUseWhatsappByPlan ? (
-              <ActivePlanBadge tone="ultra">WhatsApp en plan Control</ActivePlanBadge>
-            ) : (
-              <ActivePlanBadge tone="basic">WhatsApp bloqueado</ActivePlanBadge>
-            )}
+{canUseWhatsappByPlan ? (
+  <ActivePlanBadge tone="ultra">WhatsApp activo</ActivePlanBadge>
+) : (
+  <button
+    type="button"
+    style={styles.assistantPlanUpgradeButton}
+    onClick={() => setPlansOpen(true)}
+  >
+    WhatsApp en plan Control
+  </button>
+)}
 
             <span style={styles.assistantPromoBadge}>
               {jasoBot.tipoPromo === "combo"
@@ -3308,17 +3430,29 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     </div>
 
     <div style={styles.assistantFooterActions}>
-      <span style={styles.assistantControlBadge}>
-        Disponible en plan Control
-      </span>
+<button
+  type="button"
+  style={
+    currentPlan === "ultra"
+      ? styles.assistantControlButtonActive
+      : styles.assistantControlButton
+  }
+  onClick={
+    currentPlan === "ultra"
+      ? shareJasoAlixByWhatsapp
+      : () => setPlansOpen(true)
+  }
+>
+  {currentPlan === "ultra" ? "Enviar por WhatsApp" : "Disponible en plan Control"}
+</button>
 
-      <button
-        type="button"
-        style={styles.assistantShareButton}
-        onClick={exportarPDF}
-      >
-        Compartir PDF
-      </button>
+<button
+  type="button"
+  style={styles.assistantShareButton}
+  onClick={exportarPDF}
+>
+  Compartir PDF
+</button>
     </div>
   </div>
 ) : null}
@@ -4605,7 +4739,7 @@ secondaryActionCard: {
   alignItems: "center",
   padding: "10px 12px",
   borderRadius: 14,
-  background: "rgba(255,255,255,0.72)",
+  background: "rgba(255,255,255,0.08)",
   border: "1px solid rgba(109,126,219,0.18)",
 },
 
@@ -4699,6 +4833,51 @@ assistantShareButton: {
   cursor: "pointer",
   boxShadow: "0 10px 22px rgba(61,44,141,0.16)",
   whiteSpace: "nowrap",
+},
+assistantControlButton: {
+  minHeight: 36,
+  padding: "0 18px",
+  borderRadius: 999,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  border: "1px solid rgba(34,197,94,0.22)",
+  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 900,
+  whiteSpace: "nowrap",
+  cursor: "pointer",
+  boxShadow: "0 10px 22px rgba(22,163,74,0.16)",
+},
+assistantControlButtonActive: {
+  minHeight: 36,
+  padding: "0 18px",
+  borderRadius: 999,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  border: "1px solid rgba(34,197,94,0.22)",
+  background: "linear-gradient(135deg, rgba(34,197,94,0.72) 0%, rgba(16,185,129,0.88) 100%)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 900,
+  whiteSpace: "nowrap",
+  cursor: "pointer",
+  boxShadow: "0 10px 22px rgba(22,163,74,0.16)",
+},
+assistantPlanUpgradeButton: {
+  minHeight: 30,
+  padding: "0 13px",
+  borderRadius: 999,
+  border: "1px solid rgba(34,197,94,0.22)",
+  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  boxShadow: "0 8px 18px rgba(22,163,74,0.14)",
 },
 };
 

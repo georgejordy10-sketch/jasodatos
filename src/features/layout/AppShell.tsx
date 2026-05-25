@@ -14,18 +14,25 @@ type AppShellProps = {
   showPlanBanner?: boolean;
 };
 
-function useIsMobile(breakpoint = 900) {
+function useIsMobile(breakpoint = 1024) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint}px)`);
+
     function updateIsMobile() {
-      setIsMobile(window.innerWidth <= breakpoint);
+      setIsMobile(mediaQuery.matches);
     }
 
     updateIsMobile();
 
+    mediaQuery.addEventListener("change", updateIsMobile);
     window.addEventListener("resize", updateIsMobile);
-    return () => window.removeEventListener("resize", updateIsMobile);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateIsMobile);
+      window.removeEventListener("resize", updateIsMobile);
+    };
   }, [breakpoint]);
 
   return isMobile;
@@ -61,7 +68,34 @@ export function AppShell({
       }}
     >
       {!isMobile ? <AppSidebar /> : null}
-
+     {isMobile ? (
+  <button
+    type="button"
+    onClick={() => setIsSidebarOpen(true)}
+    aria-label="Abrir menú"
+    style={{
+      position: "fixed",
+      top: 12,
+      left: 12,
+      zIndex: 70,
+      width: 42,
+      height: 42,
+      borderRadius: 14,
+      border: "1px solid rgba(255,255,255,0.18)",
+      background: "linear-gradient(135deg, #2E0D4F 0%, #3D2C8D 100%)",
+      color: "#FFFFFF",
+      fontSize: 22,
+      fontWeight: 900,
+      cursor: "pointer",
+      boxShadow: "0 14px 34px rgba(46,13,79,0.24)",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    ☰
+  </button>
+) : null}
       {isMobile && isSidebarOpen ? (
         <div
           role="presentation"

@@ -181,8 +181,8 @@ export default function BenchmarkingSucursales({ rows }: Props) {
 const styles: Record<string, React.CSSProperties> = {
 wrapper: {
   background:
-    "linear-gradient(180deg, rgba(109,126,219,0.10) 0%, rgba(241,244,255,0.96) 42%, #FFFFFF 100%)",
-  color: "#0F172A",
+    "var(--jd-gradient-container)",
+  color: "var(--jd-text-main)",
   borderRadius: 18,
   padding: "12px 14px",
   border: "1px solid rgba(109,126,219,0.16)",
@@ -213,7 +213,7 @@ title: {
   margin: 0,
   fontSize: 17,
   fontWeight: 900,
-  color: "var(--jd-text-main, #0F172A)",
+  color: "var(--jd-text-main)",
   letterSpacing: "-0.03em",
   lineHeight: 1.05,
 },
@@ -270,12 +270,12 @@ tableShell: {
   border: "1px solid rgba(109,126,219,0.12)",
   background:
     "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(244,246,255,0.96) 100%)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
 },
 table: {
   width: "100%",
   borderCollapse: "collapse",
-  color: "var(--jd-text-main, #0F172A)",
+  color: "var(--jd-text-main)",
   fontSize: 12,
 },
 th: {
@@ -304,7 +304,7 @@ tdStrong: {
   padding: "8px 10px",
   borderRight: "1px solid rgba(61,44,141,0.05)",
   borderBottom: "1px solid rgba(61,44,141,0.06)",
-  color: "#0F172A",
+  color: "var(--jd-text-main)",
   verticalAlign: "middle",
   fontSize: 11,
   fontWeight: 850,
@@ -347,7 +347,7 @@ shareCell: {
     alignItems: "center",
   },
 sharePct: {
-  color: "var(--jd-text-main, #0F172A)",
+  color: "var(--jd-text-main)",
   fontSize: 11,
   fontWeight: 850,
 },

@@ -288,7 +288,7 @@ export default function SecondaryChartsSection({
                 <Tooltip
                   contentStyle={{
                     ...tooltipStyle,
-                    background: "#FFFFFF",
+                    background: "rgba(255,255,255,0.10)",
                     border: "1px solid #E2E8F0",
                     color: "#0F172A",
                     boxShadow: "0 18px 42px rgba(15, 23, 42, 0.14)",
@@ -393,7 +393,7 @@ const styles: Record<string, CSSProperties> = {
     padding: "0 11px",
     borderRadius: 999,
     border: "1px solid var(--jd-border-accent-soft)",
-    background: "#FFFFFF",
+    background: "rgba(255,255,255,0.10)",
     color: "var(--jd-brand-secondary)",
     fontSize: 11,
     fontWeight: 900,
@@ -412,7 +412,7 @@ const styles: Record<string, CSSProperties> = {
   tableCompact: {
     width: "100%",
     borderCollapse: "collapse",
-    color: "var(--jd-text-main, #0F172A)",
+    color: "var(--jd-text-main)",
     fontSize: 12,
   },
 

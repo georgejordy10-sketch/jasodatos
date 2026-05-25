@@ -165,7 +165,7 @@ const styles: Record<string, CSSProperties> = {
 
   title: {
     margin: 0,
-    color: "var(--jd-text-main, #0F172A)",
+    color: "var(--jd-text-main)",
     fontSize: 15,
     fontWeight: 900,
     lineHeight: 1,
@@ -193,8 +193,8 @@ const styles: Record<string, CSSProperties> = {
 
   filterControl: {
     width: "100%",
-    background: "#FFFFFF",
-    color: "var(--jd-text-main, #0F172A)",
+background: "rgba(255,255,255,0.92)",
+color: "#111827",
     borderRadius: 10,
     minHeight: 31,
     padding: "0 10px",
@@ -205,17 +205,17 @@ const styles: Record<string, CSSProperties> = {
     boxShadow: "0 5px 12px rgba(15, 23, 42, 0.025)",
   },
 
-  clearButtonTop: {
-    minHeight: 26,
-    borderRadius: 999,
-    border: "1px solid rgba(61, 44, 141, 0.18)",
-    background: "#FFFFFF",
-    color: "var(--jd-brand-secondary, #3D2C8D)",
-    fontWeight: 900,
-    fontSize: 11,
-    cursor: "pointer",
-    padding: "0 12px",
-    whiteSpace: "nowrap",
-    boxShadow: "0 6px 14px rgba(15, 23, 42, 0.035)",
-  },
+clearButtonTop: {
+  minHeight: 26,
+  borderRadius: 999,
+  border: "1px solid var(--jd-border-accent-soft)",
+  background: "rgba(255,255,255,0.08)",
+  color: "var(--jd-text-main)",
+  fontWeight: 900,
+  fontSize: 11,
+  cursor: "pointer",
+  padding: "0 12px",
+  whiteSpace: "nowrap",
+  boxShadow: "0 6px 14px rgba(0, 0, 0, 0.10)",
+},
 };

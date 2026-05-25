@@ -176,7 +176,7 @@ export default function DetailTableSection({
 const styles: Record<string, CSSProperties> = {
 detailCardPro: {
   background:
-    "linear-gradient(180deg, rgba(109,126,219,0.10) 0%, rgba(241,244,255,0.96) 42%, #FFFFFF 100%)",
+    "var(--jd-gradient-container)",
   color: "var(--jd-text-main)",
   borderRadius: 22,
   padding: 18,
@@ -264,7 +264,7 @@ detailCardPro: {
   },
 
   pageGhostButton: {
-    background: "rgba(255,255,255,0.72)",
+    background: "rgba(255,255,255,0.08)",
     color: "#5B5AA6",
     border: "1px solid rgba(61,44,141,0.10)",
     borderRadius: 999,
@@ -305,7 +305,7 @@ detailTableShell: {
   borderRadius: 18,
   overflow: "hidden",
   border: "1px solid rgba(109,126,219,0.12)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
 },
 
   detailTableScroller: {
@@ -367,7 +367,7 @@ detailBottomBar: {
   fontSize: 12,
   fontWeight: 800,
   background:
-    "linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(240,244,255,0.96) 100%)",
+    "var(--jd-gradient-table-surface)",
 },
 
 dataRowEven: {

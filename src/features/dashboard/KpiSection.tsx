@@ -123,7 +123,7 @@ kpiTitle: {
 kpiHelpButton: {
   position: "relative",
   border: "1px solid var(--jd-border-accent-soft)",
-  background: "#FFFFFF",
+  background: "var(--jd-gradient-table-surface)",
   color: "var(--jd-brand-secondary)",
   borderRadius: 999,
   padding: "3px 7px",
@@ -143,7 +143,7 @@ kpiHelpButton: {
     width: 300,
     padding: "11px 13px",
     borderRadius: 14,
-    background: "#FFFFFF",
+    background: "var(--jd-gradient-table-surface)",
     border: "1px solid var(--jd-border-accent-soft)",
     boxShadow: "0 18px 42px rgba(15,23,42,0.18)",
     color: "var(--jd-text-main)",

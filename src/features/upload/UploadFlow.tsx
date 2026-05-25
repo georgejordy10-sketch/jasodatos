@@ -490,6 +490,12 @@ if (previousUpload) {
 
 saveUploadHistory(historyItem);
 
+setActiveUploadView("general");
+
+if (typeof window !== "undefined") {
+  window.history.replaceState(null, "", window.location.pathname);
+}
+
 setProcessedData(result);
   }
 

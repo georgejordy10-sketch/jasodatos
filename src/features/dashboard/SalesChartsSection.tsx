@@ -147,9 +147,9 @@ export default function SalesChartsSection({
                 <Tooltip
                   contentStyle={{
                     ...tooltipStyle,
-                    background: "#FFFFFF",
+                    background: "rgba(255,255,255,0.94)",
                     border: "1px solid #E2E8F0",
-                    color: "#0F172A",
+                    color: "#111827",
                     boxShadow: "0 18px 42px rgba(15, 23, 42, 0.14)",
                   }}
                   formatter={(value) => formatMoney(Number(value ?? 0))}
@@ -231,9 +231,9 @@ export default function SalesChartsSection({
                     <Tooltip
                       contentStyle={{
                         ...tooltipStyle,
-                        background: "#FFFFFF",
+                        background: "rgba(255,255,255,0.94)",
                         border: "1px solid #E2E8F0",
-                        color: "#0F172A",
+                        color: "#111827",
                         boxShadow: "0 18px 42px rgba(15, 23, 42, 0.14)",
                       }}
                       formatter={(value) => formatMoney(Number(value ?? 0))}
@@ -426,7 +426,7 @@ pieBox: {
   },
 
   pieCenterValue: {
-    color: "var(--jd-text-main, #0F172A)",
+    color: "var(--jd-text-main)",
     fontSize: 17,
     fontWeight: 950,
     lineHeight: 1.05,
@@ -452,7 +452,7 @@ legendItem: {
   alignItems: "center",
   justifyContent: "start",
   gap: 8,
-  color: "var(--jd-text-main, #0F172A)",
+  color: "var(--jd-text-main)",
   fontSize: 12,
 },
   legendDot: {
@@ -471,7 +471,7 @@ legendItem: {
   },
 
 legendPct: {
-  color: "var(--jd-text-main, #0F172A)",
+  color: "var(--jd-text-main)",
   fontSize: 12,
   fontWeight: 900,
   textAlign: "left",
@@ -488,7 +488,7 @@ legendPct: {
     minHeight: 30,
     borderRadius: 999,
     border: "1px solid var(--jd-border-accent-soft)",
-    background: "#FFFFFF",
+    background: "rgba(255,255,255,0.94)",
     color: "var(--jd-brand-secondary)",
     padding: "0 11px",
     fontSize: 11,
@@ -503,7 +503,7 @@ legendPct: {
     padding: "0 11px",
     borderRadius: 999,
     border: "1px solid var(--jd-border-accent-soft)",
-    background: "#FFFFFF",
+    background: "rgba(255,255,255,0.94)",
     color: "var(--jd-brand-secondary)",
     fontSize: 11,
     fontWeight: 900,
