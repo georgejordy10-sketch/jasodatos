@@ -2999,32 +2999,37 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     </button>
   </div>
 ) : null}
-
-  {selectedComparisonProducts.length > 0 ? (
-    <div style={styles.productChipsRow}>
-      {selectedComparisonProducts.map((producto, index) => (
-        <button
-          key={producto}
-          type="button"
+{selectedComparisonProducts.length > 0 ? (
+  <div style={styles.productChipsRow}>
+    {selectedComparisonProducts.map((producto, index) => (
+      <div
+        key={producto}
+        role="button"
+        tabIndex={0}
+        style={{
+          ...styles.productChip,
+          borderColor: COLORS[index % COLORS.length],
+        }}
+        onClick={() => removeComparisonProduct(producto)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            removeComparisonProduct(producto);
+          }
+        }}
+      >
+        <span
           style={{
-            ...styles.productChip,
-            borderColor: COLORS[index % COLORS.length],
+            ...styles.productChipDot,
+            background: COLORS[index % COLORS.length],
           }}
-          onClick={() => removeComparisonProduct(producto)}
-        >
-          <span
-            style={{
-              ...styles.productChipDot,
-              background: COLORS[index % COLORS.length],
-            }}
-          />
-          {producto}
-          <span style={styles.productChipClose}>×</span>
-        </button>
-      ))}
-    </div>
-  ) : null}
-
+        />
+        {producto}
+        <span style={styles.productChipClose}>×</span>
+      </div>
+    ))}
+  </div>
+) : null}
   {productComparisonRows.length > 0 ? (
     <div style={styles.productComparisonGrid}>
       <div style={styles.productComparisonChartBox}>
@@ -3087,7 +3092,6 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
 <th style={styles.productComparisonTh}>Rotación</th>
 <th style={styles.productComparisonTh}>Días disponibles</th>
 <th style={styles.productComparisonTh}>Rentabilidad</th>
-<th style={styles.productComparisonTh}>Cambio en ventas</th>
               </tr>
             </thead>
 
@@ -3147,9 +3151,6 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
                   <td style={styles.productComparisonTd}>
                     {row.rentabilidadPct.toFixed(1)}%
                   </td>
-                  <td style={styles.productComparisonTd}>
-                    {row.tendenciaPct.toFixed(1)}%
-                  </td>
                 </tr>
               ))}
 
@@ -3199,7 +3200,6 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
                 <td style={styles.productComparisonTotalTd}>
                   {productComparisonTotal.rentabilidadPct.toFixed(1)}%
                 </td>
-                <td style={styles.productComparisonTotalTd}>-</td>
               </tr>
             </tbody>
           </table>
@@ -3836,12 +3836,11 @@ const styles: Record<string, CSSProperties> = {
     background: "linear-gradient(180deg, #EEF2FF 0%, #E8EDFF 100%)",
   },
 assistantCard: {
-  background:
-    "linear-gradient(180deg, #dfe6ff 0%, #e7ecff 48%, #eef3ff 100%)",
+  background: "var(--jd-gradient-container)",
   color: "var(--jd-text-main)",
   borderRadius: 22,
   padding: 18,
-  border: "1px solid rgba(109,126,219,0.28)",
+  border: "1px solid var(--jd-border-accent-soft)",
   boxShadow: "var(--jd-shadow-card)",
   display: "grid",
   gap: 14,
@@ -3859,8 +3858,8 @@ assistantBody: {
   alignItems: "start",
   padding: 10,
   borderRadius: 18,
-  background: "#d8e1ff",
-  border: "1px solid rgba(109,126,219,0.24)",
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid var(--jd-border-accent-soft)",
 },
 
 lockedFeatureActions: {
@@ -4026,11 +4025,9 @@ assistantChannelRow: {
   maxWidth: 680,
   padding: "14px 16px",
   borderRadius: 18,
-  background:
-    "linear-gradient(135deg, rgba(239,246,255,0.96) 0%, rgba(248,250,252,0.92) 100%)",
-  border: "2px solid rgba(37,99,235,0.42)",
-  boxShadow:
-    "0 12px 28px rgba(37,99,235,0.08), inset 0 1px 0 rgba(255,255,255,0.85)",
+  background: "rgba(255,255,255,0.07)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
   display: "grid",
   gap: 8,
 },
@@ -4284,34 +4281,40 @@ comparisonHeaderActions: {
 
 metricSelectorLabel: {
   display: "grid",
-  gap: 4,
-  color: "var(--jd-text-secondary)",
+  gap: 5,
+  color: "#FFFFFF",
   fontSize: 11,
-  fontWeight: 800,
+  fontWeight: 600,
+  lineHeight: 1.1,
 },
 
 metricSelector: {
-  minHeight: 34,
-  borderRadius: 11,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "rgba(255,255,255,0.92)",
-  color: "var(--jd-text-main)",
-  padding: "0 10px",
-  fontSize: 11,
-  fontWeight: 850,
+  minHeight: 36,
+  minWidth: 150,
+  borderRadius: 10,
+  border: "1px solid rgba(255,255,255,0.42)",
+  background: "rgba(93, 111, 219, 0.42)",
+  color: "#FFFFFF",
+  padding: "0 12px",
+  fontSize: 12,
+  fontWeight: 500,
   outline: "none",
+  boxShadow:
+    "0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.18)",
 },
 
 clearComparisonButton: {
-  minHeight: 34,
+  minHeight: 36,
   borderRadius: 999,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "rgba(255,255,255,0.82)",
-  color: "var(--jd-brand-secondary)",
-  padding: "0 12px",
-  fontSize: 11,
-  fontWeight: 900,
+  border: "1px solid rgba(255,255,255,0.44)",
+  background: "rgba(93, 111, 219, 0.48)",
+  color: "#FFFFFF",
+  padding: "0 16px",
+  fontSize: 12,
+  fontWeight: 600,
   cursor: "pointer",
+  boxShadow:
+    "0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.20)",
 },
 
 productComparisonEmpty: {
@@ -4365,13 +4368,13 @@ productChipsRow: {
 productChip: {
   minHeight: 28,
   borderRadius: 999,
-  border: "1px solid rgba(109,126,219,0.28)",
-  background: "rgba(255,255,255,0.86)",
-  color: "var(--jd-text-main)",
-  padding: "0 10px",
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(255,255,255,0.07)",
+  color: "#FFFFFF",
+  padding: "0 12px",
   display: "inline-flex",
   alignItems: "center",
-  gap: 6,
+  gap: 7,
   fontSize: 11,
   fontWeight: 850,
   cursor: "pointer",
@@ -4393,18 +4396,20 @@ productChipClose: {
 
 productComparisonGrid: {
   display: "grid",
-  gridTemplateColumns: "1fr 0.92fr",
-  gap: 12,
+  gridTemplateColumns: "minmax(405px, 0.87fr) minmax(0, 1.16fr)",
+  gap: 8,
   alignItems: "stretch",
 },
 
 productComparisonChartBox: {
   borderRadius: 16,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "var(--jd-gradient-table-surface)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  background: "rgba(8, 13, 49, 0.22)",
   padding: "12px 14px",
   display: "grid",
-  gap: 6,
+  gap: 10,
+  minWidth: 0,
+  overflow: "hidden",
 },
 
 productComparisonBlockTitle: {
@@ -4421,17 +4426,17 @@ productComparisonMiniText: {
 },
 
 comparisonBars: {
-  minHeight: 180,
+  minHeight: 245,
   display: "flex",
   alignItems: "flex-end",
-  justifyContent: "center",
-  gap: 56,
-  padding: "14px 8px 6px",
+  justifyContent: "flex-start",
+  gap: 18,
+  padding: "38px 8px 12px",
   borderRadius: 14,
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(241,244,255,0.88) 100%)",
-  border: "1px solid rgba(109,126,219,0.12)",
+  background: "rgba(8, 13, 49, 0.30)",
+  border: "1px solid rgba(255,255,255,0.08)",
   overflowX: "auto",
+  overflowY: "hidden",
 },
 
 comparisonBarItem: {
@@ -4439,36 +4444,36 @@ comparisonBarItem: {
   justifyItems: "center",
   alignItems: "end",
   gap: 6,
-  minWidth: 90,
+  minWidth: 62,
 },
 
 comparisonBarValue: {
-  color: "var(--jd-text-main)",
-  fontSize: 11,
-  fontWeight: 750,
+  color: "#FFFFFF",
+  fontSize: 10,
+  fontWeight: 500,
   lineHeight: 1.1,
 },
 
 comparisonBar: {
-  width: 42,
+  width: 34,
   borderRadius: "6px 6px 0 0",
   boxShadow: "0 10px 20px rgba(46,13,79,0.12)",
 },
 comparisonBarLabel: {
-  color: "var(--jd-text-main)",
-  fontSize: 10,
-  fontWeight: 700,
+  color: "#FFFFFF",
+  fontSize: 9,
+  fontWeight: 400,
   lineHeight: 1.1,
   textAlign: "center",
-  maxWidth: 76,
-  minHeight: 24,
+  maxWidth: 78,
+  minHeight: 26,
   overflow: "hidden",
 },
 
 productComparisonTableBox: {
   borderRadius: 16,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "var(--jd-gradient-table-surface)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  background: "rgba(8, 13, 49, 0.28)",
   padding: "12px",
   display: "grid",
   minWidth: 0,
@@ -4481,49 +4486,48 @@ productComparisonTableScroll: {
 },
 productComparisonTable: {
   width: "100%",
-  minWidth: 1250,
+  minWidth: 980,
   borderCollapse: "collapse",
   background: "transparent",
 },
 
 productComparisonTh: {
-  padding: "10px 12px",
+  padding: "9px 10px",
   textAlign: "left",
   color: "#F8FAFC",
-  fontSize: 11,
-  fontWeight: 800,
+  fontSize: 10,
+  fontWeight: 700,
   lineHeight: 1.2,
   letterSpacing: "0.01em",
-  background:
-    "linear-gradient(135deg, #6d7edb 0%, #6271d1 42%, #5965c3 72%, #5657b2 100%)",
-  borderBottom: "1px solid rgba(61,44,141,0.12)",
+  background: "rgba(109,126,219,0.42)",
+  borderBottom: "1px solid rgba(255,255,255,0.12)",
   whiteSpace: "normal",
 },
 
 productComparisonTd: {
-  padding: "10px 12px",
-  borderBottom: "1px solid rgba(61,44,141,0.08)",
-  color: "var(--jd-text-main)",
-  fontSize: 12,
-  fontWeight: 700,
-  lineHeight: 1.25,
+  padding: "8px 9px",
+  borderBottom: "1px solid rgba(255,255,255,0.08)",
+  color: "#FFFFFF",
+  fontSize: 11,
+  fontWeight: 450,
+  lineHeight: 1.2,
   verticalAlign: "middle",
+  whiteSpace: "nowrap",
 },
 productComparisonTotalTd: {
-  padding: "12px",
-  color: "var(--jd-text-main)",
-  fontSize: 12,
-  fontWeight: 900,
-  borderBottom: "1px solid rgba(61,44,141,0.10)",
-  background: "rgba(109,126,219,0.10)",
+  padding: "10px",
+  color: "#FFFFFF",
+  fontSize: 11,
+  fontWeight: 700,
+  borderBottom: "1px solid rgba(255,255,255,0.10)",
+  background: "rgba(109,126,219,0.18)",
 },
 
 productInsightBox: {
   borderRadius: 14,
-  border: "1px solid rgba(34,197,94,0.22)",
-  background:
-    "linear-gradient(135deg, rgba(236,253,245,0.96) 0%, rgba(240,253,250,0.92) 100%)",
-  color: "var(--jd-text-main)",
+  border: "1px solid rgba(34,197,94,0.26)",
+  background: "rgba(20, 83, 45, 0.18)",
+  color: "#FFFFFF",
   padding: "10px 12px",
   fontSize: 12,
   fontWeight: 600,
@@ -4570,9 +4574,9 @@ productCellInline: {
 
 productCellText: {
   color: "var(--jd-text-main)",
-  fontSize: 12,
-  fontWeight: 800,
-  lineHeight: 1.25,
+  fontSize: 11,
+  fontWeight: 500,
+  lineHeight: 1.2,
 },
 productDot: {
   width: "8px",
@@ -4626,9 +4630,9 @@ insightBadge: {
   width: "fit-content",
   borderRadius: 999,
   padding: "5px 10px",
-  background: "rgba(34,197,94,0.12)",
-  border: "1px solid rgba(34,197,94,0.22)",
-  color: "#047857",
+  background: "rgba(34,197,94,0.16)",
+  border: "1px solid rgba(34,197,94,0.30)",
+  color: "#BBF7D0",
   fontSize: 10,
   fontWeight: 850,
   textTransform: "uppercase",
@@ -4640,23 +4644,21 @@ pdfSpacerBeforeBenchmarking: {
 assistantInsightItem: {
   padding: "9px 11px",
   borderRadius: 16,
-  background: "#f3f6ff",
-  border: "1px solid rgba(109,126,219,0.24)",
-  color: "var(--jd-text-main)",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  color: "var(--jd-text-secondary)",
   fontSize: 12,
   lineHeight: 1.35,
-  fontWeight: 500,
+  fontWeight: 650,
 },
 priorityActionCard: {
   display: "grid",
   gap: 8,
   padding: "14px 16px",
   borderRadius: 18,
-  background:
-    "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(239,242,255,0.92) 100%)",
-  border: "1px solid rgba(91,104,255,0.30)",
-  boxShadow:
-    "0 14px 32px rgba(61,44,141,0.10), inset 0 1px 0 rgba(255,255,255,0.82)",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid var(--jd-border-accent-soft)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
 },
 
 priorityActionHeader: {
@@ -4689,9 +4691,9 @@ priorityActionType: {
   minHeight: 24,
   padding: "0 10px",
   borderRadius: 999,
-  background: "var(--jd-info-soft)",
-  color: "var(--jd-info)",
-  border: "1px solid var(--jd-border-accent-soft)",
+  background: "rgba(34,211,238,0.14)",
+  color: "#A5F3FC",
+  border: "1px solid rgba(34,211,238,0.24)",
   fontSize: 11,
   fontWeight: 850,
 },
@@ -4761,9 +4763,9 @@ secondaryActionText: {
 assistantFooter: {
   marginTop: 12,
   padding: "14px 16px",
-  borderRadius: 0,
-  background: "rgba(255,255,255,0.18)",
-  borderTop: "1px solid rgba(109,126,219,0.18)",
+  borderRadius: 16,
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid var(--jd-border-accent-soft)",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
