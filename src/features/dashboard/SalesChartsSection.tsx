@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import {
   Area,
   AreaChart,
+  CartesianGrid,
   Cell,
   Line,
   Pie,
@@ -114,64 +115,95 @@ export default function SalesChartsSection({
             </div>
           </div>
 
-          <div style={styles.chartBox}>
-            <ResponsiveContainer>
-              <AreaChart
-                data={tendenciaVentas}
-                margin={{ top: 8, right: 12, left: 18, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="ventasFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6D7EDB" stopOpacity={0.24} />
-<stop offset="100%" stopColor="#6D7EDB" stopOpacity={0.03} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="fecha"
-                  stroke="#64748B"
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={12}
-                />
+<div style={styles.chartBox}>
+  <ResponsiveContainer>
+    <AreaChart
+      data={tendenciaVentas}
+      margin={{ top: 18, right: 18, left: 8, bottom: 4 }}
+    >
+      <defs>
+        <linearGradient id="ventasFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#60A5FA" stopOpacity={0.34} />
+          <stop offset="55%" stopColor="#60A5FA" stopOpacity={0.16} />
+          <stop offset="100%" stopColor="#60A5FA" stopOpacity={0.03} />
+        </linearGradient>
+      </defs>
+<XAxis
+  dataKey="fecha"
+  stroke="rgba(255,255,255,0.58)"
+  tickLine={false}
+  axisLine={false}
+  tickMargin={12}
+  fontSize={12}
+/>
+<YAxis
+  stroke="rgba(255,255,255,0.58)"
+  tickLine={false}
+  axisLine={false}
+  width={axisWidth}
+  tickMargin={10}
+  fontSize={12}
+  tickFormatter={(value) => formatCompactMoney(value)}
+/>
 
-                <YAxis
-                  stroke="#64748B"
-                  tickLine={false}
-                  axisLine={false}
-                  width={axisWidth}
-                  tickMargin={10}
-                  fontSize={12}
-                  tickFormatter={(value) => formatCompactMoney(value)}
-                />
-
-                <Tooltip
-                  contentStyle={{
-                    ...tooltipStyle,
-                    background: "rgba(255,255,255,0.94)",
-                    border: "1px solid #E2E8F0",
-                    color: "#111827",
-                    boxShadow: "0 18px 42px rgba(15, 23, 42, 0.14)",
-                  }}
-                  formatter={(value) => formatMoney(Number(value ?? 0))}
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="ventas"
-                  stroke="#6D7EDB"
-                  fill="url(#ventasFill)"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: "#FFFFFF", stroke: "#6D7EDB", strokeWidth: 2 }}
-                />
-
-                <Line
-                  type="monotone"
-                  dataKey="comparativo"
-                  stroke="#3D2C8D"
-                  strokeDasharray="4 4"
-                  strokeWidth={2}
-                  dot={false}
-                />
+<Tooltip
+  contentStyle={{
+    ...tooltipStyle,
+    background: "rgba(22, 30, 84, 0.96)",
+    border: "1px solid rgba(255,255,255,0.30)",
+    color: "#FFFFFF",
+    borderRadius: 14,
+    boxShadow: "0 18px 42px rgba(0, 0, 0, 0.38)",
+  }}
+  labelStyle={{
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: 500,
+    marginBottom: 8,
+  }}
+  itemStyle={{
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: 400,
+  }}
+  formatter={(value) => formatMoney(Number(value ?? 0))}
+/>
+                  <Area
+  type="monotone"
+  dataKey="ventas"
+  name="Actual"
+  stroke="#93C5FD"
+  fill="url(#ventasFill)"
+  fillOpacity={1}
+  strokeWidth={3}
+  dot={{
+    r: 4,
+    fill: "#93C5FD",
+    stroke: "rgba(255,255,255,0.42)",
+    strokeWidth: 2,
+  }}
+  activeDot={{
+    r: 6,
+    fill: "#BFDBFE",
+    stroke: "#FFFFFF",
+    strokeWidth: 2,
+  }}
+/>
+<Line
+  type="monotone"
+  dataKey="comparativo"
+  name="Referencia"
+  stroke="#D8B4FE"
+  strokeDasharray="4 5"
+  strokeWidth={2}
+  dot={false}
+  activeDot={{
+    r: 4,
+    fill: "#D8B4FE",
+    stroke: "#FFFFFF",
+    strokeWidth: 2,
+  }}
+/>
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -210,18 +242,15 @@ export default function SalesChartsSection({
         >
           <div style={styles.pieLayout}>
             <div style={styles.pieBox}>
-              <div style={{ width: "100%", height: 260 }}>
+              <div style={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
                   <PieChart>
-                    <Pie
-                      data={topProductos}
-                      dataKey="ventas"
-                      nameKey="producto"
-                      innerRadius={72}
-                      outerRadius={114}
-                      paddingAngle={1.5}
-                      stroke="#FFFFFF"
-                      strokeWidth={2}
+        <Pie
+  data={topProductos}
+  dataKey="ventas"
+  nameKey="producto"
+  innerRadius={88}
+  outerRadius={140}
                     >
                       {topProductos.map((_, index) => (
                         <Cell key={index} fill={colors[index % colors.length]} />
@@ -302,36 +331,41 @@ const styles: Record<string, CSSProperties> = {
     flexWrap: "wrap",
   },
 
-  eyebrow: {
-    display: "inline-flex",
-    alignItems: "center",
-    minHeight: 20,
-    padding: "0 8px",
-    borderRadius: 999,
-    background: "var(--jd-info-soft)",
-    color: "var(--jd-info)",
-    border: "1px solid var(--jd-border-accent-soft)",
-    fontSize: 9,
-    fontWeight: 900,
-    marginBottom: 5,
-  },
+eyebrow: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 28,
+  width: "fit-content",
+  padding: "0 14px",
+  borderRadius: 999,
+  background: "rgba(56, 189, 248, 0.18)",
+  border: "1px solid rgba(255,255,255,0.86)",
+  color: "#7DD3FC",
+  fontSize: 12,
+  fontWeight: 600,
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+},
 
-  sectionTitle: {
-    margin: 0,
-    fontSize: 18,
-    fontWeight: 900,
-    color: "var(--jd-text-main)",
-    letterSpacing: "-0.03em",
-    lineHeight: 1.05,
-  },
+sectionTitle: {
+  margin: "10px 0 3px",
+  color: "var(--jd-text-main)",
+  fontSize: 20,
+  fontWeight: 800,
+  lineHeight: 1.1,
+  letterSpacing: "-0.025em",
+},
 
-  sectionSubtitle: {
-    margin: "3px 0 0",
-    color: "var(--jd-text-secondary)",
-    fontSize: 11,
-    lineHeight: 1.25,
-    fontWeight: 650,
-  },
+sectionSubtitle: {
+  margin: 0,
+  color: "var(--jd-text-secondary)",
+  fontSize: 12,
+  fontWeight: 500,
+  lineHeight: 1.35,
+},
 
   chartTopBar: {
     display: "flex",
@@ -369,41 +403,43 @@ const styles: Record<string, CSSProperties> = {
     height: 0,
   },
 
-  totalPill: {
-    display: "grid",
-    gap: 1,
-    minWidth: 102,
-    justifyItems: "center",
-    padding: "6px 9px",
-    borderRadius: 12,
-    background: "rgba(255,255,255,0.86)",
-    color: "var(--jd-text-main)",
-    fontSize: 10,
-    fontWeight: 750,
-    border: "1px solid var(--jd-border-accent-soft)",
-    boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
-  },
+totalPill: {
+  display: "grid",
+  gap: 2,
+  minWidth: 112,
+  justifyItems: "center",
+  padding: "8px 12px",
+  borderRadius: 14,
+  background: "rgba(56, 189, 248, 0.18)",
+  color: "#FFFFFF",
+  fontSize: 10,
+  fontWeight: 500,
+  border: "1px solid rgba(255,255,255,0.86)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+},
 
-  chartBox: {
-    width: "100%",
-    height: 230,
-    borderRadius: 14,
-    background: "var(--jd-gradient-table-surface)",
-    border: "1px solid var(--jd-border-accent-soft)",
-    padding: "6px 6px 2px",
-  },
+chartBox: {
+  position: "relative",
+  height: 260,
+  borderRadius: 16,
+  border: "1px solid rgba(255,255,255,0.10)",
+  background:
+    "linear-gradient(180deg, rgba(37, 50, 126, 0.42) 0%, rgba(27, 36, 104, 0.30) 100%)",
+  padding: "12px 14px 10px",
+  overflow: "hidden",
+},
 
 pieLayout: {
   display: "grid",
-  gridTemplateColumns: "270px minmax(0, 1fr)",
-  gap: 10,
+  gridTemplateColumns: "minmax(340px, 0.95fr) minmax(260px, 1fr)",
   alignItems: "center",
-  minHeight: 0,
+  gap: 22,
+  minHeight: 330,
 },
 pieBox: {
   position: "relative",
-  width: 270,
-  height: 260,
+  minHeight: 330,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -484,31 +520,33 @@ legendPct: {
     flexWrap: "wrap",
   },
 
-  compareButton: {
-    minHeight: 30,
-    borderRadius: 999,
-    border: "1px solid var(--jd-border-accent-soft)",
-    background: "rgba(255,255,255,0.94)",
-    color: "var(--jd-brand-secondary)",
-    padding: "0 11px",
-    fontSize: 11,
-    fontWeight: 900,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
-  },
+compareButton: {
+  minHeight: 34,
+  borderRadius: 999,
+  border: "1px solid rgba(255,255,255,0.86)",
+  background: "rgba(56, 189, 248, 0.18)",
+  color: "#FFFFFF",
+  padding: "0 15px",
+  fontSize: 11,
+  fontWeight: 600,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+},
 
-  viewAllButton: {
-    minHeight: 30,
-    padding: "0 11px",
-    borderRadius: 999,
-    border: "1px solid var(--jd-border-accent-soft)",
-    background: "rgba(255,255,255,0.94)",
-    color: "var(--jd-brand-secondary)",
-    fontSize: 11,
-    fontWeight: 900,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    boxShadow: "0 8px 18px rgba(46, 13, 79, 0.04)",
-  },
+viewAllButton: {
+  minHeight: 34,
+  padding: "0 15px",
+  borderRadius: 999,
+  border: "1px solid rgba(255,255,255,0.86)",
+  background: "rgba(56, 189, 248, 0.18)",
+  color: "#FFFFFF",
+  fontSize: 11,
+  fontWeight: 600,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+},
 };

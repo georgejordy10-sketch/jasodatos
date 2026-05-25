@@ -95,29 +95,29 @@ function normalizeStockState(value: string) {
   return value;
 }
 
-function getStockStateStyle(estado: string): CSSProperties {
+function getStockStateBarStyle(estado: string): CSSProperties {
   const normalized = normalizeStockState(estado);
 
   if (normalized === "Crítico" || normalized === "Sin inventario") {
     return {
-      background: "rgba(220, 38, 38, 0.10)",
-      color: "#B91C1C",
-      border: "1px solid rgba(220, 38, 38, 0.18)",
+      width: "64%",
+      background: "linear-gradient(90deg, #DC2626 0%, #B91C1C 100%)",
+      color: "#FFFFFF",
     };
   }
 
   if (normalized === "En riesgo") {
     return {
-      background: "rgba(245, 158, 11, 0.12)",
-      color: "#B45309",
-      border: "1px solid rgba(245, 158, 11, 0.22)",
+      width: "78%",
+      background: "linear-gradient(90deg, #FACC15 0%, #F59E0B 100%)",
+      color: "#FFFFFF",
     };
   }
 
   return {
-    background: "rgba(22, 163, 74, 0.10)",
-    color: "#15803D",
-    border: "1px solid rgba(22, 163, 74, 0.18)",
+    width: "58%",
+    background: "linear-gradient(90deg, #22C55E 0%, #16A34A 100%)",
+    color: "#FFFFFF",
   };
 }
 
@@ -167,9 +167,11 @@ export default function SecondaryChartsSection({
                     <td style={styles.tdCompact}>No disponible</td>
                     <td style={styles.tdCompact}>{defaultStockMin}</td>
                     <td style={styles.tdCompact}>
-                     <span style={{ ...styles.statusPill, ...getStockStateStyle("Sin inventario") }}>
-                      Sin inventario cargado
-                     </span>
+                     <div style={styles.stockStateTrack}>
+  <div style={{ ...styles.stockStateBar, ...getStockStateBarStyle("Sin inventario") }}>
+    Sin inventario cargado
+  </div>
+</div>
                     </td>
                     <td style={styles.tdCompact}>-</td>
                   </tr>
@@ -183,9 +185,11 @@ export default function SecondaryChartsSection({
                         <td style={styles.tdCompact}>{row.stock}</td>
                         <td style={styles.tdCompact}>{row.minimo}</td>
                         <td style={styles.tdCompact}>
-                          <span style={{ ...styles.statusPill, ...getStockStateStyle(row.estado) }}>
-                            {state}
-                          </span>
+<div style={styles.stockStateTrack}>
+  <div style={{ ...styles.stockStateBar, ...getStockStateBarStyle(row.estado) }}>
+    {state}
+  </div>
+</div>
                         </td>
                         <td style={styles.tdCompact}>{row.diasCobertura} días</td>
                       </tr>
@@ -284,21 +288,26 @@ export default function SecondaryChartsSection({
                   fontSize={12}
                   tickFormatter={(value) => formatCompactMoney(value)}
                 />
-
                 <Tooltip
-                  contentStyle={{
-                    ...tooltipStyle,
-                    background: "rgba(255,255,255,0.10)",
-                    border: "1px solid #E2E8F0",
-                    color: "#0F172A",
-                    boxShadow: "0 18px 42px rgba(15, 23, 42, 0.14)",
-                  }}
-                  formatter={(value, name) => [
-                    formatMoney(Number(value ?? 0)),
-                    getFriendlyChannelName(String(name)),
-                  ]}
-                />
-
+  contentStyle={{
+    ...tooltipStyle,
+    background: "rgba(15, 23, 42, 0.96)",
+    border: "1px solid rgba(255,255,255,0.18)",
+    color: "#F8FAFC",
+    boxShadow: "0 18px 42px rgba(0, 0, 0, 0.35)",
+  }}
+  labelStyle={{
+    color: "#F8FAFC",
+    fontWeight: 700,
+  }}
+  itemStyle={{
+    color: "#E2E8F0",
+  }}
+  formatter={(value, name) => [
+    formatMoney(Number(value ?? 0)),
+    getFriendlyChannelName(String(name)),
+  ]}
+/>
                 {channelResult.channels.map((channel, index) => (
                   <Area
                     key={channel}
@@ -388,19 +397,16 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 650,
   },
 
-  viewAllButton: {
-    minHeight: 30,
-    padding: "0 11px",
-    borderRadius: 999,
-    border: "1px solid var(--jd-border-accent-soft)",
-    background: "rgba(255,255,255,0.10)",
-    color: "var(--jd-brand-secondary)",
-    fontSize: 11,
-    fontWeight: 900,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    boxShadow: "0 8px 18px rgba(46, 13, 79, 0.035)",
-  },
+viewAllButton: {
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(255,255,255,0.08)",
+  color: "#E2E8F0",
+  borderRadius: 999,
+  padding: "8px 14px",
+  fontSize: 11,
+  fontWeight: 600,
+  cursor: "pointer",
+},
 
   tableShell: {
     overflowX: "auto",
@@ -416,26 +422,23 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 12,
   },
 
-  thCompact: {
-    textAlign: "left",
-    padding: "8px 10px",
-    color: "#F8FAFC",
-    borderBottom: "1px solid rgba(255,255,255,0.14)",
-    fontWeight: 850,
-    background: "var(--jd-gradient-accent)",
-    fontSize: 10,
-    whiteSpace: "nowrap",
-  },
-
-  tdCompact: {
-    padding: "8px 10px",
-    borderBottom: "1px solid var(--jd-border-table)",
-    color: "var(--jd-text-main)",
-    verticalAlign: "middle",
-    fontSize: 11,
-    fontWeight: 650,
-    whiteSpace: "nowrap",
-  },
+thCompact: {
+  padding: "10px 12px",
+  textAlign: "left",
+  fontSize: 11,
+  fontWeight: 500,
+  color: "#F8FAFC",
+  background: "rgba(99, 102, 241, 0.72)",
+  borderBottom: "1px solid rgba(255,255,255,0.08)",
+},
+tdCompact: {
+  padding: "10px 12px",
+  fontSize: 11,
+  fontWeight: 400,
+  color: "#F8FAFC",
+  borderBottom: "1px solid rgba(255,255,255,0.08)",
+  verticalAlign: "middle",
+},
 
   productCell: {
     padding: "8px 10px",
@@ -503,4 +506,28 @@ const styles: Record<string, CSSProperties> = {
     border: "1px solid var(--jd-border-accent-soft)",
     padding: "6px 6px 2px",
   },
+  stockStateTrack: {
+  width: "100%",
+  maxWidth: 210,
+  height: 24,
+  borderRadius: 999,
+  background: "rgba(15, 23, 42, 0.38)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  overflow: "hidden",
+},
+
+stockStateBar: {
+  height: "100%",
+  minWidth: 96,
+  borderRadius: 999,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-start",
+  padding: "0 10px",
+  fontSize: 10,
+  fontWeight: 600,
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.20)",
+},
 };

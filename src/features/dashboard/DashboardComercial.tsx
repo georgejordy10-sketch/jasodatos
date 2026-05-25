@@ -2409,8 +2409,8 @@ return (
           style={{
             margin: 0,
             color: "var(--jd-text-main)",
-            fontSize: 16,
-            fontWeight: 900,
+            fontSize: 20,
+            fontWeight: 800,
             letterSpacing: "-0.02em",
             lineHeight: 1.05,
           }}
@@ -2422,7 +2422,7 @@ return (
           style={{
             margin: "2px 0 0",
             color: "var(--jd-text-secondary)",
-            fontSize: 11,
+            fontSize: 12,
             lineHeight: 1.25,
             fontWeight: 600,
           }}
@@ -2435,17 +2435,19 @@ return (
         <button
           type="button"
           onClick={() => setShowFullUploadHistory(true)}
-          style={{
-            border: "1px solid var(--jd-border-accent-soft)",
-            background: "rgba(109, 126, 219, 0.12)",
-            color: "var(--jd-brand-secondary)",
-            borderRadius: 999,
-            padding: "5px 9px",
-            fontSize: 11,
-            fontWeight: 850,
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-          }}
+style={{
+  border: "1px solid rgba(255,255,255,0.86)",
+  background: "rgba(56, 189, 248, 0.18)",
+  color: "#7DD3FC",
+  borderRadius: 999,
+  padding: "7px 14px",
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+}}
         >
           Ver historial completo
         </button>
@@ -2471,26 +2473,25 @@ return (
       }}
     >
       <span
-        style={{
-          display: "block",
-          color: "var(--jd-text-secondary)",
-          fontSize: 9,
-          fontWeight: 850,
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-          lineHeight: 1.1,
-        }}
+style={{
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.035em",
+  lineHeight: 1.15,
+}}
       >
         Ventas vs anterior
       </span>
 
 <strong
   style={{
-    color: "var(--jd-brand-secondary)",
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: 750,
+    fontWeight: 500,
     lineHeight: 1.05,
-    letterSpacing: "-0.02em",
+    letterSpacing: "-0.01em",
   }}
 >
         {dashboardHistorySummary.salesChange}
@@ -2499,10 +2500,10 @@ return (
       <span
         style={{
           display: "block",
-          color: "var(--jd-text-main)",
-          fontSize: 12,
-          fontWeight: 850,
-          lineHeight: 1.2,
+color: "#7DD3FC",
+fontSize: 12,
+fontWeight: 500,
+lineHeight: 1.2,
         }}
       >
         Actual:{" "}
@@ -2530,26 +2531,25 @@ return (
       }}
     >
       <span
-        style={{
-          display: "block",
-          color: "var(--jd-text-secondary)",
-          fontSize: 9,
-          fontWeight: 850,
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-          lineHeight: 1.1,
-        }}
+style={{
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.035em",
+  lineHeight: 1.15,
+}}
       >
         Unidades vs anterior
       </span>
 
 <strong
   style={{
-    color: "var(--jd-brand-secondary)",
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: 750,
+    fontWeight: 500,
     lineHeight: 1.05,
-    letterSpacing: "-0.02em",
+    letterSpacing: "-0.01em",
   }}
 >
         {dashboardHistorySummary.unitsChange}
@@ -2558,10 +2558,10 @@ return (
       <span
         style={{
           display: "block",
-          color: "var(--jd-text-main)",
-          fontSize: 12,
-          fontWeight: 850,
-          lineHeight: 1.2,
+color: "#7DD3FC",
+fontSize: 12,
+fontWeight: 500,
+lineHeight: 1.2,
         }}
       >
         Actual: {dashboardHistorySummary.currentUnits} · Anterior:{" "}
@@ -2581,26 +2581,25 @@ return (
       }}
     >
       <span
-        style={{
-          display: "block",
-          color: "var(--jd-text-secondary)",
-          fontSize: 9,
-          fontWeight: 850,
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-          lineHeight: 1.1,
-        }}
+style={{
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.035em",
+  lineHeight: 1.15,
+}}
       >
         Productos vs anterior
       </span>
 
 <strong
   style={{
-    color: "var(--jd-brand-secondary)",
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: 750,
+    fontWeight: 500,
     lineHeight: 1.05,
-    letterSpacing: "-0.02em",
+    letterSpacing: "-0.01em",
   }}
 >
         {dashboardHistorySummary.productDelta >= 0 ? "+" : ""}
@@ -2610,10 +2609,10 @@ return (
       <span
         style={{
           display: "block",
-          color: "var(--jd-text-secondary)",
-          fontSize: 12,
-          fontWeight: 850,
-          lineHeight: 1.25,
+color: "#7DD3FC",
+fontSize: 12,
+fontWeight: 500,
+lineHeight: 1.25,
         }}
       >
         Actual: {dashboardHistorySummary.currentProducts} · Anterior:{" "}
@@ -2633,15 +2632,14 @@ return (
       }}
     >
       <span
-        style={{
-          display: "block",
-          color: "var(--jd-text-secondary)",
-          fontSize: 9,
-          fontWeight: 850,
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-          lineHeight: 1.1,
-        }}
+style={{
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.035em",
+  lineHeight: 1.15,
+}}
       >
         Última carga de archivos
       </span>
@@ -2744,9 +2742,9 @@ return (
           <h3
             style={{
               margin: 0,
-              color: "var(--jd-brand-secondary)",
-              fontSize: 24,
-              fontWeight: 900,
+              color: "#FFFFFF",
+fontSize: 18,
+fontWeight: 600,
               letterSpacing: "-0.02em",
             }}
           >
@@ -2778,11 +2776,11 @@ return (
     style={{
 border: "1px solid var(--jd-border-accent-soft)",
 background: "rgba(109, 126, 219, 0.12)",
-color: "var(--jd-brand-secondary)",
+color: "#FFFFFF",
       borderRadius: 999,
       padding: "8px 12px",
-      fontSize: 12,
-      fontWeight: 800,
+      fontSize: 18,
+      fontWeight: 600,
       cursor: "pointer",
     }}
   >
@@ -3355,7 +3353,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
   {mainRecommendation ? (
     <div style={styles.priorityActionCard}>
       <div style={styles.priorityActionHeader}>
-        <span style={styles.priorityActionBadge}>Prioridad ahora</span>
+        <span style={styles.priorityNowBadge}>PRIORIDAD AHORA</span>
         <span style={styles.priorityActionType}>
           {mainRecommendation.type}
         </span>
@@ -3376,7 +3374,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
             usarAccion(`${mainRecommendation.title}. ${mainRecommendation.message}`)
           }
         >
-          Copiar acción principal
+          Copiar
         </button>
       ) : null}
     </div>
@@ -3883,42 +3881,48 @@ lockedFeatureSalesButton: {
   boxShadow: "0 10px 20px rgba(16,185,129,0.18)",
 },
 actionButton: {
-  minHeight: 30,
-  width: "fit-content",
-  maxWidth: "100%",
-  padding: "0 12px",
+  minHeight: 32,
   borderRadius: 999,
-  border: "1px solid rgba(109, 126, 219, 0.22)",
-  background: "rgba(109, 126, 219, 0.14)",
-  color: "var(--jd-brand-secondary)",
+  border: "1px solid rgba(255,255,255,0.78)",
+  background: "rgba(80, 96, 220, 0.42)",
+  color: "#FFFFFF",
+  padding: "0 14px",
   fontSize: 11,
-  fontWeight: 750,
+  fontWeight: 500,
   cursor: "pointer",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 14px rgba(0,0,0,0.10)",
   whiteSpace: "nowrap",
 },
 actionNotice: {
-  padding: "10px 12px",
-  borderRadius: 16,
-  background: "var(--jd-info-soft)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  color: "var(--jd-brand-secondary)",
-  fontSize: 13,
-  fontWeight: 800,
+  marginTop: 10,
+  padding: "12px 14px",
+  borderRadius: 14,
+  border: "1px solid rgba(255,255,255,0.22)",
+  background: "rgba(80, 96, 220, 0.22)",
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 400,
+  lineHeight: 1.45,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
 },
 
 assistantPromoBadge: {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  minHeight: 26,
-  padding: "0 10px",
+  minHeight: 30,
+  padding: "0 14px",
   borderRadius: 999,
-  background: "var(--jd-info-soft)",
-  color: "var(--jd-brand-secondary)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  fontSize: 11,
-  fontWeight: 750,
-  width: "fit-content",
+  background: "rgba(56, 189, 248, 0.18)",
+  border: "1px solid rgba(125, 211, 252, 0.36)",
+  color: "#7DD3FC",
+  fontSize: 12,
+  fontWeight: 700,
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 10px rgba(56,189,248,0.08)",
 },
 actionsGrid: {
   display: "grid",
@@ -4026,8 +4030,8 @@ assistantChannelRow: {
   padding: "14px 16px",
   borderRadius: 18,
   background: "rgba(255,255,255,0.07)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
+border: "1px solid rgba(255,255,255,0.42)",
+boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
   display: "grid",
   gap: 8,
 },
@@ -4035,17 +4039,20 @@ assistantChannelRow: {
 assistantChannelBadge: {
   width: "fit-content",
   minHeight: 24,
-  padding: "0 11px",
+  padding: "0 12px",
   borderRadius: 999,
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  background: "rgba(37,99,235,0.12)",
-  color: "#1D4ED8",
-  border: "1px solid rgba(37,99,235,0.24)",
+  background: "rgba(34, 197, 94, 0.18)",
+  border: "1px solid rgba(255,255,255,0.86)",
+  color: "#86EFAC",
   fontSize: 11,
-  fontWeight: 900,
+  fontWeight: 600,
+  lineHeight: 1,
   whiteSpace: "nowrap",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(255,255,255,0.05)",
 },
 
 assistantChannelText: {
@@ -4265,12 +4272,12 @@ productComparisonTitle: {
 },
 
 productComparisonSubtitle: {
-  margin: "3px 0 0",
-  color: "var(--jd-text-secondary)",
-  fontSize: 11,
-  fontWeight: 650,
-  maxWidth: 860,
-  lineHeight: 1.25,
+  margin: "5px 0 0",
+  color: "#FFFFFF",
+  fontSize: 13,
+  fontWeight: 600,
+  maxWidth: 940,
+  lineHeight: 1.35,
 },
 comparisonHeaderActions: {
   display: "flex",
@@ -4319,45 +4326,48 @@ clearComparisonButton: {
 
 productComparisonEmpty: {
   borderRadius: 18,
-  border: "1px dashed var(--jd-border-accent-soft)",
-  background:
-    "linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(241,244,255,0.88) 100%)",
+  border: "1px solid rgba(255,255,255,0.86)",
+  background: "rgba(80, 96, 220, 0.42)",
   padding: 18,
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
   gap: 16,
   flexWrap: "wrap",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 24px rgba(0,0,0,0.10)",
 },
 
 emptyTitle: {
   margin: 0,
-  color: "var(--jd-text-main)",
+  color: "#FFFFFF",
   fontSize: 15,
-  fontWeight: 900,
+  fontWeight: 700,
+  lineHeight: 1.25,
 },
 
 emptyText: {
   margin: "6px 0 0",
-  color: "var(--jd-text-secondary)",
+  color: "rgba(255,255,255,0.92)",
   fontSize: 13,
-  fontWeight: 650,
+  fontWeight: 500,
   lineHeight: 1.45,
-  maxWidth: 880,
+  maxWidth: 920,
 },
 
 emptyActionButton: {
-  minHeight: 42,
-  borderRadius: 14,
-  border: "1px solid rgba(79,70,229,0.20)",
-  background:
-    "linear-gradient(135deg, #4F46E5 0%, #3D2C8D 65%, #2E0D4F 100%)",
-  color: "#FFFFFF",
+  minHeight: 38,
+  borderRadius: 999,
+  border: "1px solid rgba(255,255,255,0.86)",
+  background: "rgba(34, 197, 94, 0.18)",
+  color: "#86EFAC",
   padding: "0 18px",
-  fontSize: 13,
-  fontWeight: 900,
+  fontSize: 12,
+  fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 10px 20px rgba(61,44,141,0.16)",
+  whiteSpace: "nowrap",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(34,197,94,0.08)",
 },
 
 productChipsRow: {
@@ -4642,14 +4652,19 @@ pdfSpacerBeforeBenchmarking: {
   height: 0,
 },
 assistantInsightItem: {
-  padding: "9px 11px",
-  borderRadius: 16,
-  background: "rgba(255,255,255,0.08)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  color: "var(--jd-text-secondary)",
-  fontSize: 12,
-  lineHeight: 1.35,
-  fontWeight: 650,
+  display: "flex",
+  alignItems: "center",
+  minHeight: 58,
+  padding: "0 14px",
+  borderRadius: 14,
+  background: "rgba(15, 23, 42, 0.14)",
+  border: "1px solid rgba(255,255,255,0.88)",
+  color: "#86EFAC",
+  fontSize: 13,
+  fontWeight: 500,
+  lineHeight: 1.15,
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 12px rgba(255,255,255,0.06)",
 },
 priorityActionCard: {
   display: "grid",
@@ -4880,6 +4895,23 @@ assistantPlanUpgradeButton: {
   cursor: "pointer",
   whiteSpace: "nowrap",
   boxShadow: "0 8px 18px rgba(22,163,74,0.14)",
+},
+priorityNowBadge: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 24,
+  padding: "0 12px",
+  borderRadius: 999,
+  background: "rgba(34, 197, 94, 0.16)",
+  border: "1px solid rgba(255,255,255,0.86)",
+  color: "#86EFAC",
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(255,255,255,0.05)",
 },
 };
 

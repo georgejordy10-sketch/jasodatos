@@ -214,28 +214,29 @@ subtitle: {
 },
 
 counterWrap: {
-  minWidth: 50,
+  minWidth: 54,
   minHeight: 38,
-  borderRadius: 12,
+  borderRadius: 14,
   display: "grid",
   placeItems: "center",
   gap: 0,
-  background: "var(--jd-gradient-table-surface)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  padding: "5px 8px",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72)",
+  background: "rgba(56, 189, 248, 0.18)",
+  border: "1px solid rgba(255,255,255,0.86)",
+  padding: "5px 10px",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
 },
 
 counter: {
-  color: "var(--jd-brand-secondary)",
-  fontSize: 16,
-  fontWeight: 950,
+  color: "#FFFFFF",
+  fontSize: 15,
+  fontWeight: 700,
   lineHeight: 1,
 },
 counterLabel: {
-  color: "var(--jd-text-muted)",
-  fontSize: 9,
-  fontWeight: 750,
+  color: "#FFFFFF",
+  fontSize: 10,
+  fontWeight: 500,
   lineHeight: 1,
 },
 
@@ -247,13 +248,15 @@ summaryRow: {
 
 summaryPill: {
   borderRadius: 999,
-  padding: "4px 8px",
-  fontSize: 9,
-  fontWeight: 850,
+  padding: "0 12px",
+  fontSize: 11,
+  fontWeight: 700,
   lineHeight: 1,
-  minHeight: 20,
+  minHeight: 24,
   display: "inline-flex",
   alignItems: "center",
+  justifyContent: "center",
+  whiteSpace: "nowrap",
 },
 
   emptyState: {
@@ -272,19 +275,18 @@ summaryPill: {
 
 grid: {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-  gap: 8,
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: 6,
 },
-
 alertCard: {
-  borderRadius: 14,
-  padding: "10px 11px",
-  background: "var(--jd-gradient-container)",
-  border: "1px solid var(--jd-border-accent)",
+  borderRadius: 12,
+  padding: "7px 9px",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.12)",
   display: "grid",
-  gap: 5,
-  minHeight: 82,
-  boxShadow: "var(--jd-shadow-card)",
+  gap: 2,
+  minHeight: 54,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
 },
   alertTop: {
     display: "flex",
@@ -295,55 +297,57 @@ alertCard: {
 
 severityBadge: {
   borderRadius: 999,
-  padding: "4px 8px",
-  fontSize: 9,
-  fontWeight: 900,
+  padding: "0 10px",
+  minHeight: 22,
+  fontSize: 11,
+  fontWeight: 700,
   letterSpacing: 0.2,
   lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
 },
 
 contentBlock: {
   display: "grid",
-  gap: 3,
+  gap: 1,
 },
 
 alertTitle: {
   margin: 0,
-  color: "var(--jd-text-main)",
-  fontSize: 13,
-  fontWeight: 900,
+  color: "#FFFFFF",
+  fontSize: 14,
+  fontWeight: 650,
   lineHeight: 1.12,
   letterSpacing: "-0.01em",
 },
 
 alertMessage: {
   margin: 0,
-  color: "var(--jd-text-secondary)",
+  color: "#FFFFFF",
   fontSize: 11,
-  fontWeight: 600,
-  lineHeight: 1.25,
+  fontWeight: 400,
+  lineHeight: 1.18,
 },
 
-  actionsRow: {
-    display: "flex",
-    justifyContent: "flex-end",
-    marginTop: "auto",
-  },
+actionsRow: {
+  display: "flex",
+  justifyContent: "flex-end",
+  marginTop: 0,
+},
 
 actionButton: {
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "rgba(109, 126, 219, 0.12)",
-  color: "var(--jd-brand-secondary)",
+  border: "1px solid rgba(255,255,255,0.28)",
+  background: "rgba(80, 96, 220, 0.24)",
+  color: "#FFFFFF",
   borderRadius: 999,
-  padding: "5px 9px",
+  padding: "4px 9px",
   fontSize: 10,
-  fontWeight: 900,
+  fontWeight: 500,
   cursor: "pointer",
   textDecoration: "none",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  boxShadow: "0 8px 18px rgba(46, 13, 79, 0.06)",
+  whiteSpace: "nowrap",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
 },
 noAction: {
   color: "var(--jd-text-muted)",
