@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { listProfiles } from "@/core/profiles/registry";
 import type { ProfileId } from "@/core/profiles/types";
 import DashboardComercial from "@/features/dashboard/DashboardComercial";
@@ -1560,151 +1560,164 @@ const historyMetricLabelStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 700,
 };
-
-const historyMetricValueStyle: React.CSSProperties = {
-  color: "#0f172a",
+const historyMetricValueStyle: CSSProperties = {
+  color: "#FFFFFF",
   fontSize: 22,
-  fontWeight: 900,
-};
-
-const historyComparisonSectionStyle: React.CSSProperties = {
-  borderRadius: 24,
-  padding: 20,
-  background: "var(--jd-gradient-container)",
-  border: "1px solid var(--jd-border-accent)",
-  boxShadow: "var(--jd-shadow-card)",
-  display: "grid",
-  gap: 16,
-  scrollMarginTop: 96,
-};
-const historyComparisonHeaderStyle: React.CSSProperties = {
-  display: "grid",
-  gap: 6,
-};
-
-const historyComparisonTitleStyle: React.CSSProperties = {
-  margin: 0,
-  color: "var(--jd-text-main)",
-  fontSize: 24,
-  fontWeight: 900,
-  lineHeight: 1.15,
+  fontWeight: 650,
+  lineHeight: 1,
   letterSpacing: "-0.02em",
 };
-const historyComparisonSubtitleStyle: React.CSSProperties = {
-  margin: 0,
-  color: "var(--jd-text-secondary)",
-  fontSize: 13,
-  lineHeight: 1.4,
-  fontWeight: 650,
-};
-const historyComparisonReferenceStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  width: "fit-content",
-  maxWidth: "100%",
-  padding: "5px 10px",
-  borderRadius: 999,
-  background: "rgba(255, 255, 255, 0.52)",
-  color: "var(--jd-text-secondary)",
-  fontSize: 11,
-  fontWeight: 500,
-  lineHeight: 1.2,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-};
-const historyComparisonGridStyle: React.CSSProperties = {
+
+const historyComparisonSectionStyle: CSSProperties = {
+  width: "100%",
+  maxWidth: "calc(100% - 48px)",
+  margin: "0 auto 16px",
+  borderRadius: 18,
+  padding: "18px",
+  background: "var(--jd-gradient-container)",
+  border: "1px solid rgba(255,255,255,0.42)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.04)",
   display: "grid",
-  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-  gap: 8,
-};
-const historyComparisonCardStyle: React.CSSProperties = {
-  border: "1px solid var(--jd-border-accent-soft)",
-  borderRadius: 12,
-  padding: "8px 10px",
-  background: "var(--jd-gradient-table-surface)",
-  display: "grid",
-  gap: 3,
-  minHeight: 66,
-  alignContent: "center",
-};
-const historyComparisonLabelStyle: React.CSSProperties = {
-  display: "block",
-  color: "var(--jd-text-secondary)",
-  fontSize: 13,
-  fontWeight: 900,
-  lineHeight: 1.1,
-  letterSpacing: "-0.01em",
+  gap: 14,
 };
 
-const historyComparisonValueStyle: React.CSSProperties = {
-  display: "block",
-  color: "var(--jd-text-main)",
-  fontSize: 22,
-  fontWeight: 850,
+const historyComparisonHeaderStyle: CSSProperties = {
+  display: "grid",
+  gap: 8,
+};
+
+const historyComparisonTitleStyle: CSSProperties = {
+  margin: 0,
+  color: "#FFFFFF",
+  fontSize: 24,
+  fontWeight: 800,
   lineHeight: 1.05,
   letterSpacing: "-0.03em",
 };
 
-const historyComparisonFootStyle: React.CSSProperties = {
-  display: "block",
-  color: "var(--jd-text-secondary)",
+const historyComparisonSubtitleStyle: CSSProperties = {
+  margin: 0,
+  color: "rgba(255,255,255,0.86)",
+  fontSize: 13,
+  fontWeight: 500,
+  lineHeight: 1.3,
+};
+
+const historyComparisonReferenceStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  width: "fit-content",
+  maxWidth: "100%",
+  minHeight: 24,
+  padding: "0 12px",
+  borderRadius: 999,
+  background: "rgba(255,255,255,0.14)",
+  border: "1px solid rgba(255,255,255,0.16)",
+  color: "rgba(255,255,255,0.82)",
   fontSize: 11,
-  fontWeight: 700,
+  fontWeight: 500,
+  lineHeight: 1,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const historyComparisonGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  gap: 10,
+};
+
+const historyComparisonCardStyle: CSSProperties = {
+  borderRadius: 14,
+  padding: "10px 12px",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  display: "grid",
+  gap: 5,
+  minHeight: 76,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+};
+
+const historyComparisonLabelStyle: CSSProperties = {
+  color: "#FFFFFF",
+  fontSize: 13,
+  fontWeight: 600,
   lineHeight: 1.15,
 };
-const historyComparisonModeStyle: React.CSSProperties = {
+
+const historyComparisonValueStyle: CSSProperties = {
+  color: "#FFFFFF",
+  fontSize: 22,
+  fontWeight: 650,
+  lineHeight: 1,
+  letterSpacing: "-0.02em",
+};
+
+const historyComparisonFootStyle: CSSProperties = {
+  color: "#86EFAC",
+  fontSize: 13,
+  fontWeight: 600,
+  lineHeight: 1.25,
+};
+
+const historyComparisonModeStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 8,
   flexWrap: "wrap",
-};
-const historyComparisonModeLabelStyle: React.CSSProperties = {
-  color: "var(--jd-text-main)",
-  fontSize: 12,
-  fontWeight: 900,
+  marginTop: 2,
 };
 
-const historyComparisonModeButtonStyle: React.CSSProperties = {
-  minHeight: 34,
-  borderRadius: 999,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "rgba(255,255,255,0.86)",
-  color: "var(--jd-brand-secondary)",
-  padding: "0 14px",
-  fontSize: 12,
-  fontWeight: 850,
-  cursor: "pointer",
-};
-
-const historyComparisonModeButtonActiveStyle: React.CSSProperties = {
-  background:
-    "linear-gradient(135deg, #4F46E5 0%, #3D2C8D 65%, #2E0D4F 100%)",
-  border: "1px solid rgba(79,70,229,0.22)",
+const historyComparisonModeLabelStyle: CSSProperties = {
   color: "#FFFFFF",
-  boxShadow: "0 10px 20px rgba(61,44,141,0.16)",
+  fontSize: 12,
+  fontWeight: 600,
+  lineHeight: 1,
 };
 
-const historyComparisonEmptyStyle: React.CSSProperties = {
-  borderRadius: 18,
-  border: "1px dashed var(--jd-border-accent-soft)",
-  background:
-    "linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(241,244,255,0.88) 100%)",
-  color: "var(--jd-text-secondary)",
-  padding: 16,
+const historyComparisonModeButtonStyle: CSSProperties = {
+  minHeight: 32,
+  padding: "0 15px",
+  borderRadius: 999,
+  border: "1px solid rgba(255,255,255,0.72)",
+  background: "rgba(255,255,255,0.88)",
+  color: "#1E1B4B",
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+const historyComparisonModeButtonActiveStyle: CSSProperties = {
+  background: "rgba(56, 189, 248, 0.18)",
+  border: "1px solid rgba(255,255,255,0.86)",
+  color: "#FFFFFF",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+};
+
+const historyComparisonEmptyStyle: CSSProperties = {
+  borderRadius: 14,
+  padding: "12px 14px",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  color: "rgba(255,255,255,0.86)",
   fontSize: 13,
-  fontWeight: 700,
+  fontWeight: 500,
+  lineHeight: 1.35,
 };
 
-const analysisResultCompactStyle: React.CSSProperties = {
-  border: "1px solid #dbeafe",
+const analysisResultCompactStyle: CSSProperties = {
+  border: "1px solid rgba(255,255,255,0.12)",
   borderRadius: 16,
   padding: 14,
-  background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
+  background: "rgba(255,255,255,0.08)",
   display: "grid",
   gap: 10,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
 };
-
 const analysisResultTitleStyle: React.CSSProperties = {
   display: "block",
   color: "#1d4ed8",
