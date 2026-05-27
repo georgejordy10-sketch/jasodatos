@@ -521,15 +521,41 @@ function resetFlow() {
     fileInputRef.current.value = "";
   }
 }
+
+const qualityScoreTone =
+  qualityReport && qualityReport.score >= 90
+    ? {
+        background: "rgba(34, 197, 94, 0.18)",
+        border: "1px solid rgba(134, 239, 172, 0.72)",
+        color: "#86EFAC",
+      }
+    : qualityReport && qualityReport.score >= 70
+    ? {
+        background: "rgba(245, 158, 11, 0.18)",
+        border: "1px solid rgba(253, 186, 116, 0.72)",
+        color: "#FDBA74",
+      }
+    : {
+        background: "rgba(239, 68, 68, 0.18)",
+        border: "1px solid rgba(252, 165, 165, 0.72)",
+        color: "#FCA5A5",
+      };
+
 return (
   <div style={{ display: "grid", gap: processedData ? 0 : 16 }}>
     <div
       style={{
-        border: processedData ? 0 : "1px solid #e5e7eb",
-        borderRadius: processedData ? 0 : 12,
-        padding: processedData ? 0 : 16,
+        border: processedData ? 0 : "1px solid rgba(255,255,255,0.42)",
+        borderRadius: processedData ? 0 : 18,
+        padding: processedData ? 0 : 18,
+        background: processedData
+          ? "transparent"
+          : "linear-gradient(135deg, #283593 0%, #27308A 52%, #252C7D 100%)",
         display: "grid",
-        gap: processedData ? 0 : 12,
+        gap: processedData ? 0 : 14,
+        boxShadow: processedData
+          ? "none"
+          : "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.04)",
       }}
     >
       {!processedData ? (
@@ -613,9 +639,9 @@ style={inventoryHelpButtonStyle}
   gap: 10,
   padding: "10px 12px",
   borderRadius: 12,
-  border: "1px solid #c7d2fe",
-  background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
-  color: "#1e1b4b",
+  border: "1px solid rgba(255,255,255,0.42)",
+  background: "rgba(255,255,255,0.08)",
+  color: "#FFFFFF",
   fontSize: 14,
   lineHeight: 1.5,
   cursor: "pointer",
@@ -632,7 +658,7 @@ style={inventoryHelpButtonStyle}
   />
 <span>
   Confirmo que tengo autorización para procesar este archivo.{" "}
-  <small style={{ color: "#475569" }}>
+  <small style={{ color: "rgba(255,255,255,0.72)" }}>
     Los resultados dependerán de la calidad y exactitud de los datos cargados.
   </small>{" "}
   <a
@@ -640,7 +666,7 @@ style={inventoryHelpButtonStyle}
     target="_blank"
     rel="noopener noreferrer"
     style={{
-      color: "#1d4ed8",
+      color: "#FFFFFF",
       fontWeight: 700,
       textDecoration: "underline",
     }}
@@ -657,9 +683,9 @@ style={inventoryHelpButtonStyle}
   style={{
     padding: "10px 14px",
     borderRadius: 8,
-    border: "1px solid #111827",
-    background: loading || !file || !hasDataConsent ? "#9ca3af" : "#111827",
-    color: "#ffffff",
+    border: "1px solid rgba(255,255,255,0.72)",
+    background: loading || !file || !hasDataConsent ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.10)",
+    color: "#FFFFFF",
     cursor: loading || !file || !hasDataConsent ? "not-allowed" : "pointer",
   }}
 >
@@ -672,9 +698,9 @@ style={inventoryHelpButtonStyle}
             style={{
               padding: "10px 14px",
               borderRadius: 8,
-              border: "1px solid #d1d5db",
-              background: "#ffffff",
-              color: "#111827",
+              border: "1px solid rgba(255,255,255,0.72)",
+              background: "rgba(255,255,255,0.08)",
+              color: "#FFFFFF",
               cursor: "pointer",
             }}
           >
@@ -699,137 +725,165 @@ style={inventoryHelpButtonStyle}
         ) : null}
       </div>
       {historyLoaded && !processedData && uploadHistory.length > 0 ? (
-  <div
-    style={{
-      border: "1px solid #dbeafe",
-      borderRadius: 16,
-      padding: 14,
-      background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
-      display: "grid",
-      gap: 10,
-    }}
-  >
-    <div style={{ display: "grid", gap: 2 }}>
-      <strong style={{ color: "#1d4ed8", fontSize: 15 }}>
-        Últimas cargas procesadas
-      </strong>
-
-      <p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.35 }}>
-        Resumen local de tus últimos archivos analizados en este navegador.
-      </p>
-    </div>
-
-    <div style={{ display: "grid", gap: 8 }}>
-      {uploadHistory.slice(0, 3).map((item) => (
         <div
-          key={item.id}
           style={{
-            border: "1px solid #dbeafe",
-            borderRadius: 12,
-            padding: "10px 12px",
-            background: "#ffffff",
+            border: "1px solid rgba(255,255,255,0.42)",
+            borderRadius: 18,
+            padding: 18,
+            background:
+              "linear-gradient(135deg, #283593 0%, #27308A 52%, #252C7D 100%)",
             display: "grid",
-            gap: 6,
+            gap: 14,
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.04)",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 12,
-              alignItems: "flex-start",
-              flexWrap: "wrap",
-            }}
-          >
+          <div style={{ display: "grid", gap: 2 }}>
             <strong
               style={{
-                color: "#0f172a",
-                fontSize: 13,
-                lineHeight: 1.2,
-                maxWidth: 360,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                color: "#FFFFFF",
+                fontSize: 20,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
               }}
-              title={item.fileName}
             >
-              {item.fileName}
+              Últimas cargas procesadas
             </strong>
 
-<span style={uploadHistoryDateStyle}>
-  {getUploadDateLabel(item.uploadedAt)} ·{" "}
-  {new Date(item.uploadedAt).toLocaleString("es-EC")}
-</span>
+            <p
+              style={{
+                margin: 0,
+                color: "rgba(255,255,255,0.78)",
+                fontSize: 13,
+                lineHeight: 1.4,
+              }}
+            >
+              Resumen local de tus últimos archivos analizados en este navegador.
+            </p>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              flexWrap: "wrap",
-              color: "#334155",
-              fontSize: 12,
-              lineHeight: 1.3,
-            }}
+          <div style={{ display: "grid", gap: 8 }}>
+            {uploadHistory.slice(0, 3).map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  borderRadius: 14,
+                  padding: "10px 12px",
+                  background: "rgba(255,255,255,0.08)",
+                  display: "grid",
+                  gap: 6,
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    alignItems: "flex-start",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <strong
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 13,
+                      lineHeight: 1.2,
+                      maxWidth: 360,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                    title={item.fileName}
+                  >
+                    {item.fileName}
+                  </strong>
+
+                  <span style={{ color: "rgba(255,255,255,0.72)", fontSize: 11 }}>
+                    {getUploadDateLabel(item.uploadedAt)} ·{" "}
+                    {new Date(item.uploadedAt).toLocaleString("es-EC")}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    color: "rgba(255,255,255,0.82)",
+                    fontSize: 12,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  <span>
+                    <strong style={{ color: "#FFFFFF" }}>{item.totalRows}</strong>{" "}
+                    registros
+                  </span>
+                  <span>
+                    <strong style={{ color: "#FFFFFF" }}>
+                      {item.totalSales.toLocaleString("es-EC", {
+                        style: "currency",
+                        currency: "USD",
+                      })}
+                    </strong>{" "}
+                    ventas
+                  </span>
+                  <span>
+                    <strong style={{ color: "#FFFFFF" }}>{item.totalUnits}</strong>{" "}
+                    unidades
+                  </span>
+                  <span>
+                    <strong style={{ color: "#FFFFFF" }}>{item.productsCount}</strong>{" "}
+                    productos
+                  </span>
+                  <span>
+                    <strong style={{ color: "#FFFFFF" }}>{item.localsCount}</strong>{" "}
+                    locales
+                  </span>
+                  <span>
+                    <strong style={{ color: "#FFFFFF" }}>{item.channelsCount}</strong>{" "}
+                    medios
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {uploadHistory.length > 3 ? (
+            <span style={{ color: "rgba(255,255,255,0.72)", fontSize: 11 }}>
+              Mostrando las 3 cargas más recientes de {uploadHistory.length} registradas.
+            </span>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={clearUploadHistory}
+            style={clearHistoryButtonStyle}
           >
-            <span>
-              <strong>{item.totalRows}</strong> registros
-            </span>
-            <span>
-              <strong>
-                {item.totalSales.toLocaleString("es-EC", {
-                  style: "currency",
-                  currency: "USD",
-                })}
-              </strong>{" "}
-              ventas
-            </span>
-            <span>
-              <strong>{item.totalUnits}</strong> unidades
-            </span>
-            <span>
-              <strong>{item.productsCount}</strong> productos
-            </span>
-            <span>
-              <strong>{item.localsCount}</strong> locales
-            </span>
-            <span>
-              <strong>{item.channelsCount}</strong> medios
-            </span>
-          </div>
+            Limpiar historial local
+          </button>
         </div>
-      ))}
-    </div>
-
-    {uploadHistory.length > 3 ? (
-      <span style={{ color: "#64748b", fontSize: 11 }}>
-        Mostrando las 3 cargas más recientes de {uploadHistory.length} registradas.
-      </span>
-    ) : null}
-    <button
-  type="button"
-  onClick={clearUploadHistory}
-  style={clearHistoryButtonStyle}
->
-  Limpiar historial local
-</button>
-  </div>
-) : null}
+      ) : null}
       {initialData && !processedData ? (
         <div
           style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: 12,
-            padding: 16,
+            border: "1px solid rgba(255,255,255,0.42)",
+            borderRadius: 18,
+            padding: 18,
+            background:
+              "linear-gradient(135deg, #283593 0%, #27308A 52%, #252C7D 100%)",
             display: "grid",
-            gap: 12,
+            gap: 14,
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.04)",
           }}
         >
-<h3 style={{ margin: 0, fontSize: 24, color: "#111827" }}>
+<h3 style={{ margin: 0, fontSize: 24, color: "#FFFFFF", fontWeight: 800, letterSpacing: "-0.02em" }}>
   Revisa cómo JasoDatos entendió tu archivo
 </h3>
 
-<p style={{ margin: 0, color: "#475569", fontSize: 14 }}>
+<p style={{ margin: 0, color: "rgba(255,255,255,0.78)", fontSize: 14, lineHeight: 1.45 }}>
   JasoDatos detectó las columnas del archivo y sugirió a qué campo comercial corresponde cada una.
   Puedes ajustar manualmente cualquier asignación antes de procesar el archivo.
 </p>
@@ -858,14 +912,14 @@ style={inventoryHelpButtonStyle}
 {qualityReport ? (
   <div
     style={{
-      background: qualityTheme?.background ?? "#ffffff",
-      color: qualityTheme?.textColor ?? "#334155",
-      border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+      background: "rgba(255,255,255,0.08)",
+      color: "#FFFFFF",
+      border: "1px solid rgba(255,255,255,0.18)",
       borderRadius: 18,
       padding: 18,
       display: "grid",
       gap: 16,
-      boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
     }}
   >
     <div
@@ -888,9 +942,9 @@ style={inventoryHelpButtonStyle}
             fontSize: 12,
             fontWeight: 700,
             letterSpacing: "0.02em",
-            background: "#ffffff",
-            border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
-            color: qualityTheme?.statusColor ?? "#334155",
+            background: "rgba(255,255,255,0.10)",
+            border: "1px solid rgba(255,255,255,0.72)",
+            color: "#FFFFFF",
           }}
         >
           {qualityTheme?.badge}
@@ -900,7 +954,7 @@ style={inventoryHelpButtonStyle}
           style={{
             fontSize: 28,
             lineHeight: 1.1,
-            color: qualityTheme?.statusColor ?? "#0f172a",
+            color: "#FFFFFF",
           }}
         >
           {qualityTheme?.title}
@@ -909,7 +963,7 @@ style={inventoryHelpButtonStyle}
         <span
           style={{
             fontSize: 15,
-            color: qualityTheme?.textColor ?? "#334155",
+            color: "rgba(255,255,255,0.78)",
           }}
         >
           {qualityTheme?.message}
@@ -922,12 +976,12 @@ style={inventoryHelpButtonStyle}
             borderRadius: 12,
             background: "#ffffff",
             border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
-            color: qualityTheme?.textColor ?? "#334155",
+            color: "rgba(255,255,255,0.78)",
             fontSize: 14,
             lineHeight: 1.5,
           }}
         >
-<strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
+<strong style={{ color: "#FFFFFF" }}>
   Qué te sugerimos:
 </strong>{" "}
           {qualityReport.recommendation}
@@ -939,12 +993,13 @@ style={inventoryHelpButtonStyle}
           minWidth: 160,
           borderRadius: 16,
           padding: "14px 16px",
-          background: "#ffffff",
-          border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+          background: qualityScoreTone.background,
+          border: qualityScoreTone.border,
           textAlign: "center",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
         }}
       >
-        <div style={{ fontSize: 12, color: qualityTheme?.mutedColor ?? "#64748b" }}>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.78)", fontWeight: 500 }}>
           Calidad del archivo
         </div>
         <div
@@ -952,7 +1007,7 @@ style={inventoryHelpButtonStyle}
             fontSize: 34,
             fontWeight: 800,
             lineHeight: 1.1,
-            color: qualityTheme?.accent ?? "#4f46e5",
+            color: qualityScoreTone.color,
           }}
         >
           {qualityReport.score}/100
@@ -980,8 +1035,8 @@ style={inventoryHelpButtonStyle}
         <div
           key={item.label}
           style={{
-            background: "#ffffff",
-            border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.18)",
             borderRadius: 14,
             padding: 12,
             display: "grid",
@@ -991,7 +1046,7 @@ style={inventoryHelpButtonStyle}
           <span
             style={{
               fontSize: 12,
-              color: qualityTheme?.mutedColor ?? "#64748b",
+              color: "rgba(255,255,255,0.72)",
             }}
           >
             {item.label}
@@ -1000,7 +1055,7 @@ style={inventoryHelpButtonStyle}
             style={{
               fontSize: 24,
               lineHeight: 1.1,
-              color: qualityTheme?.headingColor ?? "#0f172a",
+              color: "#FFFFFF",
             }}
           >
             {item.value}
@@ -1012,8 +1067,8 @@ style={inventoryHelpButtonStyle}
     {qualityReport.unmappedColumns.length > 0 ? (
       <div
         style={{
-          background: "#ffffff",
-          border: `1px dashed ${qualityTheme?.border ?? "#e2e8f0"}`,
+          background: "rgba(255,255,255,0.08)",
+          border: "1px dashed rgba(255,255,255,0.42)",
           borderRadius: 14,
           padding: 12,
           display: "grid",
@@ -1031,10 +1086,10 @@ style={inventoryHelpButtonStyle}
               style={{
                 padding: "6px 10px",
                 borderRadius: 999,
-                background: qualityTheme?.chipBackground ?? "#f8fafc",
-                border: `1px solid ${qualityTheme?.chipBorder ?? "#e2e8f0"}`,
+                background: "rgba(255,255,255,0.10)",
+                border: "1px solid rgba(255,255,255,0.42)",
                 fontSize: 13,
-                color: qualityTheme?.chipText ?? "#334155",
+                color: "#FFFFFF",
               }}
             >
               {formatColumnLabel(column)}
@@ -1047,8 +1102,8 @@ style={inventoryHelpButtonStyle}
     {qualityReport.issues.length > 0 ? (
       <div
         style={{
-          background: "#ffffff",
-          border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+          background: "rgba(255,255,255,0.08)",
+          border: "1px solid rgba(255,255,255,0.18)",
           borderRadius: 14,
           padding: 12,
           display: "grid",
@@ -1063,7 +1118,7 @@ style={inventoryHelpButtonStyle}
           style={{
             margin: 0,
             paddingLeft: 18,
-            color: qualityTheme?.textColor ?? "#334155",
+            color: "rgba(255,255,255,0.78)",
           }}
         >
           {qualityReport.issues.slice(0, 8).map((issue, index) => (
@@ -1106,7 +1161,7 @@ style={inventoryHelpButtonStyle}
   return (
     <tr key={candidate.sourceColumn}>
       <td style={tdStyle}>
-        <strong style={{ color: "#0f172a" }}>
+        <strong style={{ color: "#FFFFFF" }}>
           {formatColumnLabel(candidate.sourceColumn)}
         </strong>
       </td>
@@ -1121,7 +1176,7 @@ style={inventoryHelpButtonStyle}
             width: "100%",
             padding: 8,
             borderRadius: 8,
-            border: "1px solid #d1d5db",
+            border: "1px solid rgba(255,255,255,0.42)",
           }}
         >
           <option value="">No necesario para el análisis</option>
@@ -1134,7 +1189,7 @@ style={inventoryHelpButtonStyle}
       </td>
 
       <td style={tdStyle}>
-        <span style={{ color: "#475569", fontSize: 13 }}>
+        <span style={{ color: "rgba(255,255,255,0.72)", fontSize: 13 }}>
           {getColumnExamples(candidate.sourceColumn)}
         </span>
       </td>
@@ -1267,6 +1322,7 @@ title={
   showPlanBanner={false}
 >
   {(isUploadGeneralView || isUploadComparativoView) && lastUploadComparison ? (
+  <div style={historyComparisonOuterStyle}>
   <div id="comparativo" style={historyComparisonSectionStyle}>
               <div style={historyComparisonHeaderStyle}>
                 <h3 style={historyComparisonTitleStyle}>
@@ -1376,6 +1432,7 @@ title={
 </div>
               )}
             </div>
+            </div>
           ) : null}
 
 {!isUploadComparativoView ? (
@@ -1393,27 +1450,31 @@ title={
   );
 }
 
-const thStyle: React.CSSProperties = {
+const thStyle: CSSProperties = {
   textAlign: "left",
   padding: "10px 12px",
-  borderBottom: "1px solid #e5e7eb",
-  background: "#f9fafb",
+  borderBottom: "1px solid rgba(255,255,255,0.18)",
+  background: "rgba(255,255,255,0.10)",
+  color: "#FFFFFF",
 };
 
-const tdStyle: React.CSSProperties = {
+const tdStyle: CSSProperties = {
   padding: "10px 12px",
-  borderBottom: "1px solid #e5e7eb",
+  borderBottom: "1px solid rgba(255,255,255,0.14)",
   verticalAlign: "top",
+  color: "#FFFFFF",
 };
-const infoCardStyle: React.CSSProperties = {
+const infoCardStyle: CSSProperties = {
   display: "grid",
   gap: 4,
-  border: "1px solid #dbeafe",
+  border: "1px solid rgba(255,255,255,0.18)",
   borderRadius: 14,
   padding: 12,
-  background: "linear-gradient(135deg, #ffffff 0%, #f8faff 100%)",
+  background: "rgba(255,255,255,0.08)",
+  color: "#FFFFFF",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
 };
-const inventoryHelpCardStyle: React.CSSProperties = {
+const inventoryHelpCardStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
@@ -1426,14 +1487,14 @@ const inventoryHelpCardStyle: React.CSSProperties = {
   boxShadow: "0 12px 30px rgba(37, 99, 235, 0.10)",
 };
 
-const inventoryHelpTitleStyle: React.CSSProperties = {
+const inventoryHelpTitleStyle: CSSProperties = {
   color: "#172554",
   fontSize: 18,
   fontWeight: 900,
   lineHeight: 1.15,
 };
 
-const inventoryHelpTextStyle: React.CSSProperties = {
+const inventoryHelpTextStyle: CSSProperties = {
   margin: 0,
   color: "#334155",
   fontSize: 14,
@@ -1442,7 +1503,7 @@ const inventoryHelpTextStyle: React.CSSProperties = {
   maxWidth: 720,
 };
 
-const inventoryHelpButtonStyle: React.CSSProperties = {
+const inventoryHelpButtonStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
@@ -1458,59 +1519,60 @@ const inventoryHelpButtonStyle: React.CSSProperties = {
   boxShadow: "0 12px 28px rgba(22, 163, 74, 0.22)",
   whiteSpace: "nowrap",
 };
-const infoLabelStyle: React.CSSProperties = {
-  color: "#64748b",
+const infoLabelStyle: CSSProperties = {
+  color: "rgba(255,255,255,0.72)",
   fontSize: 12,
 };
 
-const infoValueStyle: React.CSSProperties = {
-  color: "#0f172a",
+const infoValueStyle: CSSProperties = {
+  color: "#FFFFFF",
   fontSize: 15,
   overflowWrap: "anywhere",
-  };
+};
 
-const uploadTitleStyle: React.CSSProperties = {
+const uploadTitleStyle: CSSProperties = {
   margin: 0,
-  color: "#1d4ed8",
+  color: "#FFFFFF",
   fontSize: 40,
   fontWeight: 900,
   lineHeight: 1.1,
 };
 
-const uploadHeroStyle: React.CSSProperties = {
+const uploadHeroStyle: CSSProperties = {
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr) auto",
   gap: 16,
   alignItems: "center",
   padding: 18,
   borderRadius: 20,
-  border: "1px solid #bfdbfe",
-  background: "linear-gradient(135deg, #eff6ff 0%, #eef2ff 55%, #f8fafc 100%)",
-  boxShadow: "0 14px 36px rgba(37, 99, 235, 0.10)",
+  border: "1px solid rgba(255,255,255,0.42)",
+  background: "rgba(255,255,255,0.08)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.08), 0 0 10px rgba(56,189,248,0.04)",
 };
 
-const uploadHeroTextStyle: React.CSSProperties = {
+const uploadHeroTextStyle: CSSProperties = {
   display: "grid",
   gap: 6,
 };
 
-const uploadHeroTitleStyle: React.CSSProperties = {
-  color: "#1d4ed8",
+const uploadHeroTitleStyle: CSSProperties = {
+  color: "#FFFFFF",
   fontSize: 19,
-  fontWeight: 900,
+  fontWeight: 800,
   lineHeight: 1.15,
 };
 
-const uploadHeroDescriptionStyle: React.CSSProperties = {
+const uploadHeroDescriptionStyle: CSSProperties = {
   margin: 0,
-  color: "#334155",
+  color: "rgba(255,255,255,0.82)",
   fontSize: 14,
-  fontWeight: 600,
+  fontWeight: 500,
   lineHeight: 1.45,
   maxWidth: 760,
 };
 
-const uploadActionsStyle: React.CSSProperties = {
+const uploadActionsStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "flex-end",
@@ -1518,7 +1580,7 @@ const uploadActionsStyle: React.CSSProperties = {
   flexWrap: "wrap",
 };
 
-const selectFileButtonStyle: React.CSSProperties = {
+const selectFileButtonStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
@@ -1534,28 +1596,28 @@ const selectFileButtonStyle: React.CSSProperties = {
   border: "1px solid rgba(255,255,255,0.20)",
 };
 
-const selectedFileStyle: React.CSSProperties = {
+const selectedFileStyle: CSSProperties = {
   gridColumn: "1 / -1",
   padding: "10px 12px",
   borderRadius: 14,
-  background: "#ffffff",
-  border: "1px solid #dbeafe",
-  color: "#1e293b",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.42)",
+  color: "#FFFFFF",
   fontSize: 13,
-  fontWeight: 650,
+  fontWeight: 600,
 };
 
-const selectedFileMutedStyle: React.CSSProperties = {
+const selectedFileMutedStyle: CSSProperties = {
   gridColumn: "1 / -1",
   padding: "10px 12px",
   borderRadius: 14,
-  background: "rgba(255,255,255,0.70)",
-  border: "1px dashed #bfdbfe",
-  color: "#64748b",
+  background: "rgba(255,255,255,0.07)",
+  border: "1px dashed rgba(255,255,255,0.42)",
+  color: "rgba(255,255,255,0.82)",
   fontSize: 13,
-  fontWeight: 650,
+  fontWeight: 500,
 };
-const historyMetricLabelStyle: React.CSSProperties = {
+const historyMetricLabelStyle: CSSProperties = {
   color: "#64748b",
   fontSize: 12,
   fontWeight: 700,
@@ -1567,19 +1629,25 @@ const historyMetricValueStyle: CSSProperties = {
   lineHeight: 1,
   letterSpacing: "-0.02em",
 };
-
+const historyComparisonOuterStyle: CSSProperties = {
+  width: "100%",
+  background: "#EEF2FF",
+  margin: 0,
+  padding: "16px 20px 4px",
+  boxSizing: "border-box",
+};
 const historyComparisonSectionStyle: CSSProperties = {
   width: "100%",
-  maxWidth: "calc(100% - 48px)",
-  margin: "0 auto 16px",
+  boxSizing: "border-box",
+  margin: 0,
   borderRadius: 18,
-  padding: "18px",
-  background: "var(--jd-gradient-container)",
+  padding: "16px 18px",
+  background: "linear-gradient(135deg, #283593 0%, #27308A 52%, #252C7D 100%)",
   border: "1px solid rgba(255,255,255,0.42)",
   boxShadow:
     "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.04)",
   display: "grid",
-  gap: 14,
+  gap: 12,
 };
 
 const historyComparisonHeaderStyle: CSSProperties = {
@@ -1657,11 +1725,10 @@ const historyComparisonValueStyle: CSSProperties = {
 
 const historyComparisonFootStyle: CSSProperties = {
   color: "#86EFAC",
-  fontSize: 13,
-  fontWeight: 600,
+  fontSize: 19,
+  fontWeight: 500,
   lineHeight: 1.25,
 };
-
 const historyComparisonModeStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -1682,20 +1749,21 @@ const historyComparisonModeButtonStyle: CSSProperties = {
   padding: "0 15px",
   borderRadius: 999,
   border: "1px solid rgba(255,255,255,0.72)",
-  background: "rgba(255,255,255,0.88)",
-  color: "#1E1B4B",
+  background: "rgba(255,255,255,0.08)",
+  color: "#FFFFFF",
   fontSize: 12,
-  fontWeight: 600,
+  fontWeight: 700,
   cursor: "pointer",
   whiteSpace: "nowrap",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
 };
 
 const historyComparisonModeButtonActiveStyle: CSSProperties = {
-  background: "rgba(56, 189, 248, 0.18)",
-  border: "1px solid rgba(255,255,255,0.86)",
+  background: "rgba(56,189,248,0.22)",
+  border: "1px solid rgba(255,255,255,0.92)",
   color: "#FFFFFF",
   boxShadow:
-    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+    "inset 0 1px 0 rgba(255,255,255,0.16), 0 0 12px rgba(56,189,248,0.16)",
 };
 
 const historyComparisonEmptyStyle: CSSProperties = {
@@ -1710,7 +1778,7 @@ const historyComparisonEmptyStyle: CSSProperties = {
 };
 
 const analysisResultCompactStyle: CSSProperties = {
-  border: "1px solid rgba(255,255,255,0.12)",
+  border: "1px solid rgba(255,255,255,0.18)",
   borderRadius: 16,
   padding: 14,
   background: "rgba(255,255,255,0.08)",
@@ -1718,46 +1786,46 @@ const analysisResultCompactStyle: CSSProperties = {
   gap: 10,
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
 };
-const analysisResultTitleStyle: React.CSSProperties = {
+const analysisResultTitleStyle: CSSProperties = {
   display: "block",
-  color: "#1d4ed8",
+  color: "#FFFFFF",
   fontSize: 16,
   fontWeight: 800,
   lineHeight: 1.2,
 };
 
-const analysisResultTextStyle: React.CSSProperties = {
+const analysisResultTextStyle: CSSProperties = {
   margin: "4px 0 0",
-  color: "#475569",
+  color: "rgba(255,255,255,0.78)",
   fontSize: 13,
   lineHeight: 1.35,
 };
 
-const analysisResultBadgesStyle: React.CSSProperties = {
+const analysisResultBadgesStyle: CSSProperties = {
   display: "flex",
   gap: 8,
   flexWrap: "wrap",
   alignItems: "center",
 };
 
-const analysisResultBadgeStyle: React.CSSProperties = {
-  border: "1px solid #bfdbfe",
-  background: "#ffffff",
-  color: "#1e3a8a",
+const analysisResultBadgeStyle: CSSProperties = {
+  border: "1px solid rgba(255,255,255,0.72)",
+  background: "rgba(255,255,255,0.10)",
+  color: "#FFFFFF",
   borderRadius: 999,
   padding: "6px 10px",
   fontSize: 12,
   fontWeight: 800,
   whiteSpace: "normal",
 };
-const processActionsStyle: React.CSSProperties = {
+const processActionsStyle: CSSProperties = {
   display: "flex",
   justifyContent: "flex-start",
   gap: 10,
   flexWrap: "wrap",
   paddingTop: 4,
 };
-const analysisWarningStyle: React.CSSProperties = {
+const analysisWarningStyle: CSSProperties = {
   background: "#fff7ed",
   color: "#9a3412",
   border: "1px solid #fed7aa",
@@ -1766,25 +1834,25 @@ const analysisWarningStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
-const clearHistoryButtonStyle: React.CSSProperties = {
+const clearHistoryButtonStyle: CSSProperties = {
   width: "fit-content",
-  border: "1px solid #cbd5e1",
-  background: "#ffffff",
-  color: "#334155",
+  border: "1px solid rgba(255,255,255,0.72)",
+  background: "rgba(255,255,255,0.08)",
+  color: "#FFFFFF",
   borderRadius: 999,
   padding: "7px 12px",
   fontSize: 12,
   fontWeight: 800,
   cursor: "pointer",
 };
-const dashboardLayerStyle: React.CSSProperties = {
+const dashboardLayerStyle: CSSProperties = {
   display: "grid",
   gap: 0,
   marginTop: 0,
   paddingTop: 0,
 };
 
-const dashboardLayerHeaderStyle: React.CSSProperties = {
+const dashboardLayerHeaderStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
@@ -1796,7 +1864,7 @@ const dashboardLayerHeaderStyle: React.CSSProperties = {
   background: "linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)",
 };
 
-const dashboardLayerTitleStyle: React.CSSProperties = {
+const dashboardLayerTitleStyle: CSSProperties = {
   display: "block",
   color: "#1d4ed8",
   fontSize: 24,
@@ -1805,14 +1873,14 @@ const dashboardLayerTitleStyle: React.CSSProperties = {
   letterSpacing: "-0.02em",
 };
 
-const dashboardLayerSubtitleStyle: React.CSSProperties = {
+const dashboardLayerSubtitleStyle: CSSProperties = {
   margin: "6px 0 0",
   color: "#475569",
   fontSize: 14,
   lineHeight: 1.4,
 };
 
-const dashboardLayerBackButtonStyle: React.CSSProperties = {
+const dashboardLayerBackButtonStyle: CSSProperties = {
   border: "1px solid transparent",
   background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
   color: "#ffffff",
@@ -1824,7 +1892,7 @@ const dashboardLayerBackButtonStyle: React.CSSProperties = {
   whiteSpace: "nowrap",
   boxShadow: "0 10px 24px rgba(79, 70, 229, 0.22)",
 };
-const uploadHistoryDateStyle: React.CSSProperties = {
+const uploadHistoryDateStyle: CSSProperties = {
   color: "#64748b",
   fontSize: 11,
   whiteSpace: "nowrap",

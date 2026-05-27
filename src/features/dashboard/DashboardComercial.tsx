@@ -716,6 +716,7 @@ export default function DashboardComercial({
 const [selectedComparisonProducts, setSelectedComparisonProducts] = useState<string[]>([]);
 const productComparisonRef = useRef<HTMLElement | null>(null);
 const [highlightProductComparison, setHighlightProductComparison] = useState(false);
+const highlightProductComparisonTimerRef = useRef<number | null>(null);
 const [comparisonMetric, setComparisonMetric] = useState<ComparisonMetric>("ventas");
   const [pageSize, setPageSize] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
@@ -871,6 +872,13 @@ readSectionFromHash();
 
 window.addEventListener("hashchange", readSectionFromHash);
 return () => window.removeEventListener("hashchange", readSectionFromHash);
+}, []);
+useEffect(() => {
+  return () => {
+if (highlightProductComparisonTimerRef.current !== null) {
+  window.clearTimeout(highlightProductComparisonTimerRef.current);
+}
+  };
 }, []);
 function shouldShowSection(section: DashboardSectionView) {
   if (activeSectionView === "general") {
@@ -1421,10 +1429,15 @@ function focusProductComparison() {
     block: "start",
   });
 
+if (highlightProductComparisonTimerRef.current !== null) {
+  window.clearTimeout(highlightProductComparisonTimerRef.current);
+}
+
   setHighlightProductComparison(true);
 
-  window.setTimeout(() => {
+  highlightProductComparisonTimerRef.current = window.setTimeout(() => {
     setHighlightProductComparison(false);
+    highlightProductComparisonTimerRef.current = null;
   }, 2600);
 }
 function removeComparisonProduct(producto: string) {
@@ -2385,18 +2398,19 @@ return (
 ) : null}
 {activeSectionView === "general" && dashboardUploadHistory.length > 0 ? (
 <section
-  style={{
-    border: "1px solid rgba(255,255,255,0.42)",
-    borderRadius: 18,
-    padding: "18px",
-    background: "var(--jd-gradient-container)",
-    boxShadow:
-      "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.04)",
-    display: "grid",
-    gap: 14,
-    maxWidth: "calc(100% - 48px)",
-    margin: "0 auto",
-  }}
+style={{
+  width: "100%",
+  maxWidth: "none",
+  margin: "0",
+  border: "1px solid rgba(255,255,255,0.42)",
+  borderRadius: 18,
+  padding: "18px",
+  background: "var(--jd-gradient-container)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 10px rgba(56,189,248,0.04)",
+  display: "grid",
+  gap: 14,
+}}
 >
 <div
   style={{
@@ -4157,51 +4171,61 @@ lockedFeatureButton: {
   boxShadow: "0 10px 20px rgba(68,96,255,0.18)",
 },
 modulePlanRow: {
-  display: "inline-flex",
+  display: "flex",
   alignItems: "center",
-  
+  justifyContent: "flex-start",
+  gap: 12,
   flexWrap: "wrap",
-  margin: "0 0 12px 4px",
-  padding: 0,
-  width: "fit-content",
-  background: "transparent",
-  border: "none",
+  margin: "0 0 14px",
+  padding: "12px 14px",
+  width: "100%",
+  borderRadius: 16,
+  background: "rgba(224, 242, 254, 0.88)",
+  border: "1px solid rgba(125, 211, 252, 0.46)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.72), 0 10px 22px rgba(15,23,42,0.06)",
 },
 modulePlanText: {
-  color: "#1E2670",
+  color: "#1E3A8A",
   fontSize: 14,
-  fontWeight: 800,
+  fontWeight: 700,
   letterSpacing: "-0.01em",
 },
 activePlanBadge: {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  minHeight: 30,
-  padding: "0 14px",
+  minHeight: 26,
+  padding: "0 12px",
   borderRadius: 999,
   fontSize: 11,
-  fontWeight: 800,
-  border: "1px solid transparent",
-  boxShadow: "0 6px 14px rgba(15, 23, 42, 0.10)",
+  fontWeight: 600,
+  border: "1px solid rgba(255,255,255,0.42)",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(255,255,255,0.05)",
+  whiteSpace: "nowrap",
 },
 
 activePlanBadgeBasic: {
-  background: "linear-gradient(135deg, #475569 0%, #64748B 100%)",
-  border: "1px solid rgba(71, 85, 105, 0.30)",
-  color: "#FFFFFF",
+  background: "rgba(219, 234, 254, 0.72)",
+  border: "1px solid rgba(30, 58, 138, 0.24)",
+  color: "#1E3A8A",
 },
 
 activePlanBadgePro: {
-  background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)",
-  border: "1px solid rgba(67, 56, 202, 0.28)",
+  background: "rgba(80, 96, 220, 0.42)",
+  border: "1px solid rgba(255,255,255,0.72)",
   color: "#FFFFFF",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(80,96,220,0.16)",
 },
 
 activePlanBadgeUltra: {
-  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 100%)",
-  border: "1px solid rgba(22, 163, 74, 0.30)",
+  background: "rgba(34, 197, 94, 0.38)",
+  border: "1px solid rgba(134, 239, 172, 0.54)",
   color: "#FFFFFF",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 12px rgba(34,197,94,0.16)",
 },
 businessLocationBar: {
   display: "inline-flex",
@@ -4249,10 +4273,10 @@ productComparisonCard: {
   gap: 10,
 },
 productComparisonHighlight: {
-  outline: "5px solid rgba(34, 197, 94, 0.98)",
+  border: "5px solid rgba(34, 197, 94, 1)",
   boxShadow:
-    "0 0 0 12px rgba(34, 197, 94, 0.22), 0 22px 52px rgba(15, 23, 42, 0.26)",
-  transition: "outline 260ms ease, box-shadow 260ms ease",
+    "0 0 0 5px rgba(34, 197, 94, 0.24), 0 0 28px rgba(34, 197, 94, 0.50)",
+  transition: "border 180ms ease, box-shadow 180ms ease",
 },
 productComparisonHeader: {
   display: "flex",

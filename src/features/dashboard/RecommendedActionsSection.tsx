@@ -42,9 +42,12 @@ export default function RecommendedActionsSection({
   recommendations,
   isExportingPdf = false,
 }: Props) {
-      function irAlAnalisis(sectionId?: string) {
-    if (!sectionId) return;
+function irAlAnalisis(sectionId?: string) {
+  if (!sectionId) return;
 
+  window.location.hash = sectionId;
+
+  window.setTimeout(() => {
     const section = document.getElementById(sectionId);
 
     if (!section) {
@@ -53,7 +56,30 @@ export default function RecommendedActionsSection({
     }
 
     section.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
+
+    const previousBorder = section.style.border;
+    const previousBoxShadow = section.style.boxShadow;
+    const previousTransition = section.style.transition;
+    const previousBorderRadius = section.style.borderRadius;
+    const previousOverflow = section.style.overflow;
+
+    section.style.border = "5px solid rgba(34, 197, 94, 1)";
+    section.style.borderRadius = "24px";
+    section.style.overflow = "hidden";
+    section.style.boxShadow =
+      "0 0 0 5px rgba(34, 197, 94, 0.24), 0 0 28px rgba(34, 197, 94, 0.50)";
+    section.style.transition =
+      "border 180ms ease, box-shadow 180ms ease, border-radius 180ms ease";
+
+    window.setTimeout(() => {
+      section.style.border = previousBorder;
+      section.style.boxShadow = previousBoxShadow;
+      section.style.transition = previousTransition;
+      section.style.borderRadius = previousBorderRadius;
+      section.style.overflow = previousOverflow;
+    }, 2400);
+  }, 120);
+}
   if (!recommendations.length) {
     return (
       <section style={styles.wrapper}>

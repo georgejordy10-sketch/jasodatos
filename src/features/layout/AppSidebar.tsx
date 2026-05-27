@@ -40,21 +40,23 @@ export function AppSidebar({ onNavigate, isDrawer = false }: AppSidebarProps) {
   }, []);
 
   return (
-    <aside
-      style={{
-        minHeight: isDrawer ? "100dvh" : "100vh",
-        width: isDrawer ? "100%" : undefined,
-        padding: "22px 14px 16px",
-        color: "#FFFFFF",
-        background: "var(--jd-gradient-brand-dark)",
-        borderRight: isDrawer ? "none" : "1px solid rgba(255,255,255,0.10)",
-        position: isDrawer ? "relative" : "sticky",
-        top: 0,
-        alignSelf: "start",
-        overflowY: isDrawer ? "auto" : undefined,
-        boxShadow: "inset -1px 0 0 rgba(255,255,255,0.04)",
-      }}
-    >
+<aside
+  style={{
+    minHeight: isDrawer ? "100dvh" : "100vh",
+    width: isDrawer ? "100%" : undefined,
+    padding: "22px 14px 16px",
+    color: "#FFFFFF",
+    background:
+      "linear-gradient(180deg, #262B82 0%, #222878 45%, #1F246D 100%)",
+    borderRight: isDrawer ? "none" : "1px solid rgba(255,255,255,0.10)",
+    position: isDrawer ? "relative" : "sticky",
+    top: 0,
+    alignSelf: "start",
+    overflowY: isDrawer ? "auto" : undefined,
+    boxShadow:
+      "inset -1px 0 0 rgba(255,255,255,0.05), 10px 0 28px rgba(15,23,42,0.18)",
+  }}
+>
       <div style={{ marginBottom: "24px", paddingRight: isDrawer ? 42 : 0 }}>
         <div
           style={{
@@ -102,43 +104,43 @@ export function AppSidebar({ onNavigate, isDrawer = false }: AppSidebarProps) {
   setActiveTarget(itemTarget);
   onNavigate?.();
 }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                minHeight: "40px",
-                padding: "0 12px",
-                borderRadius: "14px",
-                color: isActive ? "#FFFFFF" : "rgba(248,250,252,0.78)",
-                textDecoration: "none",
-                fontSize: "13px",
-                fontWeight: isActive ? 900 : 750,
-                border: isActive
-                  ? "1px solid rgba(255,255,255,0.14)"
-                  : "1px solid rgba(255,255,255,0.08)",
-                background: isActive
-                  ? "rgba(109,126,219,0.24)"
-                  : "rgba(255,255,255,0.06)",
-                boxShadow: isActive
-                  ? "0 10px 22px rgba(20,18,66,0.22)"
-                  : "inset 0 1px 0 rgba(255,255,255,0.03)",
-              }}
+style={{
+  display: "flex",
+  alignItems: "center",
+  minHeight: "40px",
+  padding: "0 12px",
+  borderRadius: "14px",
+  color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.82)",
+  textDecoration: "none",
+  fontSize: "13px",
+  fontWeight: isActive ? 800 : 600,
+  border: isActive
+    ? "1px solid rgba(255,255,255,0.28)"
+    : "1px solid rgba(255,255,255,0.10)",
+  background: isActive
+    ? "rgba(56, 189, 248, 0.18)"
+    : "rgba(255,255,255,0.07)",
+  boxShadow: isActive
+    ? "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)"
+    : "inset 0 1px 0 rgba(255,255,255,0.04)",
+}}
             >
               {item.label}
             </a>
           );
         })}
       </nav>
-
-      <div
-        style={{
-          marginTop: "28px",
-          padding: "14px",
-          borderRadius: "18px",
-          border: "1px solid rgba(255,255,255,0.10)",
-          background: "rgba(255,255,255,0.08)",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-        }}
-      >
+<div
+  style={{
+    marginTop: "28px",
+    padding: "14px",
+    borderRadius: "18px",
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: "rgba(255,255,255,0.08)",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.06), 0 10px 22px rgba(15,23,42,0.12)",
+  }}
+>
         <div
           style={{
             display: "inline-flex",

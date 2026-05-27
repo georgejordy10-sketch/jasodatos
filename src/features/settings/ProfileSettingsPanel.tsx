@@ -40,9 +40,33 @@ type ProfileSettingsPanelProps = {
   }) => Promise<void>;
 };
 
+function normalizeNumberInputText(value: string): string {
+  const digitsOnly = value.replace(/\D/g, "");
+
+  if (digitsOnly === "") {
+    return "";
+  }
+
+  if (/^0+$/.test(digitsOnly)) {
+    return "0";
+  }
+
+  return digitsOnly.replace(/^0+/, "");
+}
+
 function toNumber(value: string): number {
-  const parsed = Number(value);
+  const cleanValue = normalizeNumberInputText(value);
+
+  if (cleanValue === "") {
+    return 0;
+  }
+
+  const parsed = Number(cleanValue);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function numberInputValue(value: number): string {
+  return String(value);
 }
 
 const COUNTRY_DIAL_CODES: Record<string, string> = {
@@ -98,6 +122,25 @@ export default function ProfileSettingsPanel({
   const [savingCrm, setSavingCrm] = useState(false);
   const [crmNotice, setCrmNotice] = useState("");
   const lastLoadedCrmKeyRef = useRef("");
+  const [defaultStockMinInput, setDefaultStockMinInput] = useState(() =>
+    numberInputValue(settings.defaultStockMin)
+  );
+  const [salesDropMediumInput, setSalesDropMediumInput] = useState(() =>
+    numberInputValue(settings.salesDropMediumPct)
+  );
+  const [salesDropHighInput, setSalesDropHighInput] = useState(() =>
+    numberInputValue(settings.salesDropHighPct)
+  );
+
+  useEffect(() => {
+    if (!open) return;
+
+    setDefaultStockMinInput(numberInputValue(settings.defaultStockMin));
+    setSalesDropMediumInput(numberInputValue(settings.salesDropMediumPct));
+    setSalesDropHighInput(numberInputValue(settings.salesDropHighPct));
+    // Se sincroniza solo al abrir el panel para permitir borrar temporalmente el input.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -424,10 +467,17 @@ export default function ProfileSettingsPanel({
               <input
                 type="number"
                 style={styles.compactNumberInput}
-                value={settings.defaultStockMin}
-                onChange={(e) =>
-                  updateSettings({ defaultStockMin: toNumber(e.target.value) })
-                }
+                value={defaultStockMinInput}
+                onChange={(e) => {
+                  const nextValue = normalizeNumberInputText(e.target.value);
+                  setDefaultStockMinInput(nextValue);
+                  updateSettings({ defaultStockMin: toNumber(nextValue) });
+                }}
+                onBlur={() => {
+                  if (defaultStockMinInput === "") {
+                    setDefaultStockMinInput("0");
+                  }
+                }}
               />
             </label>
 
@@ -442,10 +492,17 @@ export default function ProfileSettingsPanel({
               <input
                 type="number"
                 style={styles.compactNumberInput}
-                value={settings.salesDropMediumPct}
-                onChange={(e) =>
-                  updateThreshold("salesDropMediumPct", toNumber(e.target.value))
-                }
+                value={salesDropMediumInput}
+                onChange={(e) => {
+                  const nextValue = normalizeNumberInputText(e.target.value);
+                  setSalesDropMediumInput(nextValue);
+                  updateThreshold("salesDropMediumPct", toNumber(nextValue));
+                }}
+                onBlur={() => {
+                  if (salesDropMediumInput === "") {
+                    setSalesDropMediumInput("0");
+                  }
+                }}
               />
             </label>
 
@@ -460,10 +517,17 @@ export default function ProfileSettingsPanel({
               <input
                 type="number"
                 style={styles.compactNumberInput}
-                value={settings.salesDropHighPct}
-                onChange={(e) =>
-                  updateThreshold("salesDropHighPct", toNumber(e.target.value))
-                }
+                value={salesDropHighInput}
+                onChange={(e) => {
+                  const nextValue = normalizeNumberInputText(e.target.value);
+                  setSalesDropHighInput(nextValue);
+                  updateThreshold("salesDropHighPct", toNumber(nextValue));
+                }}
+                onBlur={() => {
+                  if (salesDropHighInput === "") {
+                    setSalesDropHighInput("0");
+                  }
+                }}
               />
             </label>
           </section>

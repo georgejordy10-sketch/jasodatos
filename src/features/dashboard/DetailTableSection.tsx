@@ -174,55 +174,46 @@ export default function DetailTableSection({
   );
 }
 const styles: Record<string, CSSProperties> = {
-detailCardPro: {
-  background:
-    "var(--jd-gradient-container)",
-  color: "var(--jd-text-main)",
-  borderRadius: 22,
-  padding: 18,
-  border: "1px solid rgba(109,126,219,0.16)",
-  boxShadow: "0 10px 24px rgba(46,13,79,0.04)",
-},
+  detailCardPro: {
+    background:
+      "linear-gradient(135deg, #4F66F2 0%, #3F55D8 45%, #2563EB 100%)",
+    color: "#FFFFFF",
+    borderRadius: 18,
+    padding: 14,
+    border: "1px solid rgba(56,189,248,0.95)",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.16), 0 18px 42px rgba(15,23,42,0.18)",
+  },
 
   detailTopBar: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 14,
-    marginBottom: 14,
+    marginBottom: 10,
     flexWrap: "wrap",
   },
 
   eyebrow: {
-    display: "inline-flex",
-    alignItems: "center",
-    minHeight: 24,
-    padding: "0 10px",
-    borderRadius: 999,
-    background: "rgba(40,53,147,0.10)",
-    color: "#283593",
-    border: "1px solid rgba(61,44,141,0.18)",
-    fontSize: 11,
-    fontWeight: 900,
-    marginBottom: 8,
+    display: "none",
   },
 
-  title: {
-    margin: 0,
-    fontSize: 21,
-    fontWeight: 950,
-    color: "var(--jd-text-main)",
-    letterSpacing: "-0.04em",
-    lineHeight: 1.08,
-  },
+title: {
+  margin: 0,
+  fontSize: 13,
+  fontWeight: 600,
+  color: "#FFFFFF",
+  letterSpacing: "-0.01em",
+  lineHeight: 1.1,
+},
 
-  subtitle: {
-    margin: "4px 0 0",
-    color: "var(--jd-text-secondary)",
-    fontSize: 13,
-    fontWeight: 650,
-    lineHeight: 1.35,
-  },
+subtitle: {
+  margin: "2px 0 0",
+  color: "rgba(255,255,255,0.86)",
+  fontSize: 12,
+  fontWeight: 400,
+  lineHeight: 1.3,
+},
 
   detailTopRight: {
     display: "flex",
@@ -232,153 +223,159 @@ detailCardPro: {
     flexWrap: "wrap",
   },
 
-  detailTopLabel: {
-    color: "var(--jd-text-secondary)",
-    fontSize: 12,
-    fontWeight: 850,
-  },
+detailTopLabel: {
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: 500,
+},
 
   searchInput: {
     minWidth: 220,
-    minHeight: 38,
-    borderRadius: 999,
-    border: "1px solid rgba(61,44,141,0.12)",
-    background: "rgba(255,255,255,0.92)",
-    color: "var(--jd-text-main)",
-    padding: "0 14px",
+    minHeight: 34,
+    borderRadius: 9,
+    border: "1px solid rgba(255,255,255,0.22)",
+    background: "rgba(255,255,255,0.14)",
+    color: "#FFFFFF",
+    padding: "0 12px",
     outline: "none",
-    fontWeight: 750,
-    boxShadow: "0 6px 14px rgba(46,13,79,0.04)",
+    fontSize: 12,
+    fontWeight: 400,
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
   },
 
   pageSizeSelect: {
-    background: "rgba(255,255,255,0.92)",
-    color: "var(--jd-text-main)",
-    border: "1px solid rgba(61,44,141,0.12)",
+    background: "#0F172A",
+    color: "#FFFFFF",
+    border: "1px solid rgba(255,255,255,0.18)",
     borderRadius: 999,
-    minHeight: 38,
+    minHeight: 34,
     padding: "0 12px",
-    fontWeight: 850,
+    fontSize: 12,
+    fontWeight: 500,
     outline: "none",
-    boxShadow: "0 6px 14px rgba(46,13,79,0.04)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
   },
 
   pageGhostButton: {
-    background: "rgba(255,255,255,0.08)",
-    color: "#5B5AA6",
-    border: "1px solid rgba(61,44,141,0.10)",
+    background: "rgba(255,255,255,0.18)",
+    color: "#FFFFFF",
+    border: "1px solid rgba(255,255,255,0.28)",
     borderRadius: 999,
-    minHeight: 38,
+    minHeight: 34,
     padding: "0 13px",
-    fontWeight: 900,
+    fontSize: 12,
+    fontWeight: 500,
     cursor: "pointer",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
   },
 
   pagePrimaryButton: {
     background:
-      "linear-gradient(135deg, #4F46E5 0%, #3D2C8D 65%, #2E0D4F 100%)",
+      "linear-gradient(135deg, #3B82F6 0%, #2563EB 45%, #1E1B4B 100%)",
     color: "#FFFFFF",
-    border: "1px solid rgba(61,44,141,0.18)",
+    border: "1px solid rgba(255,255,255,0.28)",
     borderRadius: 999,
-    minHeight: 38,
+    minHeight: 34,
     padding: "0 13px",
-    fontWeight: 900,
+    fontSize: 12,
+    fontWeight: 600,
     cursor: "pointer",
-    boxShadow: "0 10px 18px rgba(61,44,141,0.14)",
+    boxShadow: "0 10px 18px rgba(15,23,42,0.22)",
   },
 
   disabledButton: {
-    opacity: 0.45,
+    opacity: 0.38,
     cursor: "not-allowed",
     boxShadow: "none",
   },
 
   pageIndicator: {
-    color: "var(--jd-text-secondary)",
+    color: "#FFFFFF",
     fontSize: 12,
-    fontWeight: 850,
+    fontWeight: 500,
+    whiteSpace: "nowrap",
   },
 
-detailTableShell: {
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(244,246,255,0.96) 100%)",
-  borderRadius: 18,
-  overflow: "hidden",
-  border: "1px solid rgba(109,126,219,0.12)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
-},
+  detailTableShell: {
+    background: "#0B1238",
+    borderRadius: 12,
+    overflow: "hidden",
+    border: "1px solid rgba(255,255,255,0.12)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
+  },
 
   detailTableScroller: {
     overflowX: "auto",
     maxHeight: 620,
     overflowY: "auto",
+    scrollbarColor: "rgba(255,255,255,0.55) rgba(15,23,42,0.42)",
+    scrollbarWidth: "thin",
   },
 
   dataTablePro: {
     width: "100%",
     minWidth: 1200,
     borderCollapse: "collapse",
-    color: "var(--jd-text-main)",
+    color: "#FFFFFF",
     fontSize: 13,
     background: "transparent",
   },
 
-dataTh: {
-  textAlign: "left",
-  padding: "11px 10px",
-  background:
-    "linear-gradient(135deg, #6d7edb 0%, #6271d1 42%, #5965c3 72%, #5657b2 100%)",
-  color: "#F8FAFC",
-  borderRight: "1px solid rgba(255,255,255,0.14)",
-  borderBottom: "1px solid rgba(61,44,141,0.08)",
-  fontWeight: 850,
-  fontSize: 12,
-  whiteSpace: "nowrap",
-  position: "sticky",
-  top: 0,
-  zIndex: 2,
-},
+  dataTh: {
+    textAlign: "left",
+    padding: "10px 10px",
+    background: "#091033",
+    color: "#FFFFFF",
+    borderRight: "1px solid rgba(255,255,255,0.10)",
+    borderBottom: "1px solid rgba(255,255,255,0.10)",
+    fontWeight: 600,
+    fontSize: 12,
+    whiteSpace: "nowrap",
+    position: "sticky",
+    top: 0,
+    zIndex: 2,
+  },
 
   dataTd: {
-    padding: "10px 10px",
-    color: "var(--jd-text-secondary)",
-    borderRight: "1px solid rgba(61,44,141,0.05)",
-    borderBottom: "1px solid rgba(61,44,141,0.06)",
+    padding: "9px 10px",
+    color: "#FFFFFF",
+    borderRight: "1px solid rgba(255,255,255,0.08)",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
     whiteSpace: "nowrap",
-    fontWeight: 650,
+    fontWeight: 400,
     background: "transparent",
-    letterSpacing: 0.08,
+    letterSpacing: 0.06,
   },
 
   dataTdStrong: {
-    padding: "10px 10px",
-    color: "var(--jd-text-main)",
-    borderRight: "1px solid rgba(61,44,141,0.05)",
-    borderBottom: "1px solid rgba(61,44,141,0.06)",
+    padding: "9px 10px",
+    color: "#FFFFFF",
+    borderRight: "1px solid rgba(255,255,255,0.08)",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
     whiteSpace: "nowrap",
-    fontWeight: 850,
+    fontWeight: 600,
     background: "transparent",
-    letterSpacing: 0.08,
+    letterSpacing: 0.06,
   },
 
-detailBottomBar: {
-  padding: "10px 12px",
-  color: "var(--jd-text-secondary)",
-  fontSize: 12,
-  fontWeight: 800,
-  background:
-    "var(--jd-gradient-table-surface)",
-},
+  detailBottomBar: {
+    padding: "10px 12px",
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: 500,
+    background: "rgba(8, 47, 73, 0.82)",
+    borderTop: "1px solid rgba(255,255,255,0.10)",
+  },
 
-dataRowEven: {
-  background: "rgba(255,255,255,0.78)",
-},
+  dataRowEven: {
+    background: "rgba(30, 58, 138, 0.74)",
+  },
 
-dataRowOdd: {
-  background: "rgba(241,244,255,0.82)",
-},
+  dataRowOdd: {
+    background: "rgba(28, 80, 125, 0.78)",
+  },
 
-dataRowHover: {
-  background: "rgba(228,234,255,0.92)",
-},
+  dataRowHover: {
+    background: "rgba(56, 189, 248, 0.22)",
+  },
 };
