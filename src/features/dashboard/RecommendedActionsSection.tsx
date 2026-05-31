@@ -85,8 +85,8 @@ function irAlAnalisis(sectionId?: string) {
       <section style={styles.wrapper}>
         <div style={styles.header}>
           <div>
-            <span style={styles.eyebrow}>Recomendaciones del negocio</span>
-            <h3 style={styles.title}>Acciones recomendadas</h3>
+<span style={styles.eyebrow}>Prioridades detectadas</span>
+<h3 style={styles.title}>Qué deberías hacer primero</h3>
             <p style={styles.subtitle}>
               Aún no hay acciones claras para recomendar. Carga datos de ventas, inventario y canales para recibir sugerencias útiles.
             </p>
@@ -100,11 +100,11 @@ function irAlAnalisis(sectionId?: string) {
     <section style={styles.wrapper}>
       <div style={styles.header}>
         <div>
-          <span style={styles.eyebrow}>Recomendaciones del negocio</span>
-          <h3 style={styles.title}>Acciones recomendadas</h3>
-          <p style={styles.subtitle}>
-            Sugerencias creadas a partir de tus ventas, inventario y canales para ayudarte a tomar mejores decisiones.
-          </p>
+<span style={styles.eyebrow}>Prioridades detectadas</span>
+<h3 style={styles.title}>Qué deberías hacer primero</h3>
+<p style={styles.subtitle}>
+  JasoDatos analiza tus ventas e inventario y te muestra acciones concretas para vender mejor, reponer a tiempo y corregir riesgos.
+</p>
         </div>
 
         {!isExportingPdf ? (
@@ -158,11 +158,11 @@ wrapper: {
   background: "var(--jd-gradient-container)",
   color: "var(--jd-text-main)",
   borderRadius: 18,
-  padding: "12px 14px",
+  padding: "14px 16px",
   border: "1px solid var(--jd-border-accent)",
   boxShadow: "var(--jd-shadow-card)",
   display: "grid",
-  gap: 9,
+  gap: 12,
 },
 header: {
   display: "flex",
@@ -186,19 +186,19 @@ eyebrow: {
 },
 title: {
   margin: 0,
-  fontSize: 17,
+  fontSize: 19,
   fontWeight: 900,
   color: "var(--jd-text-main)",
   letterSpacing: "-0.03em",
   lineHeight: 1.05,
 },
 subtitle: {
-  margin: "3px 0 0",
+  margin: "4px 0 0",
   color: "var(--jd-text-secondary)",
-  fontSize: 11,
-  lineHeight: 1.3,
-  fontWeight: 600,
-  maxWidth: 760,
+  fontSize: 12,
+  lineHeight: 1.35,
+  fontWeight: 500,
+  maxWidth: 780,
 },
 countBadge: {
   minHeight: 26,
@@ -274,11 +274,13 @@ typeButton: {
 },
 cardTitle: {
   margin: 0,
-  color: "#FFFFFF",
-  fontSize: 16,
-  fontWeight: 600,
-  letterSpacing: "-0.01em",
+  fontSize: 15,
+  fontWeight: 700,
+  color: "#86EFAC",
+  WebkitTextFillColor: "#86EFAC",
   lineHeight: 1.18,
+  letterSpacing: "-0.005em",
+  textShadow: "0 0 10px rgba(34,197,94,0.22)",
 },
 cardText: {
   margin: 0,
