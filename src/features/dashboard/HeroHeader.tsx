@@ -39,13 +39,43 @@ return (
       <div style={styles.eyebrow}>Negocio analizado</div>
 
       <div style={styles.brandRow}>
-        <div style={styles.brandIcon}>{initials}</div>
+        <div style={styles.brandIcon} aria-hidden="true">
+  <svg
+    width="25"
+    height="25"
+    viewBox="0 0 24 24"
+    fill="none"
+  >
+    <path
+      d="M4 20V9.5L12 4L20 9.5V20"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M8 20V12H16V20"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M10 9.5H14"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </svg>
+
+  <span style={styles.brandIconInitial}>{initials.slice(0, 1)}</span>
+</div>
 
         <div style={styles.titleBlock}>
           <h1 style={styles.brandTitle}>{safeBusinessName}</h1>
 
           <p style={styles.brandSubtitle}>
-            Indicadores comerciales, alertas e insights listos para actuar.
+            Detecta oportunidades, riesgos y decisiones importantes para tu negocio.
           </p>
         </div>
       </div>
@@ -152,20 +182,36 @@ brandRow: {
 },
 
 brandIcon: {
-  width: 58,
-  height: 58,
-  borderRadius: 16,
-  background: "linear-gradient(135deg, #2E0D4F 0%, #3D2C8D 100%)",
+  width: 64,
+  height: 64,
+  borderRadius: 20,
+  background:
+    "linear-gradient(135deg, rgba(91,75,255,0.96) 0%, rgba(46,13,79,0.95) 100%)",
   color: "#FFFFFF",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: 20,
-  fontWeight: 950,
-  boxShadow: "0 14px 28px rgba(46, 13, 79, 0.18)",
+  display: "grid",
+  placeItems: "center",
+  position: "relative",
+  boxShadow:
+    "0 16px 32px rgba(46,13,79,0.24), inset 0 1px 0 rgba(255,255,255,0.16)",
   flexShrink: 0,
 },
 
+brandIconInitial: {
+  position: "absolute",
+  right: 7,
+  bottom: 6,
+  width: 18,
+  height: 18,
+  borderRadius: 999,
+  display: "grid",
+  placeItems: "center",
+  background: "rgba(255,255,255,0.16)",
+  border: "1px solid rgba(255,255,255,0.28)",
+  color: "#FFFFFF",
+  fontSize: 10,
+  fontWeight: 900,
+  lineHeight: 1,
+},
 titleBlock: {
   minWidth: 0,
   flex: "1 1 240px",
@@ -174,16 +220,16 @@ titleBlock: {
 brandTitle: {
   margin: 0,
   color: "#FFFFFF",
-  fontSize: 46,
-  fontWeight: 800,
-  lineHeight: 1,
-  letterSpacing: "-0.045em",
+  fontSize: 58,
+  fontWeight: 950,
+  lineHeight: 0.95,
+  letterSpacing: "-0.05em",
 },
 
 brandSubtitle: {
-  margin: "7px 0 0",
+  margin: "10px 0 0",
   color: "rgba(255,255,255,0.88)",
-  fontSize: 15,
+  fontSize: 17,
   fontWeight: 500,
   lineHeight: 1.35,
   maxWidth: "100%",

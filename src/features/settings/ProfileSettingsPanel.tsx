@@ -279,9 +279,17 @@ export default function ProfileSettingsPanel({
               <input
                 style={styles.input}
                 value={settings.businessName}
-                onChange={(e) =>
-                  updateSettings({ businessName: e.target.value })
-                }
+onChange={(e) => {
+  const nextBusinessName = e.target.value;
+
+  updateSettings({ businessName: nextBusinessName });
+
+  window.dispatchEvent(
+    new CustomEvent("jasodatos:business-name-updated", {
+      detail: nextBusinessName,
+    })
+  );
+}}
               />
             </label>
 

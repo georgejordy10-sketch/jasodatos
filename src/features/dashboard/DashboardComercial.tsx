@@ -724,6 +724,17 @@ const [comparisonMetric, setComparisonMetric] = useState<ComparisonMetric>("vent
   const [actionNotice, setActionNotice] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [plansOpen, setPlansOpen] = useState(false);
+  useEffect(() => {
+  function openPlansFromSidebar() {
+    setPlansOpen(true);
+  }
+
+  window.addEventListener("jasodatos:open-plans", openPlansFromSidebar);
+
+  return () => {
+    window.removeEventListener("jasodatos:open-plans", openPlansFromSidebar);
+  };
+}, []);
   const [detailModal, setDetailModal] = useState<DetailModalType>(null);
   const [businessCrmData, setBusinessCrmData] = useState<BusinessCrmData | null>(
   null
@@ -985,6 +996,14 @@ const businessDisplayName =
   businessPlanAny?.business?.businessName ||
   businessPlanAny?.business?.business_name ||
   "JasoDatos";
+
+useEffect(() => {
+  window.dispatchEvent(
+    new CustomEvent("jasodatos:business-name-updated", {
+      detail: businessDisplayName,
+    })
+  );
+}, [businessDisplayName]);
 
 const businessLocationLabel = [
   businessPlanAny?.ciudad ?? businessPlanAny?.business?.ciudad,
