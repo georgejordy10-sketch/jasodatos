@@ -29,7 +29,18 @@ type ProspectDraft = {
   do_not_contact: boolean;
   contact_allowed: boolean;
 };
-
+type NewProspectDraft = ProspectDraft & {
+  business_name: string;
+  contact_name: string;
+  email: string;
+  whatsapp: string;
+  city: string;
+  province: string;
+  country: string;
+  business_type: string;
+  source: string;
+  source_url: string;
+};
 const STAGE_OPTIONS: ProspectPipelineStage[] = [
   "nuevo",
   "investigado",
@@ -65,7 +76,28 @@ const PRIORITY_OPTIONS: ProspectPriority[] = [
   "alta",
   "urgente",
 ];
-
+const INITIAL_NEW_PROSPECT_DRAFT: NewProspectDraft = {
+  business_name: "",
+  contact_name: "",
+  email: "",
+  whatsapp: "",
+  city: "",
+  province: "",
+  country: "Ecuador",
+  business_type: "",
+  source: "",
+  source_url: "",
+  pipeline_stage: "nuevo",
+  lead_temperature: "frio",
+  lead_fit: "medio",
+  lead_priority: "media",
+  recommended_plan: "",
+  owner_name: "Erika",
+  next_action_at: "",
+  notes: "",
+  do_not_contact: false,
+  contact_allowed: true,
+};
 function getEcuadorDateParts(value: string | null) {
   if (!value) return null;
 
@@ -268,7 +300,12 @@ export default function AdminProspectsTable({ rows }: Props) {
   );
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-
+  const [showCreateForm, setShowCreateForm] = useState(false);
+const [newDraft, setNewDraft] = useState<NewProspectDraft>(
+  INITIAL_NEW_PROSPECT_DRAFT
+);
+const [isCreating, setIsCreating] = useState(false);
+const [createMessage, setCreateMessage] = useState<string | null>(null);
   useEffect(() => {
     setProspects(rows);
   }, [rows]);
@@ -391,7 +428,71 @@ export default function AdminProspectsTable({ rows }: Props) {
       setIsSaving(false);
     }
   }
+  async function handleCreateProspect() {
+  if (!newDraft.business_name.trim()) {
+    setCreateMessage("El nombre del negocio es obligatorio.");
+    return;
+  }
 
+  setIsCreating(true);
+  setCreateMessage(null);
+
+  try {
+    const response = await fetch("/api/admin/prospects", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        business_name: newDraft.business_name,
+        contact_name: newDraft.contact_name,
+        email: newDraft.email,
+        whatsapp: newDraft.whatsapp,
+        city: newDraft.city,
+        province: newDraft.province,
+        country: newDraft.country,
+        business_type: newDraft.business_type,
+        source: newDraft.source,
+        source_url: newDraft.source_url,
+        channel: "manual",
+        lead_origin_type: "manual_research",
+        pipeline_stage: newDraft.pipeline_stage,
+        lead_temperature: newDraft.lead_temperature,
+        lead_fit: newDraft.lead_fit,
+        lead_priority: newDraft.lead_priority,
+        recommended_plan: newDraft.recommended_plan || null,
+        owner_name: newDraft.owner_name,
+        next_action_at: fromEcuadorInputDateTime(newDraft.next_action_at),
+        notes: newDraft.notes,
+        do_not_contact: newDraft.do_not_contact,
+        contact_allowed: newDraft.contact_allowed,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+      throw new Error(result.error || "No se pudo crear el prospecto.");
+    }
+
+    const createdProspect = result.prospect as AdminProspectOverview;
+
+    setProspects((current) => [createdProspect, ...current]);
+    setSelectedId(createdProspect.id);
+    setNewDraft(INITIAL_NEW_PROSPECT_DRAFT);
+    setShowCreateForm(false);
+    setCreateMessage("Prospecto creado correctamente.");
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo crear el prospecto.";
+
+    setCreateMessage(message);
+  } finally {
+    setIsCreating(false);
+  }
+}
   return (
     <section style={styles.wrapper}>
       <header style={styles.header}>
@@ -416,7 +517,23 @@ export default function AdminProspectsTable({ rows }: Props) {
         <MetricCard label="Urgentes" value={urgentCount} />
         <MetricCard label="Ganados" value={wonCount} />
       </div>
+      <div style={styles.createToolbar}>
+  <div>
+    <p style={styles.detailEyebrow}>Captación manual</p>
+    <h2 style={styles.createTitle}>Nuevo prospecto comercial</h2>
+  </div>
 
+  <button
+    type="button"
+    style={styles.saveButton}
+    onClick={() => {
+      setShowCreateForm((current) => !current);
+      setCreateMessage(null);
+    }}
+  >
+    {showCreateForm ? "Cerrar formulario" : "Agregar prospecto"}
+  </button>
+</div>
       <div style={styles.toolbar}>
         <label style={styles.searchBox}>
           <span style={styles.searchLabel}>Buscar prospecto</span>
@@ -446,7 +563,242 @@ export default function AdminProspectsTable({ rows }: Props) {
           </select>
         </label>
       </div>
+       {showCreateForm ? (
+  <div style={styles.editPanel}>
+    <div style={styles.editHeader}>
+      <div>
+        <p style={styles.detailEyebrow}>Nuevo registro</p>
+        <h3 style={styles.editTitle}>Crear prospecto en JasoJevasa</h3>
+      </div>
 
+      <button
+        type="button"
+        style={{
+          ...styles.saveButton,
+          ...(isCreating ? styles.saveButtonDisabled : null),
+        }}
+        onClick={handleCreateProspect}
+        disabled={isCreating}
+      >
+        {isCreating ? "Creando..." : "Crear prospecto"}
+      </button>
+    </div>
+
+    {createMessage ? (
+      <div style={styles.saveMessage}>{createMessage}</div>
+    ) : null}
+
+    <div style={styles.editGrid}>
+      <label style={styles.formControl}>
+        <span>Negocio *</span>
+        <input
+          style={styles.searchInput}
+          value={newDraft.business_name}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              business_name: event.target.value,
+            }))
+          }
+          placeholder="Ej. Comercial San Miguel"
+        />
+      </label>
+
+      <label style={styles.formControl}>
+        <span>Contacto</span>
+        <input
+          style={styles.searchInput}
+          value={newDraft.contact_name}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              contact_name: event.target.value,
+            }))
+          }
+          placeholder="Nombre del dueño o encargado"
+        />
+      </label>
+
+      <label style={styles.formControl}>
+        <span>WhatsApp</span>
+        <input
+          style={styles.searchInput}
+          value={newDraft.whatsapp}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              whatsapp: event.target.value,
+            }))
+          }
+          placeholder="+593..."
+        />
+      </label>
+
+      <label style={styles.formControl}>
+        <span>Correo</span>
+        <input
+          style={styles.searchInput}
+          value={newDraft.email}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              email: event.target.value,
+            }))
+          }
+          placeholder="correo@negocio.com"
+        />
+      </label>
+
+      <label style={styles.formControl}>
+        <span>Ciudad</span>
+        <input
+          style={styles.searchInput}
+          value={newDraft.city}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              city: event.target.value,
+            }))
+          }
+          placeholder="Quito, Guayaquil, Cuenca..."
+        />
+      </label>
+
+      <label style={styles.formControl}>
+        <span>Tipo de negocio</span>
+        <input
+          style={styles.searchInput}
+          value={newDraft.business_type}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              business_type: event.target.value,
+            }))
+          }
+          placeholder="Minimarket, ferretería, repuestos..."
+        />
+      </label>
+
+      <label style={styles.formControl}>
+        <span>Estado</span>
+        <select
+          style={styles.select}
+          value={newDraft.pipeline_stage}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              pipeline_stage: event.target.value as ProspectPipelineStage,
+            }))
+          }
+        >
+          {STAGE_OPTIONS.map((stage) => (
+            <option key={stage} value={stage}>
+              {prospectStageLabel(stage)}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label style={styles.formControl}>
+        <span>Prioridad</span>
+        <select
+          style={styles.select}
+          value={newDraft.lead_priority}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              lead_priority: event.target.value as ProspectPriority,
+            }))
+          }
+        >
+          {PRIORITY_OPTIONS.map((priority) => (
+            <option key={priority} value={priority}>
+              {priorityLabel(priority)}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label style={styles.formControl}>
+        <span>Plan sugerido</span>
+        <select
+          style={styles.select}
+          value={newDraft.recommended_plan}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              recommended_plan: event.target.value as JasoJevasaPlan | "",
+            }))
+          }
+        >
+          <option value="">Sin plan</option>
+          <option value="basic">Inicio</option>
+          <option value="pro">Crecimiento</option>
+          <option value="ultra">Control</option>
+        </select>
+      </label>
+
+      <label style={styles.formControl}>
+        <span>Responsable</span>
+        <input
+          style={styles.searchInput}
+          value={newDraft.owner_name}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              owner_name: event.target.value,
+            }))
+          }
+          placeholder="Jorge, Erika..."
+        />
+      </label>
+
+      <label style={styles.formControl}>
+        <span>Próxima acción</span>
+        <input
+          style={styles.searchInput}
+          type="datetime-local"
+          value={newDraft.next_action_at}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              next_action_at: event.target.value,
+            }))
+          }
+        />
+      </label>
+
+      <label style={styles.checkboxControl}>
+        <input
+          type="checkbox"
+          checked={newDraft.contact_allowed}
+          onChange={(event) =>
+            setNewDraft((current) => ({
+              ...current,
+              contact_allowed: event.target.checked,
+            }))
+          }
+        />
+        Contacto permitido
+      </label>
+    </div>
+
+    <label style={{ ...styles.formControl, marginTop: 12 }}>
+      <span>Notas comerciales</span>
+      <textarea
+        style={styles.textArea}
+        value={newDraft.notes}
+        onChange={(event) =>
+          setNewDraft((current) => ({
+            ...current,
+            notes: event.target.value,
+          }))
+        }
+        placeholder="Contexto inicial, origen del contacto, interés detectado..."
+      />
+    </label>
+  </div>
+) : null}
       {selectedProspect && draft ? (
         <div style={styles.detailPanel}>
           <div>
@@ -970,6 +1322,23 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 28,
     color: "#2E0D4F",
   },
+  createToolbar: {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  alignItems: "center",
+  marginBottom: 16,
+  padding: 16,
+  borderRadius: 22,
+  background: "#FFFFFF",
+  border: "1px solid rgba(148,163,184,0.28)",
+  boxShadow: "0 12px 28px rgba(15,23,42,0.08)",
+},
+createTitle: {
+  margin: "4px 0 0",
+  fontSize: 20,
+  color: "#111827",
+},
   toolbar: {
     display: "flex",
     gap: 12,
