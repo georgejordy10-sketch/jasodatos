@@ -19,34 +19,50 @@ type Props = {
 
 type FilterValue = "all" | ProspectPipelineStage;
 
-function formatDate(value: string | null) {
-  if (!value) return "-";
+function getEcuadorDateParts(value: string | null) {
+  if (!value) return null;
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) return "-";
+  if (Number.isNaN(date.getTime())) return null;
 
-  return date.toLocaleDateString("es-EC", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  const ecuadorTime = new Date(date.getTime() - 5 * 60 * 60 * 1000);
+
+  const day = String(ecuadorTime.getUTCDate()).padStart(2, "0");
+  const month = String(ecuadorTime.getUTCMonth() + 1).padStart(2, "0");
+  const year = String(ecuadorTime.getUTCFullYear());
+
+  const hours24 = ecuadorTime.getUTCHours();
+  const minutes = String(ecuadorTime.getUTCMinutes()).padStart(2, "0");
+
+  const period = hours24 >= 12 ? "p. m." : "a. m.";
+  const hours12 = hours24 % 12 || 12;
+  const hour = String(hours12).padStart(2, "0");
+
+  return {
+    day,
+    month,
+    year,
+    hour,
+    minutes,
+    period,
+  };
+}
+
+function formatDate(value: string | null) {
+  const parts = getEcuadorDateParts(value);
+
+  if (!parts) return "-";
+
+  return `${parts.day}/${parts.month}/${parts.year}`;
 }
 
 function formatDateTime(value: string | null) {
-  if (!value) return "-";
+  const parts = getEcuadorDateParts(value);
 
-  const date = new Date(value);
+  if (!parts) return "-";
 
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return date.toLocaleString("es-EC", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return `${parts.day}/${parts.month}/${parts.year}, ${parts.hour}:${parts.minutes} ${parts.period}`;
 }
 
 function temperatureLabel(value: ProspectTemperature) {
