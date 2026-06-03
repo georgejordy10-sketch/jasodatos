@@ -372,7 +372,64 @@ const [createMessage, setCreateMessage] = useState<string | null>(null);
       row.pipeline_stage === "ganado" ||
       row.pipeline_stage === "convertido_cliente"
   ).length;
+ async function patchSelectedProspect(
+  patch: Partial<{
+    pipeline_stage: ProspectPipelineStage;
+    lead_temperature: ProspectTemperature;
+    lead_fit: ProspectFit;
+    lead_priority: ProspectPriority;
+    recommended_plan: JasoJevasaPlan | null;
+    owner_name: string | null;
+    next_action_at: string | null;
+    notes: string | null;
+    do_not_contact: boolean;
+    contact_allowed: boolean;
+  }>
+) {
+  if (!selectedProspect) return;
 
+  setIsSaving(true);
+  setSaveMessage(null);
+
+  try {
+    const response = await fetch(
+      `/api/admin/prospects/${selectedProspect.id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(patch),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+      throw new Error(result.error || "No se pudo actualizar el prospecto.");
+    }
+
+    const updatedProspect = result.prospect as AdminProspectOverview;
+
+    setProspects((current) =>
+      current.map((row) =>
+        row.id === updatedProspect.id ? updatedProspect : row
+      )
+    );
+
+    setDraft(createDraftFromProspect(updatedProspect));
+    setSaveMessage("Acción aplicada.");
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo actualizar el prospecto.";
+
+    setSaveMessage(message);
+  } finally {
+    setIsSaving(false);
+  }
+}
   async function handleSaveProspect() {
     if (!selectedProspect || !draft) return;
 
@@ -874,7 +931,91 @@ const [createMessage, setCreateMessage] = useState<string | null>(null);
             {saveMessage ? (
               <div style={styles.saveMessage}>{saveMessage}</div>
             ) : null}
+            <div style={styles.quickActions}>
+  <button
+    type="button"
+    style={styles.quickActionButton}
+onClick={() =>
+  patchSelectedProspect({
+    pipeline_stage: "contactado",
+  })
+}
+    disabled={isSaving}
+  >
+    Marcar contactado
+  </button>
 
+  <button
+    type="button"
+    style={styles.quickActionButton}
+onClick={() =>
+  patchSelectedProspect({
+    pipeline_stage: "interesado",
+    lead_temperature: "caliente",
+    lead_priority: "alta",
+  })
+}
+    disabled={isSaving}
+  >
+    Marcar interesado
+  </button>
+
+  <button
+    type="button"
+    style={styles.quickActionButton}
+    onClick={() =>
+      patchSelectedProspect({
+        pipeline_stage: "perdido",
+        lead_temperature: "frio",
+        lead_priority: "baja",
+      })
+    }
+    disabled={isSaving}
+  >
+    Marcar perdido
+  </button>
+
+  <button
+    type="button"
+    style={styles.quickActionButtonDanger}
+    onClick={() =>
+      patchSelectedProspect({
+        pipeline_stage: "no_contactar",
+        do_not_contact: true,
+        contact_allowed: false,
+      })
+    }
+    disabled={isSaving}
+  >
+    No contactar
+  </button>
+
+  <button
+    type="button"
+    style={styles.quickActionButton}
+    onClick={() =>
+      patchSelectedProspect({
+        owner_name: "Jorge",
+      })
+    }
+    disabled={isSaving}
+  >
+    Asignar a Jorge
+  </button>
+
+  <button
+    type="button"
+    style={styles.quickActionButton}
+    onClick={() =>
+      patchSelectedProspect({
+        owner_name: "Erika",
+      })
+    }
+    disabled={isSaving}
+  >
+    Asignar a Erika
+  </button>
+</div>
             <div style={styles.editGrid}>
               <label style={styles.formControl}>
                 <span>Estado</span>
@@ -1508,6 +1649,34 @@ createTitle: {
     fontSize: 13,
     fontWeight: 700,
   },
+  quickActions: {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 8,
+  marginBottom: 14,
+},
+quickActionButton: {
+  border: "1px solid rgba(46,13,79,0.18)",
+  background: "#FFFFFF",
+  color: "#2E0D4F",
+  padding: "8px 11px",
+  borderRadius: 12,
+  cursor: "pointer",
+  fontSize: 12,
+  fontWeight: 800,
+  whiteSpace: "nowrap",
+},
+quickActionButtonDanger: {
+  border: "1px solid rgba(220,38,38,0.24)",
+  background: "rgba(254,242,242,0.95)",
+  color: "#B91C1C",
+  padding: "8px 11px",
+  borderRadius: 12,
+  cursor: "pointer",
+  fontSize: 12,
+  fontWeight: 800,
+  whiteSpace: "nowrap",
+},
   notesBox: {
     marginTop: 14,
     padding: 12,
