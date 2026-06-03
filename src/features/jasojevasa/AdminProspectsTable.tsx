@@ -306,6 +306,8 @@ const [newDraft, setNewDraft] = useState<NewProspectDraft>(
 );
 const [isCreating, setIsCreating] = useState(false);
 const [createMessage, setCreateMessage] = useState<string | null>(null);
+const [isConverting, setIsConverting] = useState(false);
+const [convertMessage, setConvertMessage] = useState<string | null>(null);
   useEffect(() => {
     setProspects(rows);
   }, [rows]);
@@ -353,8 +355,9 @@ const [createMessage, setCreateMessage] = useState<string | null>(null);
       return;
     }
 
-    setDraft(createDraftFromProspect(selectedProspect));
-    setSaveMessage(null);
+setDraft(createDraftFromProspect(selectedProspect));
+setSaveMessage(null);
+setConvertMessage(null);
   }, [selectedProspect?.id]);
 
   const hotCount = prospects.filter(
@@ -567,6 +570,66 @@ const doNotContactCount = prospects.filter(
     setCreateMessage(message);
   } finally {
     setIsCreating(false);
+  }
+}
+async function handleConvertProspectToClient() {
+  if (!selectedProspect) return;
+
+  if (selectedProspect.converted_business_id) {
+    setConvertMessage("Este prospecto ya fue convertido en cliente.");
+    return;
+  }
+
+  setIsConverting(true);
+  setConvertMessage(null);
+
+  try {
+    const response = await fetch(
+      `/api/admin/prospects/${selectedProspect.id}/convert`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plan:
+            draft?.recommended_plan ||
+            selectedProspect.recommended_plan ||
+            "basic",
+          status: "trial",
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+      throw new Error(
+        result.error || "No se pudo convertir el prospecto en cliente."
+      );
+    }
+
+    const updatedProspect = result.prospect as AdminProspectOverview;
+
+    setProspects((current) =>
+      current.map((row) =>
+        row.id === updatedProspect.id ? updatedProspect : row
+      )
+    );
+
+    setDraft(createDraftFromProspect(updatedProspect));
+    setConvertMessage(
+      "Prospecto convertido en cliente. Ya debe aparecer en /admin/clientes."
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo convertir el prospecto en cliente.";
+
+    setConvertMessage(message);
+  } finally {
+    setIsConverting(false);
   }
 }
   return (
@@ -1091,6 +1154,38 @@ onClick={() =>
     Asignar a Erika
   </button>
 </div>
+<div style={styles.convertPanel}>
+  <div>
+    <p style={styles.detailEyebrow}>Conversión comercial</p>
+    <h3 style={styles.convertTitle}>Convertir prospecto en cliente</h3>
+    <p style={styles.convertText}>
+      Crea el negocio en JasoDatos, registra la suscripción inicial y marca el
+      prospecto como convertido.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    style={{
+      ...styles.convertButton,
+      ...(isConverting || selectedProspect.converted_business_id
+        ? styles.saveButtonDisabled
+        : null),
+    }}
+    onClick={handleConvertProspectToClient}
+    disabled={isConverting || Boolean(selectedProspect.converted_business_id)}
+  >
+    {selectedProspect.converted_business_id
+      ? "Cliente convertido"
+      : isConverting
+        ? "Convirtiendo..."
+        : "Convertir en cliente"}
+  </button>
+</div>
+
+{convertMessage ? (
+  <div style={styles.saveMessage}>{convertMessage}</div>
+) : null}
             <div style={styles.editGrid}>
               <label style={styles.formControl}>
                 <span>Estado</span>
@@ -1786,6 +1881,39 @@ quickActionButtonDanger: {
   borderRadius: 12,
   cursor: "pointer",
   fontSize: 12,
+  fontWeight: 800,
+  whiteSpace: "nowrap",
+},
+convertPanel: {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  alignItems: "center",
+  marginBottom: 14,
+  padding: 14,
+  borderRadius: 18,
+  background: "linear-gradient(135deg, #F5F3FF 0%, #EEF2FF 100%)",
+  border: "1px solid rgba(46,13,79,0.18)",
+},
+convertTitle: {
+  margin: "4px 0 0",
+  fontSize: 16,
+  color: "#111827",
+},
+convertText: {
+  margin: "6px 0 0",
+  maxWidth: 680,
+  color: "#64748B",
+  fontSize: 13,
+  lineHeight: 1.45,
+},
+convertButton: {
+  border: "1px solid rgba(46,13,79,0.24)",
+  background: "#2E0D4F",
+  color: "#FFFFFF",
+  padding: "10px 14px",
+  borderRadius: 14,
+  cursor: "pointer",
   fontWeight: 800,
   whiteSpace: "nowrap",
 },
