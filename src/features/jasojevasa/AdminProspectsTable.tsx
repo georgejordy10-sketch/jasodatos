@@ -366,12 +366,31 @@ const [createMessage, setCreateMessage] = useState<string | null>(null);
   const urgentCount = prospects.filter(
     (row) => row.lead_priority === "urgente"
   ).length;
+const wonCount = prospects.filter(
+  (row) =>
+    row.pipeline_stage === "ganado" ||
+    row.pipeline_stage === "convertido_cliente"
+).length;
 
-  const wonCount = prospects.filter(
-    (row) =>
-      row.pipeline_stage === "ganado" ||
-      row.pipeline_stage === "convertido_cliente"
-  ).length;
+const pendingContactCount = prospects.filter(
+  (row) =>
+    row.pipeline_stage === "nuevo" ||
+    row.pipeline_stage === "investigado" ||
+    row.pipeline_stage === "calificado"
+).length;
+
+const withoutNextActionCount = prospects.filter(
+  (row) =>
+    !row.next_action_at &&
+    row.pipeline_stage !== "ganado" &&
+    row.pipeline_stage !== "convertido_cliente" &&
+    row.pipeline_stage !== "perdido" &&
+    row.pipeline_stage !== "no_contactar"
+).length;
+
+const doNotContactCount = prospects.filter(
+  (row) => row.do_not_contact || row.pipeline_stage === "no_contactar"
+).length;
  async function patchSelectedProspect(
   patch: Partial<{
     pipeline_stage: ProspectPipelineStage;
@@ -574,6 +593,62 @@ const [createMessage, setCreateMessage] = useState<string | null>(null);
         <MetricCard label="Urgentes" value={urgentCount} />
         <MetricCard label="Ganados" value={wonCount} />
       </div>
+      <div style={styles.followUpPanel}>
+  <div>
+    <p style={styles.detailEyebrow}>Seguimiento comercial</p>
+    <h2 style={styles.createTitle}>Prioridades de trabajo</h2>
+  </div>
+
+  <div style={styles.followUpGrid}>
+    <button
+      type="button"
+      style={styles.followUpCard}
+      onClick={() => {
+        setStageFilter("all");
+        setSearch("urgente");
+      }}
+    >
+      <span>Urgentes</span>
+      <strong>{urgentCount}</strong>
+    </button>
+
+    <button
+      type="button"
+      style={styles.followUpCard}
+      onClick={() => {
+        setStageFilter("all");
+        setSearch("nuevo");
+      }}
+    >
+      <span>Pendientes de contacto</span>
+      <strong>{pendingContactCount}</strong>
+    </button>
+
+    <button
+      type="button"
+      style={styles.followUpCard}
+      onClick={() => {
+        setStageFilter("all");
+        setSearch("");
+      }}
+    >
+      <span>Sin próxima acción</span>
+      <strong>{withoutNextActionCount}</strong>
+    </button>
+
+    <button
+      type="button"
+      style={styles.followUpCardDanger}
+      onClick={() => {
+        setStageFilter("no_contactar");
+        setSearch("");
+      }}
+    >
+      <span>No contactar</span>
+      <strong>{doNotContactCount}</strong>
+    </button>
+  </div>
+</div>
       <div style={styles.createToolbar}>
   <div>
     <p style={styles.detailEyebrow}>Captación manual</p>
@@ -1442,6 +1517,43 @@ const styles: Record<string, CSSProperties> = {
     gap: 12,
     marginBottom: 16,
   },
+  followUpPanel: {
+  display: "grid",
+  gap: 14,
+  marginBottom: 16,
+  padding: 16,
+  borderRadius: 22,
+  background: "#FFFFFF",
+  border: "1px solid rgba(148,163,184,0.28)",
+  boxShadow: "0 12px 28px rgba(15,23,42,0.08)",
+},
+followUpGrid: {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  gap: 12,
+},
+followUpCard: {
+  display: "grid",
+  gap: 8,
+  textAlign: "left",
+  padding: 14,
+  borderRadius: 18,
+  border: "1px solid rgba(46,13,79,0.16)",
+  background: "#F8FAFC",
+  color: "#2E0D4F",
+  cursor: "pointer",
+},
+followUpCardDanger: {
+  display: "grid",
+  gap: 8,
+  textAlign: "left",
+  padding: 14,
+  borderRadius: 18,
+  border: "1px solid rgba(220,38,38,0.22)",
+  background: "rgba(254,242,242,0.95)",
+  color: "#B91C1C",
+  cursor: "pointer",
+},
   metricCard: {
     padding: 16,
     borderRadius: 20,
