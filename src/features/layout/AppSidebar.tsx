@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 const navItems = [
   { label: "Vista general", href: "/cargas#general" },
   { label: "Resumen", href: "/cargas#resumen" },
@@ -12,6 +13,8 @@ const navItems = [
   { label: "Productos", href: "/cargas#productos" },
   { label: "Archivo", href: "/cargas#reportes" },
   { label: "Configuración", href: "/cargas#configuracion" },
+  { label: "Clientes", href: "/admin/clientes" },
+  { label: "JasoJevasa", href: "/admin/prospectos" },
 ];
 
 type AppSidebarProps = {
@@ -19,6 +22,7 @@ type AppSidebarProps = {
   onNavigate?: () => void;
   isDrawer?: boolean;
 };
+
 export function AppSidebar({
   businessName,
   onNavigate,
@@ -26,41 +30,51 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const [activeTarget, setActiveTarget] = useState("#general");
 
-const [sidebarBusinessName, setSidebarBusinessName] =
-  useState("Negocio actual");
-useEffect(() => {
-  function updateActiveTarget() {
-    if (window.location.pathname.startsWith("/admin")) {
-      setActiveTarget("/admin/clientes");
-      return;
-    }
-
-    setActiveTarget(window.location.hash || "#general");
-  }
-
-  function updateBusinessNameFromDashboard(event: Event) {
-    const customEvent = event as CustomEvent<string>;
-    const nextBusinessName = customEvent.detail?.trim();
-
-    setSidebarBusinessName(nextBusinessName || "Negocio actual");
-  }
-
-  updateActiveTarget();
-
-  window.addEventListener("hashchange", updateActiveTarget);
-  window.addEventListener(
-    "jasodatos:business-name-updated",
-    updateBusinessNameFromDashboard
+  const [sidebarBusinessName, setSidebarBusinessName] = useState(
+    businessName?.trim() || "Negocio actual"
   );
 
-  return () => {
-    window.removeEventListener("hashchange", updateActiveTarget);
-    window.removeEventListener(
+  useEffect(() => {
+    if (businessName?.trim()) {
+      setSidebarBusinessName(businessName.trim());
+    }
+  }, [businessName]);
+
+  useEffect(() => {
+    function updateActiveTarget() {
+      if (window.location.pathname.startsWith("/admin")) {
+        setActiveTarget(window.location.pathname);
+        return;
+      }
+
+      setActiveTarget(window.location.hash || "#general");
+    }
+
+    function updateBusinessNameFromDashboard(event: Event) {
+      const customEvent = event as CustomEvent<string>;
+      const nextBusinessName = customEvent.detail?.trim();
+
+      setSidebarBusinessName(nextBusinessName || "Negocio actual");
+    }
+
+    updateActiveTarget();
+
+    window.addEventListener("hashchange", updateActiveTarget);
+    window.addEventListener("popstate", updateActiveTarget);
+    window.addEventListener(
       "jasodatos:business-name-updated",
       updateBusinessNameFromDashboard
     );
-  };
-}, []);
+
+    return () => {
+      window.removeEventListener("hashchange", updateActiveTarget);
+      window.removeEventListener("popstate", updateActiveTarget);
+      window.removeEventListener(
+        "jasodatos:business-name-updated",
+        updateBusinessNameFromDashboard
+      );
+    };
+  }, []);
 
   return (
     <aside
@@ -102,19 +116,19 @@ useEffect(() => {
             }}
           />
 
-<p
-  style={{
-    margin: "5px 0 0",
-    color: "#FFFFFF",
-    fontSize: "11.5px",
-    fontWeight: 400,
-    lineHeight: 1.35,
-    letterSpacing: "0.005em",
-    opacity: 0.9,
-  }}
->
-  Convierte tus datos en decisiones.
-</p>
+          <p
+            style={{
+              margin: "5px 0 0",
+              color: "#FFFFFF",
+              fontSize: "11.5px",
+              fontWeight: 400,
+              lineHeight: 1.35,
+              letterSpacing: "0.005em",
+              opacity: 0.9,
+            }}
+          >
+            Convierte tus datos en decisiones.
+          </p>
         </div>
       </div>
 
@@ -190,49 +204,49 @@ useEffect(() => {
             marginBottom: 12,
           }}
         >
-      <div
-  aria-hidden="true"
-  style={{
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    display: "grid",
-    placeItems: "center",
-    background:
-      "linear-gradient(135deg, rgba(124,58,237,0.95), rgba(37,99,235,0.88))",
-    color: "#FFFFFF",
-    boxShadow: "0 10px 22px rgba(37,99,235,0.24)",
-  }}
->
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    aria-hidden="true"
-  >
-    <path
-      d="M4 20V9.5L12 4L20 9.5V20"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M8 20V12H16V20"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M10 9.5H14"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-  </svg>
-</div>
+          <div
+            aria-hidden="true"
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 14,
+              display: "grid",
+              placeItems: "center",
+              background:
+                "linear-gradient(135deg, rgba(124,58,237,0.95), rgba(37,99,235,0.88))",
+              color: "#FFFFFF",
+              boxShadow: "0 10px 22px rgba(37,99,235,0.24)",
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 20V9.5L12 4L20 9.5V20"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M8 20V12H16V20"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M10 9.5H14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
 
           <div style={{ minWidth: 0 }}>
             <div
@@ -315,15 +329,15 @@ useEffect(() => {
         </p>
 
         <a
-href="/cargas#planes"
-onClick={(event) => {
-  event.preventDefault();
+          href="/cargas#planes"
+          onClick={(event) => {
+            event.preventDefault();
 
-  window.dispatchEvent(new CustomEvent("jasodatos:open-plans"));
-  window.location.hash = "planes";
+            window.dispatchEvent(new CustomEvent("jasodatos:open-plans"));
+            window.location.hash = "planes";
 
-  onNavigate?.();
-}}
+            onNavigate?.();
+          }}
           style={{
             display: "flex",
             alignItems: "center",
