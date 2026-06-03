@@ -580,6 +580,12 @@ async function handleConvertProspectToClient() {
     return;
   }
 
+ const confirmed = window.confirm(
+  `Vas a convertir "${selectedProspect.business_name}" en cliente real de JasoDatos. Esta acción creará un negocio y una suscripción inicial. ¿Deseas continuar?`
+);
+
+if (!confirmed) return;
+
   setIsConverting(true);
   setConvertMessage(null);
 
@@ -591,13 +597,14 @@ async function handleConvertProspectToClient() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          plan:
-            draft?.recommended_plan ||
-            selectedProspect.recommended_plan ||
-            "basic",
-          status: "trial",
-        }),
+body: JSON.stringify({
+  confirm: "convertir",
+  plan:
+    draft?.recommended_plan ||
+    selectedProspect.recommended_plan ||
+    "basic",
+  status: "trial",
+}),
       }
     );
 
