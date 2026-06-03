@@ -579,7 +579,23 @@ async function handleConvertProspectToClient() {
     setConvertMessage("Este prospecto ya fue convertido en cliente.");
     return;
   }
+if (!selectedProspect.email && !selectedProspect.whatsapp) {
+  setConvertMessage(
+    "No se puede convertir: el prospecto debe tener correo o WhatsApp."
+  );
+  return;
+}
 
+if (
+  selectedProspect.pipeline_stage === "perdido" ||
+  selectedProspect.pipeline_stage === "no_contactar" ||
+  selectedProspect.pipeline_stage === "fuera_de_perfil"
+) {
+  setConvertMessage(
+    "No se puede convertir: el prospecto está perdido, fuera de perfil o marcado como no contactar."
+  );
+  return;
+}
  const confirmed = window.confirm(
   `Vas a convertir "${selectedProspect.business_name}" en cliente real de JasoDatos. Esta acción creará un negocio y una suscripción inicial. ¿Deseas continuar?`
 );
@@ -625,9 +641,9 @@ body: JSON.stringify({
     );
 
     setDraft(createDraftFromProspect(updatedProspect));
-    setConvertMessage(
-      "Prospecto convertido en cliente. Ya debe aparecer en /admin/clientes."
-    );
+setConvertMessage(
+  "Prospecto convertido en cliente. Puedes revisarlo en la matriz de clientes."
+);
   } catch (error) {
     const message =
       error instanceof Error
@@ -1033,6 +1049,11 @@ body: JSON.stringify({
             >
               {priorityLabel(selectedProspect.lead_priority)}
             </span>
+             {selectedProspect.converted_business_id ? (
+    <span style={{ ...styles.pill, ...styles.convertedPill }}>
+      Convertido en cliente
+    </span>
+  ) : null}
           </div>
 
           <div style={styles.detailGrid}>
@@ -1171,25 +1192,30 @@ onClick={() =>
     </p>
   </div>
 
-  <button
-    type="button"
-    style={{
-      ...styles.convertButton,
-      ...(isConverting || selectedProspect.converted_business_id
-        ? styles.saveButtonDisabled
-        : null),
-    }}
-    onClick={handleConvertProspectToClient}
-    disabled={isConverting || Boolean(selectedProspect.converted_business_id)}
-  >
-    {selectedProspect.converted_business_id
-      ? "Cliente convertido"
-      : isConverting
-        ? "Convirtiendo..."
-        : "Convertir en cliente"}
-  </button>
-</div>
+  <div style={styles.convertActions}>
+    <button
+      type="button"
+      style={{
+        ...styles.convertButton,
+        ...(isConverting || selectedProspect.converted_business_id
+          ? styles.saveButtonDisabled
+          : null),
+      }}
+      onClick={handleConvertProspectToClient}
+      disabled={isConverting || Boolean(selectedProspect.converted_business_id)}
+    >
+      {selectedProspect.converted_business_id
+        ? "Cliente convertido"
+        : isConverting
+          ? "Convirtiendo..."
+          : "Convertir en cliente"}
+    </button>
 
+    <a href="/admin/clientes" style={styles.clientLink}>
+      Ver clientes
+    </a>
+  </div>
+</div>
 {convertMessage ? (
   <div style={styles.saveMessage}>{convertMessage}</div>
 ) : null}
@@ -1923,6 +1949,31 @@ convertButton: {
   cursor: "pointer",
   fontWeight: 800,
   whiteSpace: "nowrap",
+},
+convertActions: {
+  display: "grid",
+  gap: 8,
+  justifyItems: "stretch",
+},
+clientLink: {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 38,
+  padding: "0 12px",
+  borderRadius: 12,
+  border: "1px solid rgba(46,13,79,0.18)",
+  background: "#FFFFFF",
+  color: "#2E0D4F",
+  textDecoration: "none",
+  fontSize: 13,
+  fontWeight: 800,
+  whiteSpace: "nowrap",
+},
+convertedPill: {
+  background: "rgba(34,197,94,0.14)",
+  color: "#166534",
+  border: "1px solid rgba(34,197,94,0.22)",
 },
   notesBox: {
     marginTop: 14,
