@@ -75,12 +75,23 @@ export async function POST(
       );
     }
 
-    const body = await request.json().catch(() => ({}));
-    const requestedPlan = isValidPlan(body?.plan) ? body.plan : null;
-    const requestedStatus =
-      body?.status === "active" || body?.status === "trial"
-        ? body.status
-        : "trial";
+const body = await request.json().catch(() => ({}));
+
+if (body?.confirm !== "convertir") {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: "Confirmación requerida para convertir el prospecto.",
+    },
+    { status: 400 }
+  );
+}
+
+const requestedPlan = isValidPlan(body?.plan) ? body.plan : null;
+const requestedStatus =
+  body?.status === "active" || body?.status === "trial"
+    ? body.status
+    : "trial";
 
     const supabase = createAdminSupabaseClient();
 
@@ -109,7 +120,20 @@ export async function POST(
         { status: 409 }
       );
     }
-
+    if (
+  prospect.pipeline_stage === "perdido" ||
+  prospect.pipeline_stage === "no_contactar" ||
+  prospect.pipeline_stage === "fuera_de_perfil"
+) {
+  return NextResponse.json(
+    {
+      ok: false,
+      error:
+        "Este prospecto no puede convertirse porque está perdido, fuera de perfil o marcado como no contactar.",
+    },
+    { status: 409 }
+  );
+}
     const businessName = cleanText(prospect.business_name);
 
     if (!businessName) {
@@ -141,7 +165,23 @@ export async function POST(
         );
       }
     }
+    if (commercialWhatsapp) {
+  const { data: existingWhatsapp } = await supabase
+    .from("businesses")
+    .select("id")
+    .eq("commercial_whatsapp", commercialWhatsapp)
+    .maybeSingle();
 
+  if (existingWhatsapp?.id) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Ya existe un cliente con este WhatsApp comercial.",
+      },
+      { status: 409 }
+    );
+  }
+}
     const now = new Date();
     const trialEndsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const periodEndsAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
