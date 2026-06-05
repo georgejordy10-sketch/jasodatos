@@ -1130,14 +1130,21 @@ style={inventoryHelpButtonStyle}
     ) : null}
   </div>
 ) : null}
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: 14,
-              }}
-            >
+<div
+  style={{
+    overflowX: "auto",
+    maxWidth: "100%",
+    WebkitOverflowScrolling: "touch",
+  }}
+>
+  <table
+    style={{
+      width: "100%",
+      minWidth: 760,
+      borderCollapse: "collapse",
+      fontSize: 14,
+    }}
+  >
 <thead>
   <tr>
     <th style={thStyle}>Dato encontrado</th>
@@ -1171,12 +1178,13 @@ style={inventoryHelpButtonStyle}
           onChange={(e) =>
             updateMapping(candidate.sourceColumn, e.target.value)
           }
-          style={{
-            width: "100%",
-            padding: 8,
-            borderRadius: 8,
-            border: "1px solid rgba(255,255,255,0.42)",
-          }}
+style={{
+  width: "100%",
+  minWidth: 150,
+  padding: 8,
+  borderRadius: 8,
+  border: "1px solid rgba(255,255,255,0.42)",
+}}
         >
           <option value="">No necesario para el análisis</option>
           {selectedProfile.fields.map((field) => (

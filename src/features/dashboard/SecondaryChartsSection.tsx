@@ -342,11 +342,11 @@ export default function SecondaryChartsSection({
   );
 }
 const styles: Record<string, CSSProperties> = {
-  secondaryCharts: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 10,
-  },
+secondaryCharts: {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))",
+  gap: 12,
+},
 
   card: {
     background: "var(--jd-gradient-container)",
@@ -498,9 +498,9 @@ tdCompact: {
     fontWeight: 650,
   },
 
-  chartBox: {
-    width: "100%",
-    height: 300,
+chartBox: {
+  width: "100%",
+  height: 280,
     borderRadius: 14,
     background: "var(--jd-gradient-table-surface)",
     border: "1px solid var(--jd-border-accent-soft)",
