@@ -968,24 +968,23 @@ style={inventoryHelpButtonStyle}
         >
           {qualityTheme?.message}
         </span>
-
-        <div
-          style={{
-            marginTop: 6,
-            padding: "10px 12px",
-            borderRadius: 12,
-            background: "#ffffff",
-            border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
-            color: "rgba(255,255,255,0.78)",
-            fontSize: 14,
-            lineHeight: 1.5,
-          }}
-        >
-<strong style={{ color: "#FFFFFF" }}>
-  Qué te sugerimos:
-</strong>{" "}
-          {qualityReport.recommendation}
-        </div>
+         <div
+  style={{
+    marginTop: 6,
+    padding: "10px 12px",
+    borderRadius: 12,
+    background: "#ffffff",
+    border: `1px solid ${qualityTheme?.border ?? "#e2e8f0"}`,
+    color: "#1D4ED8",
+    fontSize: 14,
+    lineHeight: 1.5,
+  }}
+>
+  <strong style={{ color: "#1D4ED8" }}>
+    Qué te sugerimos:
+  </strong>{" "}
+  {qualityReport.recommendation}
+</div>
       </div>
 
       <div
@@ -1075,9 +1074,9 @@ style={inventoryHelpButtonStyle}
           gap: 8,
         }}
       >
-        <strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
-          Datos que JasoDatos no reconoció automáticamente
-        </strong>
+<strong style={{ color: "#FFFFFF" }}>
+  Datos que JasoDatos no reconoció automáticamente
+</strong>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {qualityReport.unmappedColumns.map((column) => (
@@ -1110,9 +1109,9 @@ style={inventoryHelpButtonStyle}
           gap: 8,
         }}
       >
-        <strong style={{ color: qualityTheme?.headingColor ?? "#0f172a" }}>
-          Cosas que debes revisar antes de continuar
-        </strong>
+<strong style={{ color: "#FFFFFF" }}>
+  Cosas que debes revisar antes de continuar
+</strong>
 
         <ul
           style={{
