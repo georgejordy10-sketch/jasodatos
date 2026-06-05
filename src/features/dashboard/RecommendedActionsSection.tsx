@@ -275,16 +275,16 @@ const styles: Record<string, CSSProperties> = {
     boxShadow:
       "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
   },
-  cardTitle: {
-    margin: 0,
-    fontSize: 18,
-    fontWeight: 800,
-    color: "#86EFAC",
-    WebkitTextFillColor: "#86EFAC",
-    lineHeight: 1.25,
-    letterSpacing: "-0.005em",
-    textShadow: "0 0 10px rgba(34,197,94,0.22)",
-  },
+cardTitle: {
+  margin: 0,
+  fontSize: 23,
+  fontWeight: 600,
+  color: "#86EFAC",
+  WebkitTextFillColor: "#86EFAC",
+  lineHeight: 1.22,
+  letterSpacing: "-0.015em",
+  textShadow: "0 0 8px rgba(34,197,94,0.18)",
+},
   cardText: {
     margin: 0,
     color: "#FFFFFF",
