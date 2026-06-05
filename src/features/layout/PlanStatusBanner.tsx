@@ -63,7 +63,7 @@ export function PlanStatusBanner({
         alignItems: "center",
         justifyContent: "space-between",
         gap: "16px",
-        padding: "16px 18px",
+        padding: "18px 20px",
         borderRadius: "22px",
         border: "1px solid var(--jd-border, #E2E8F0)",
         background:
@@ -76,8 +76,9 @@ export function PlanStatusBanner({
           style={{
             margin: 0,
             color: "var(--jd-text-muted, #64748B)",
-            fontSize: "13px",
-            fontWeight: 700,
+            fontSize: "15px",
+            fontWeight: 750,
+            lineHeight: 1.2,
           }}
         >
           Estado del plan
@@ -85,9 +86,11 @@ export function PlanStatusBanner({
 
         <h2
           style={{
-            margin: "4px 0 0",
+            margin: "6px 0 0",
             color: "var(--jd-text-main, #0F172A)",
-            fontSize: "18px",
+            fontSize: "22px",
+            fontWeight: 850,
+            lineHeight: 1.15,
             letterSpacing: "-0.025em",
           }}
         >
@@ -108,14 +111,14 @@ export function PlanStatusBanner({
           style={{
             display: "inline-flex",
             alignItems: "center",
-            minHeight: "34px",
-            padding: "0 12px",
+            minHeight: "38px",
+            padding: "0 14px",
             borderRadius: "999px",
             color: statusColor,
             background: "rgba(255,255,255,0.74)",
             border: `1px solid ${statusColor}33`,
-            fontSize: "13px",
-            fontWeight: 800,
+            fontSize: "15px",
+            fontWeight: 850,
           }}
         >
           {statusLabel}
