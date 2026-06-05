@@ -134,7 +134,7 @@ export default function SalesChartsSection({
   tickLine={false}
   axisLine={false}
   tickMargin={12}
-  fontSize={12}
+  fontSize={14}
 />
 <YAxis
   stroke="rgba(255,255,255,0.58)"
@@ -142,7 +142,7 @@ export default function SalesChartsSection({
   axisLine={false}
   width={axisWidth}
   tickMargin={10}
-  fontSize={12}
+  fontSize={14}
   tickFormatter={(value) => formatCompactMoney(value)}
 />
 
@@ -335,15 +335,15 @@ eyebrow: {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  minHeight: 28,
+  minHeight: 32,
   width: "fit-content",
   padding: "0 14px",
   borderRadius: 999,
   background: "rgba(56, 189, 248, 0.18)",
   border: "1px solid rgba(255,255,255,0.86)",
   color: "#7DD3FC",
-  fontSize: 12,
-  fontWeight: 600,
+  fontSize: 14,
+  fontWeight: 700,
   lineHeight: 1,
   whiteSpace: "nowrap",
   boxShadow:
@@ -353,18 +353,18 @@ eyebrow: {
 sectionTitle: {
   margin: "10px 0 3px",
   color: "var(--jd-text-main)",
-  fontSize: 20,
+  fontSize: 24,
   fontWeight: 800,
-  lineHeight: 1.1,
+  lineHeight: 1.12,
   letterSpacing: "-0.025em",
 },
 
 sectionSubtitle: {
   margin: 0,
   color: "var(--jd-text-secondary)",
-  fontSize: 12,
+  fontSize: 15,
   fontWeight: 500,
-  lineHeight: 1.35,
+  lineHeight: 1.48,
 },
 
   chartTopBar: {
@@ -387,7 +387,7 @@ sectionSubtitle: {
     alignItems: "center",
     gap: 6,
     color: "var(--jd-text-secondary, #475569)",
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: 800,
   },
 
@@ -406,14 +406,14 @@ sectionSubtitle: {
 totalPill: {
   display: "grid",
   gap: 2,
-  minWidth: 112,
+  minWidth: 132,
   justifyItems: "center",
   padding: "8px 12px",
   borderRadius: 14,
   background: "rgba(56, 189, 248, 0.18)",
   color: "#FFFFFF",
-  fontSize: 10,
-  fontWeight: 500,
+  fontSize: 13,
+  fontWeight: 650,
   border: "1px solid rgba(255,255,255,0.86)",
   boxShadow:
     "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
@@ -421,12 +421,12 @@ totalPill: {
 
 chartBox: {
   position: "relative",
-  height: 260,
+  height: 300,
   borderRadius: 16,
   border: "1px solid rgba(255,255,255,0.10)",
   background:
     "linear-gradient(180deg, rgba(37, 50, 126, 0.42) 0%, rgba(27, 36, 104, 0.30) 100%)",
-  padding: "12px 14px 10px",
+  padding: "16px 18px 14px",
   overflow: "hidden",
 },
 
@@ -457,21 +457,21 @@ pieBox: {
 
   pieCenterLabel: {
     color: "var(--jd-text-secondary, #475569)",
-    fontSize: 11,
-    fontWeight: 800,
+    fontSize: 13,
+    fontWeight: 850,
   },
 
   pieCenterValue: {
     color: "var(--jd-text-main)",
-    fontSize: 17,
+    fontSize: 21,
     fontWeight: 950,
     lineHeight: 1.05,
   },
 
   pieCenterSub: {
     color: "var(--jd-text-muted, #64748B)",
-    fontSize: 10,
-    fontWeight: 800,
+    fontSize: 12,
+    fontWeight: 850,
   },
 
   legendColumn: {
@@ -489,7 +489,7 @@ legendItem: {
   justifyContent: "start",
   gap: 10,
   color: "#FFFFFF",
-  fontSize: 14,
+  fontSize: 16,
 },
 legendDot: {
   width: 9,
@@ -499,9 +499,9 @@ legendDot: {
 
 legendLabel: {
   color: "#FFFFFF",
-  fontSize: 14,
-  fontWeight: 500,
-  lineHeight: 1.35,
+  fontSize: 16,
+  fontWeight: 550,
+  lineHeight: 1.42,
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -509,9 +509,9 @@ legendLabel: {
 
 legendPct: {
   color: "#FFFFFF",
-  fontSize: 14,
-  fontWeight: 600,
-  lineHeight: 1.35,
+  fontSize: 16,
+  fontWeight: 700,
+  lineHeight: 1.42,
   textAlign: "left",
   justifySelf: "start",
 },
@@ -523,14 +523,14 @@ legendPct: {
   },
 
 compareButton: {
-  minHeight: 34,
+  minHeight: 40,
   borderRadius: 999,
   border: "1px solid rgba(255,255,255,0.86)",
   background: "rgba(56, 189, 248, 0.18)",
   color: "#FFFFFF",
   padding: "0 15px",
-  fontSize: 11,
-  fontWeight: 600,
+  fontSize: 14,
+  fontWeight: 700,
   cursor: "pointer",
   whiteSpace: "nowrap",
   boxShadow:
@@ -538,14 +538,14 @@ compareButton: {
 },
 
 viewAllButton: {
-  minHeight: 34,
+  minHeight: 40,
   padding: "0 15px",
   borderRadius: 999,
   border: "1px solid rgba(255,255,255,0.86)",
   background: "rgba(56, 189, 248, 0.18)",
   color: "#FFFFFF",
-  fontSize: 11,
-  fontWeight: 600,
+  fontSize: 14,
+  fontWeight: 700,
   cursor: "pointer",
   whiteSpace: "nowrap",
   boxShadow:
