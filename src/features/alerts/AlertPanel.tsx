@@ -16,24 +16,24 @@ function severityLabel(severity: AlertSeverity): string {
 function severityStyles(severity: AlertSeverity): CSSProperties {
   if (severity === "alta") {
     return {
-      background: "var(--jd-danger-soft)",
-      color: "var(--jd-danger)",
-      border: "1px solid rgba(220, 38, 38, 0.18)",
+      background: "rgba(220, 38, 38, 0.18)",
+      color: "#FCA5A5",
+      border: "1px solid rgba(248, 113, 113, 0.38)",
     };
   }
 
   if (severity === "media") {
     return {
-      background: "var(--jd-warning-soft)",
-      color: "var(--jd-warning)",
-      border: "1px solid rgba(245, 158, 11, 0.22)",
+      background: "rgba(245, 158, 11, 0.18)",
+      color: "#FCD34D",
+      border: "1px solid rgba(251, 191, 36, 0.42)",
     };
   }
 
   return {
-    background: "var(--jd-success-soft)",
-    color: "var(--jd-success)",
-    border: "1px solid rgba(22, 163, 74, 0.18)",
+    background: "rgba(22, 163, 74, 0.18)",
+    color: "#86EFAC",
+    border: "1px solid rgba(134, 239, 172, 0.38)",
   };
 }
 
@@ -117,41 +117,56 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
         </div>
       ) : (
         <div style={styles.grid}>
-          {alerts.map((alert) => (
-            <article key={alert.id} style={styles.alertCard}>
-              <div style={styles.alertTop}>
-                <span
-                  style={{
-                    ...styles.severityBadge,
-                    ...severityStyles(alert.severity),
-                  }}
-                >
-                  {severityLabel(alert.severity)}
-                </span>
-              </div>
+        {alerts.map((alert) => {
+  const alertTone = severityStyles(alert.severity);
 
-              <div style={styles.contentBlock}>
-                <h3 style={styles.alertTitle}>{alert.title}</h3>
-                <p style={styles.alertMessage}>{alert.message}</p>
-              </div>
+  return (
+    <article key={alert.id} style={styles.alertCard}>
+      <div style={styles.alertTop}>
+        <span
+          style={{
+            ...styles.severityBadge,
+            ...alertTone,
+          }}
+        >
+          {severityLabel(alert.severity)}
+        </span>
+      </div>
 
-              <div style={styles.actionsRow}>
-                {alert.actionLabel && alert.anchorId ? (
-                  <a
-                    href={`#${alert.anchorId}`}
-                    style={styles.actionButton}
-                    onClick={() => {
-                      window.setTimeout(() => goToAnchor(alert.anchorId), 80);
-                    }}
-                  >
-                    {alert.actionLabel}
-                  </a>
-                ) : (
-                  <span style={styles.noAction}>Sin acción directa</span>
-                )}
-              </div>
-            </article>
-          ))}
+      <div style={styles.contentBlock}>
+        <h3 style={{ ...styles.alertTitle, color: alertTone.color }}>
+          {alert.title}
+        </h3>
+
+        <p style={{ ...styles.alertMessage, color: alertTone.color }}>
+          {alert.message}
+        </p>
+      </div>
+
+      <div style={styles.actionsRow}>
+        {alert.actionLabel && alert.anchorId ? (
+          <a
+            href={`#${alert.anchorId}`}
+            style={{
+              ...styles.actionButton,
+              color: alertTone.color,
+              border: alertTone.border,
+            }}
+            onClick={() => {
+              window.setTimeout(() => goToAnchor(alert.anchorId), 80);
+            }}
+          >
+            {alert.actionLabel}
+          </a>
+        ) : (
+          <span style={{ ...styles.noAction, color: alertTone.color }}>
+            Sin acción directa
+          </span>
+        )}
+      </div>
+    </article>
+  );
+})}
         </div>
       )}
     </section>
@@ -162,11 +177,11 @@ const styles: Record<string, CSSProperties> = {
 card: {
   background: "var(--jd-gradient-container)",
   borderRadius: 18,
-  padding: "12px 14px",
+  padding: "16px 18px",
   border: "1px solid var(--jd-border-accent)",
   boxShadow: "var(--jd-shadow-card)",
   display: "grid",
-  gap: 8,
+  gap: 12,
 },
 
 header: {
@@ -179,38 +194,38 @@ header: {
 
 headerCopy: {
   display: "grid",
-  gap: 3,
+  gap: 5,
   minWidth: 0,
 },
 
- eyebrow: {
+eyebrow: {
   display: "inline-flex",
   alignItems: "center",
   width: "fit-content",
-  minHeight: 22,
-  padding: "0 9px",
+  minHeight: 26,
+  padding: "0 11px",
   borderRadius: 999,
   background: "var(--jd-info-soft)",
   color: "var(--jd-info)",
   border: "1px solid var(--jd-border-accent-soft)",
-  fontSize: 10,
+  fontSize: 12,
   fontWeight: 900,
 },
 
 title: {
   margin: 0,
   color: "var(--jd-text-main)",
-  fontSize: 16,
+  fontSize: 22,
   fontWeight: 950,
-  lineHeight: 1.02,
+  lineHeight: 1.1,
   letterSpacing: "-0.025em",
 },
 subtitle: {
   margin: 0,
   color: "var(--jd-text-secondary)",
-  fontSize: 11,
+  fontSize: 14,
   fontWeight: 600,
-  lineHeight: 1.25,
+  lineHeight: 1.4,
 },
 
 counterWrap: {
@@ -242,17 +257,17 @@ counterLabel: {
 
 summaryRow: {
   display: "flex",
-  gap: 6,
+  gap: 8,
   flexWrap: "wrap",
 },
 
 summaryPill: {
   borderRadius: 999,
-  padding: "0 12px",
-  fontSize: 11,
-  fontWeight: 700,
+  padding: "0 14px",
+  fontSize: 13,
+  fontWeight: 800,
   lineHeight: 1,
-  minHeight: 24,
+  minHeight: 28,
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
@@ -280,12 +295,12 @@ grid: {
 },
 alertCard: {
   borderRadius: 12,
-  padding: "7px 9px",
+  padding: "12px 14px",
   background: "rgba(255,255,255,0.08)",
   border: "1px solid rgba(255,255,255,0.12)",
   display: "grid",
-  gap: 2,
-  minHeight: 54,
+  gap: 8,
+  minHeight: 86,
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
 },
   alertTop: {
@@ -297,10 +312,10 @@ alertCard: {
 
 severityBadge: {
   borderRadius: 999,
-  padding: "0 10px",
-  minHeight: 22,
-  fontSize: 11,
-  fontWeight: 700,
+  padding: "0 12px",
+  minHeight: 26,
+  fontSize: 13,
+  fontWeight: 800,
   letterSpacing: 0.2,
   lineHeight: 1,
   display: "inline-flex",
@@ -310,30 +325,30 @@ severityBadge: {
 
 contentBlock: {
   display: "grid",
-  gap: 1,
+  gap: 8,
 },
 
 alertTitle: {
   margin: 0,
   color: "#FFFFFF",
-  fontSize: 14,
-  fontWeight: 650,
-  lineHeight: 1.12,
+  fontSize: 20,
+  fontWeight: 700,
+  lineHeight: 1.25,
   letterSpacing: "-0.01em",
 },
 
 alertMessage: {
   margin: 0,
   color: "#FFFFFF",
-  fontSize: 11,
-  fontWeight: 400,
-  lineHeight: 1.18,
+  fontSize: 16,
+  fontWeight: 500,
+  lineHeight: 1.45,
 },
 
 actionsRow: {
   display: "flex",
   justifyContent: "flex-end",
-  marginTop: 0,
+  marginTop: 6,
 },
 
 actionButton: {
@@ -341,9 +356,9 @@ actionButton: {
   background: "rgba(80, 96, 220, 0.24)",
   color: "#FFFFFF",
   borderRadius: 999,
-  padding: "4px 9px",
-  fontSize: 10,
-  fontWeight: 500,
+  padding: "6px 12px",
+  fontSize: 12,
+  fontWeight: 700,
   cursor: "pointer",
   textDecoration: "none",
   whiteSpace: "nowrap",
