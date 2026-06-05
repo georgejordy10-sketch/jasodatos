@@ -276,7 +276,7 @@ export default function SecondaryChartsSection({
                   axisLine={false}
                   tickMargin={8}
                   dy={1}
-                  fontSize={12}
+                  fontSize={14}
                 />
 
                 <YAxis
@@ -285,7 +285,7 @@ export default function SecondaryChartsSection({
                   axisLine={false}
                   tickMargin={10}
                   width={axisWidth}
-                  fontSize={12}
+                  fontSize={14}
                   tickFormatter={(value) => formatCompactMoney(value)}
                 />
                 <Tooltip
@@ -369,31 +369,31 @@ const styles: Record<string, CSSProperties> = {
   eyebrow: {
     display: "inline-flex",
     alignItems: "center",
-    minHeight: 20,
-    padding: "0 8px",
+    minHeight: 28,
+    padding: "0 12px",
     borderRadius: 999,
     background: "var(--jd-info-soft)",
     color: "var(--jd-info)",
     border: "1px solid var(--jd-border-accent-soft)",
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: 900,
     marginBottom: 5,
   },
 
   sectionTitle: {
     margin: 0,
-    fontSize: 18,
+    fontSize: 23,
     fontWeight: 900,
     color: "var(--jd-text-main)",
     letterSpacing: "-0.03em",
-    lineHeight: 1.05,
+    lineHeight: 1.12,
   },
 
   sectionSubtitle: {
     margin: "3px 0 0",
     color: "var(--jd-text-secondary)",
-    fontSize: 11,
-    lineHeight: 1.25,
+    fontSize: 15,
+    lineHeight: 1.45,
     fontWeight: 650,
   },
 
@@ -402,9 +402,9 @@ viewAllButton: {
   background: "rgba(255,255,255,0.08)",
   color: "#E2E8F0",
   borderRadius: 999,
-  padding: "8px 14px",
-  fontSize: 11,
-  fontWeight: 600,
+  padding: "10px 18px",
+  fontSize: 14,
+  fontWeight: 700,
   cursor: "pointer",
 },
 
@@ -419,33 +419,33 @@ viewAllButton: {
     width: "100%",
     borderCollapse: "collapse",
     color: "var(--jd-text-main)",
-    fontSize: 12,
+    fontSize: 14,
   },
 
 thCompact: {
-  padding: "10px 12px",
+  padding: "12px 14px",
   textAlign: "left",
-  fontSize: 11,
-  fontWeight: 500,
+  fontSize: 13,
+  fontWeight: 700,
   color: "#F8FAFC",
   background: "rgba(99, 102, 241, 0.72)",
   borderBottom: "1px solid rgba(255,255,255,0.08)",
 },
 tdCompact: {
-  padding: "10px 12px",
-  fontSize: 11,
-  fontWeight: 400,
+  padding: "12px 14px",
+  fontSize: 13,
+  fontWeight: 500,
   color: "#F8FAFC",
   borderBottom: "1px solid rgba(255,255,255,0.08)",
   verticalAlign: "middle",
 },
 
   productCell: {
-    padding: "8px 10px",
+    padding: "12px 14px",
     borderBottom: "1px solid var(--jd-border-table)",
     color: "var(--jd-text-main)",
     verticalAlign: "middle",
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: 850,
     whiteSpace: "nowrap",
   },
@@ -454,11 +454,11 @@ tdCompact: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 22,
+    minHeight: 28,
     borderRadius: 999,
     padding: "0 9px",
     fontWeight: 850,
-    fontSize: 10,
+    fontSize: 12,
     whiteSpace: "nowrap",
   },
 
@@ -474,42 +474,42 @@ tdCompact: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 24,
+    minHeight: 30,
     padding: "0 10px",
     borderRadius: 999,
     background: "var(--jd-info-soft)",
     border: "1px solid var(--jd-border-accent-soft)",
     color: "var(--jd-info)",
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: 900,
   },
 
   channelBadgeText: {
     color: "var(--jd-text-secondary)",
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: 650,
   },
 
   channelEmptyState: {
     color: "var(--jd-text-secondary)",
-    fontSize: 12,
-    lineHeight: 1.35,
+    fontSize: 15,
+    lineHeight: 1.5,
     padding: "6px 0 4px",
     fontWeight: 650,
   },
 
   chartBox: {
     width: "100%",
-    height: 255,
+    height: 300,
     borderRadius: 14,
     background: "var(--jd-gradient-table-surface)",
     border: "1px solid var(--jd-border-accent-soft)",
-    padding: "6px 6px 2px",
+    padding: "10px 12px 6px",
   },
   stockStateTrack: {
   width: "100%",
   maxWidth: 210,
-  height: 24,
+  height: 30,
   borderRadius: 999,
   background: "rgba(15, 23, 42, 0.38)",
   border: "1px solid rgba(255,255,255,0.08)",
@@ -518,14 +518,14 @@ tdCompact: {
 
 stockStateBar: {
   height: "100%",
-  minWidth: 96,
+  minWidth: 118,
   borderRadius: 999,
   display: "flex",
   alignItems: "center",
   justifyContent: "flex-start",
-  padding: "0 10px",
-  fontSize: 10,
-  fontWeight: 600,
+  padding: "0 14px",
+  fontSize: 12,
+  fontWeight: 700,
   lineHeight: 1,
   whiteSpace: "nowrap",
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.20)",

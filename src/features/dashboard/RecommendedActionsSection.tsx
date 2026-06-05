@@ -42,53 +42,55 @@ export default function RecommendedActionsSection({
   recommendations,
   isExportingPdf = false,
 }: Props) {
-function irAlAnalisis(sectionId?: string) {
-  if (!sectionId) return;
+  function irAlAnalisis(sectionId?: string) {
+    if (!sectionId) return;
 
-  window.location.hash = sectionId;
-
-  window.setTimeout(() => {
-    const section = document.getElementById(sectionId);
-
-    if (!section) {
-      console.warn(`No se encontró la sección: ${sectionId}`);
-      return;
-    }
-
-    section.scrollIntoView({ behavior: "smooth", block: "center" });
-
-    const previousBorder = section.style.border;
-    const previousBoxShadow = section.style.boxShadow;
-    const previousTransition = section.style.transition;
-    const previousBorderRadius = section.style.borderRadius;
-    const previousOverflow = section.style.overflow;
-
-    section.style.border = "5px solid rgba(34, 197, 94, 1)";
-    section.style.borderRadius = "24px";
-    section.style.overflow = "hidden";
-    section.style.boxShadow =
-      "0 0 0 5px rgba(34, 197, 94, 0.24), 0 0 28px rgba(34, 197, 94, 0.50)";
-    section.style.transition =
-      "border 180ms ease, box-shadow 180ms ease, border-radius 180ms ease";
+    window.location.hash = sectionId;
 
     window.setTimeout(() => {
-      section.style.border = previousBorder;
-      section.style.boxShadow = previousBoxShadow;
-      section.style.transition = previousTransition;
-      section.style.borderRadius = previousBorderRadius;
-      section.style.overflow = previousOverflow;
-    }, 2400);
-  }, 120);
-}
+      const section = document.getElementById(sectionId);
+
+      if (!section) {
+        console.warn(`No se encontró la sección: ${sectionId}`);
+        return;
+      }
+
+      section.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      const previousBorder = section.style.border;
+      const previousBoxShadow = section.style.boxShadow;
+      const previousTransition = section.style.transition;
+      const previousBorderRadius = section.style.borderRadius;
+      const previousOverflow = section.style.overflow;
+
+      section.style.border = "5px solid rgba(34, 197, 94, 1)";
+      section.style.borderRadius = "24px";
+      section.style.overflow = "hidden";
+      section.style.boxShadow =
+        "0 0 0 5px rgba(34, 197, 94, 0.24), 0 0 28px rgba(34, 197, 94, 0.50)";
+      section.style.transition =
+        "border 180ms ease, box-shadow 180ms ease, border-radius 180ms ease";
+
+      window.setTimeout(() => {
+        section.style.border = previousBorder;
+        section.style.boxShadow = previousBoxShadow;
+        section.style.transition = previousTransition;
+        section.style.borderRadius = previousBorderRadius;
+        section.style.overflow = previousOverflow;
+      }, 2400);
+    }, 120);
+  }
+
   if (!recommendations.length) {
     return (
       <section style={styles.wrapper}>
         <div style={styles.header}>
           <div>
-<span style={styles.eyebrow}>Prioridades detectadas</span>
-<h3 style={styles.title}>Qué deberías hacer primero</h3>
+            <span style={styles.eyebrow}>Prioridades detectadas</span>
+            <h3 style={styles.title}>Qué deberías hacer primero</h3>
             <p style={styles.subtitle}>
-              Aún no hay acciones claras para recomendar. Carga datos de ventas, inventario y canales para recibir sugerencias útiles.
+              Aún no hay acciones claras para recomendar. Carga datos de ventas,
+              inventario y canales para recibir sugerencias útiles.
             </p>
           </div>
         </div>
@@ -100,11 +102,12 @@ function irAlAnalisis(sectionId?: string) {
     <section style={styles.wrapper}>
       <div style={styles.header}>
         <div>
-<span style={styles.eyebrow}>Prioridades detectadas</span>
-<h3 style={styles.title}>Qué deberías hacer primero</h3>
-<p style={styles.subtitle}>
-  JasoDatos analiza tus ventas e inventario y te muestra acciones concretas para vender mejor, reponer a tiempo y corregir riesgos.
-</p>
+          <span style={styles.eyebrow}>Prioridades detectadas</span>
+          <h3 style={styles.title}>Qué deberías hacer primero</h3>
+          <p style={styles.subtitle}>
+            JasoDatos analiza tus ventas e inventario y te muestra acciones concretas
+            para vender mejor, reponer a tiempo y corregir riesgos.
+          </p>
         </div>
 
         {!isExportingPdf ? (
@@ -121,16 +124,16 @@ function irAlAnalisis(sectionId?: string) {
               </span>
 
               {item.anchorId && !isExportingPdf ? (
-  <button
-    type="button"
-    style={styles.typeButton}
-    onClick={() => irAlAnalisis(item.anchorId ?? undefined)}
-  >
-    {item.actionLabel}
-  </button>
-) : (
-  <span style={styles.typeBadge}>{item.actionLabel}</span>
-)}
+                <button
+                  type="button"
+                  style={styles.typeButton}
+                  onClick={() => irAlAnalisis(item.anchorId ?? undefined)}
+                >
+                  {item.actionLabel}
+                </button>
+              ) : (
+                <span style={styles.typeBadge}>{item.actionLabel}</span>
+              )}
             </div>
 
             <h4 style={styles.cardTitle}>{item.title}</h4>
@@ -140,9 +143,9 @@ function irAlAnalisis(sectionId?: string) {
               <div style={styles.evidenceBox}>
                 <span style={styles.evidenceTitle}>Por qué se recomienda</span>
                 {item.evidence.slice(0, 2).map((evidence) => (
-<div key={evidence} style={styles.evidenceItem}>
-  {"\u2022"} {evidence}
-</div>
+                  <div key={evidence} style={styles.evidenceItem}>
+                    {"\u2022"} {evidence}
+                  </div>
                 ))}
               </div>
             ) : null}
@@ -154,174 +157,174 @@ function irAlAnalisis(sectionId?: string) {
 }
 
 const styles: Record<string, CSSProperties> = {
-wrapper: {
-  background: "var(--jd-gradient-container)",
-  color: "var(--jd-text-main)",
-  borderRadius: 18,
-  padding: "14px 16px",
-  border: "1px solid var(--jd-border-accent)",
-  boxShadow: "var(--jd-shadow-card)",
-  display: "grid",
-  gap: 12,
-},
-header: {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 10,
-  flexWrap: "wrap",
-},
-eyebrow: {
-  display: "inline-flex",
-  alignItems: "center",
-  minHeight: 21,
-  padding: "0 9px",
-  borderRadius: 999,
-  background: "var(--jd-info-soft)",
-  color: "var(--jd-info)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  fontSize: 10,
-  fontWeight: 900,
-  marginBottom: 5,
-},
-title: {
-  margin: 0,
-  fontSize: 19,
-  fontWeight: 900,
-  color: "var(--jd-text-main)",
-  letterSpacing: "-0.03em",
-  lineHeight: 1.05,
-},
-subtitle: {
-  margin: "4px 0 0",
-  color: "var(--jd-text-secondary)",
-  fontSize: 12,
-  lineHeight: 1.35,
-  fontWeight: 500,
-  maxWidth: 780,
-},
-countBadge: {
-  minHeight: 26,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "0 13px",
-  borderRadius: 999,
-  background: "rgba(56, 189, 248, 0.18)",
-  border: "1px solid rgba(255,255,255,0.86)",
-  color: "#FFFFFF",
-  fontSize: 11,
-  fontWeight: 600,
-  lineHeight: 1,
-  whiteSpace: "nowrap",
-  boxShadow:
-    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
-},
-grid: {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: 9,
-},
-card: {
-  background: "var(--jd-gradient-table-surface)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  borderRadius: 14,
-  padding: "9px 10px",
-  display: "grid",
-  gap: 5,
-},
-cardTop: {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 6,
-  flexWrap: "wrap",
-},
-priorityBadge: {
-  display: "inline-flex",
-  alignItems: "center",
-  minHeight: 20,
-  padding: "0 8px",
-  borderRadius: 999,
-  fontSize: 9,
-  fontWeight: 900,
-},
-typeBadge: {
-  display: "inline-flex",
-  alignItems: "center",
-  minHeight: 20,
-  padding: "0 8px",
-  borderRadius: 999,
-  background: "var(--jd-gradient-table-surface)",
-  color: "var(--jd-text-main)",
-  border: "1px solid var(--jd-border-accent-soft)",
-  fontSize: 9,
-  fontWeight: 900,
-},
-typeButton: {
-  minHeight: 24,
-  padding: "0 11px",
-  borderRadius: 999,
-  border: "1px solid rgba(255,255,255,0.86)",
-  background: "rgba(56, 189, 248, 0.18)",
-  color: "#FFFFFF",
-  fontSize: 11,
-  fontWeight: 600,
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  boxShadow:
-    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
-},
-cardTitle: {
-  margin: 0,
-  fontSize: 15,
-  fontWeight: 700,
-  color: "#86EFAC",
-  WebkitTextFillColor: "#86EFAC",
-  lineHeight: 1.18,
-  letterSpacing: "-0.005em",
-  textShadow: "0 0 10px rgba(34,197,94,0.22)",
-},
-cardText: {
-  margin: 0,
-  color: "#FFFFFF",
-  fontSize: 13,
-  lineHeight: 1.38,
-  fontWeight: 400,
-},
-evidenceBox: {
-  display: "grid",
-  gap: 3,
-  padding: "7px 9px",
-  borderRadius: 11,
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.10)",
-},
-evidenceTitle: {
-  color: "#FFFFFF",
-  fontSize: 10,
-  fontWeight: 650,
-  textTransform: "uppercase",
-  letterSpacing: "0.045em",
-  lineHeight: 1.1,
-},
-evidenceItem: {
-  color: "rgba(255,255,255,0.86)",
-  fontSize: 11,
-  lineHeight: 1.25,
-  fontWeight: 400,
-},
-button: {
-  minHeight: 28,
-  width: "fit-content",
-  padding: "0 10px",
-  borderRadius: 999,
-  border: "1px solid var(--jd-border-accent-soft)",
-  background: "rgba(109, 126, 219, 0.12)",
-  color: "var(--jd-text-main)",
-  fontSize: 11,
-  fontWeight: 750,
-  cursor: "pointer",
-  boxShadow: "none",
-},
+  wrapper: {
+    background: "var(--jd-gradient-container)",
+    color: "var(--jd-text-main)",
+    borderRadius: 18,
+    padding: "18px 20px",
+    border: "1px solid var(--jd-border-accent)",
+    boxShadow: "var(--jd-shadow-card)",
+    display: "grid",
+    gap: 16,
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  eyebrow: {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: 28,
+    padding: "0 12px",
+    borderRadius: 999,
+    background: "var(--jd-info-soft)",
+    color: "var(--jd-info)",
+    border: "1px solid var(--jd-border-accent-soft)",
+    fontSize: 12,
+    fontWeight: 900,
+    marginBottom: 7,
+  },
+  title: {
+    margin: 0,
+    fontSize: 24,
+    fontWeight: 900,
+    color: "var(--jd-text-main)",
+    letterSpacing: "-0.03em",
+    lineHeight: 1.12,
+  },
+  subtitle: {
+    margin: "6px 0 0",
+    color: "var(--jd-text-secondary)",
+    fontSize: 15,
+    lineHeight: 1.5,
+    fontWeight: 500,
+    maxWidth: 840,
+  },
+  countBadge: {
+    minHeight: 32,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 15px",
+    borderRadius: 999,
+    background: "rgba(56, 189, 248, 0.18)",
+    border: "1px solid rgba(255,255,255,0.86)",
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: 700,
+    lineHeight: 1,
+    whiteSpace: "nowrap",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+    gap: 14,
+  },
+  card: {
+    background: "var(--jd-gradient-table-surface)",
+    border: "1px solid var(--jd-border-accent-soft)",
+    borderRadius: 14,
+    padding: "14px 16px",
+    display: "grid",
+    gap: 10,
+  },
+  cardTop: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  priorityBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: 26,
+    padding: "0 10px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 900,
+  },
+  typeBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: 26,
+    padding: "0 10px",
+    borderRadius: 999,
+    background: "var(--jd-gradient-table-surface)",
+    color: "var(--jd-text-main)",
+    border: "1px solid var(--jd-border-accent-soft)",
+    fontSize: 12,
+    fontWeight: 900,
+  },
+  typeButton: {
+    minHeight: 32,
+    padding: "0 14px",
+    borderRadius: 999,
+    border: "1px solid rgba(255,255,255,0.86)",
+    background: "rgba(56, 189, 248, 0.18)",
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: 700,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+  },
+  cardTitle: {
+    margin: 0,
+    fontSize: 18,
+    fontWeight: 800,
+    color: "#86EFAC",
+    WebkitTextFillColor: "#86EFAC",
+    lineHeight: 1.25,
+    letterSpacing: "-0.005em",
+    textShadow: "0 0 10px rgba(34,197,94,0.22)",
+  },
+  cardText: {
+    margin: 0,
+    color: "#FFFFFF",
+    fontSize: 15,
+    lineHeight: 1.5,
+    fontWeight: 450,
+  },
+  evidenceBox: {
+    display: "grid",
+    gap: 6,
+    padding: "10px 12px",
+    borderRadius: 11,
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.10)",
+  },
+  evidenceTitle: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: 750,
+    textTransform: "uppercase",
+    letterSpacing: "0.045em",
+    lineHeight: 1.2,
+  },
+  evidenceItem: {
+    color: "rgba(255,255,255,0.86)",
+    fontSize: 13,
+    lineHeight: 1.4,
+    fontWeight: 450,
+  },
+  button: {
+    minHeight: 34,
+    width: "fit-content",
+    padding: "0 12px",
+    borderRadius: 999,
+    border: "1px solid var(--jd-border-accent-soft)",
+    background: "rgba(109, 126, 219, 0.12)",
+    color: "var(--jd-text-main)",
+    fontSize: 14,
+    fontWeight: 800,
+    cursor: "pointer",
+    boxShadow: "none",
+  },
 };
