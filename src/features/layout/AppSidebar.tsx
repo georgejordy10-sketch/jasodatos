@@ -120,9 +120,9 @@ export function AppSidebar({
             style={{
               margin: "5px 0 0",
               color: "#FFFFFF",
-              fontSize: "11.5px",
-              fontWeight: 400,
-              lineHeight: 1.35,
+              fontSize: "13.5px",
+              fontWeight: 450,
+              lineHeight: 1.45,
               letterSpacing: "0.005em",
               opacity: 0.9,
             }}
@@ -157,13 +157,13 @@ export function AppSidebar({
               style={{
                 display: "flex",
                 alignItems: "center",
-                minHeight: "40px",
-                padding: "0 12px",
+                minHeight: "46px",
+                padding: "0 14px",
                 borderRadius: "14px",
                 color: "#FFFFFF",
                 textDecoration: "none",
-                fontSize: "13px",
-                fontWeight: 500,
+                fontSize: "15px",
+                fontWeight: 600,
                 letterSpacing: "0.005em",
                 lineHeight: 1.35,
                 opacity: isActive ? 1 : 0.92,
@@ -252,9 +252,9 @@ export function AppSidebar({
             <div
               style={{
                 color: "#FFFFFF",
-                fontSize: "13px",
-                fontWeight: 600,
-                lineHeight: 1.25,
+                fontSize: "15px",
+                fontWeight: 700,
+                lineHeight: 1.28,
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -267,9 +267,9 @@ export function AppSidebar({
               style={{
                 marginTop: 2,
                 color: "rgba(255,255,255,0.78)",
-                fontSize: "11.5px",
-                fontWeight: 400,
-                lineHeight: 1.25,
+                fontSize: "13px",
+                fontWeight: 500,
+                lineHeight: 1.3,
               }}
             >
               Plan Comercial v1
@@ -290,14 +290,14 @@ export function AppSidebar({
             style={{
               display: "inline-flex",
               alignItems: "center",
-              minHeight: 24,
+              minHeight: 28,
               padding: "0 10px",
               borderRadius: 999,
               background: "rgba(34,197,94,0.14)",
               border: "1px solid rgba(134,239,172,0.28)",
               color: "#BBF7D0",
-              fontSize: "11px",
-              fontWeight: 600,
+              fontSize: "13px",
+              fontWeight: 700,
             }}
           >
             Activo
@@ -306,8 +306,8 @@ export function AppSidebar({
           <span
             style={{
               color: "rgba(255,255,255,0.72)",
-              fontSize: "11px",
-              fontWeight: 400,
+              fontSize: "13px",
+              fontWeight: 500,
             }}
           >
             Panel comercial
@@ -317,10 +317,10 @@ export function AppSidebar({
         <p
           style={{
             margin: "0 0 12px",
-            fontSize: "12.5px",
-            lineHeight: 1.45,
+            fontSize: "14px",
+            lineHeight: 1.5,
             color: "#FFFFFF",
-            fontWeight: 400,
+            fontWeight: 450,
             letterSpacing: "0.005em",
             opacity: 0.9,
           }}
@@ -342,14 +342,14 @@ export function AppSidebar({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            minHeight: 34,
+            minHeight: 40,
             borderRadius: 12,
             border: "1px solid rgba(255,255,255,0.28)",
             background: "rgba(255,255,255,0.06)",
             color: "#FFFFFF",
             textDecoration: "none",
-            fontSize: "12px",
-            fontWeight: 600,
+            fontSize: "14px",
+            fontWeight: 700,
             letterSpacing: "0.005em",
           }}
         >
