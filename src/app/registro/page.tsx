@@ -523,9 +523,13 @@ async function recoverBusinessAccess() {
               <button
                 type="button"
                 style={styles.secondaryButton}
-                onClick={() => {
-                  window.location.href = redirectTo;
-                }}
+onClick={() => {
+  if (slug) {
+    window.localStorage.setItem("jasodatos.currentBusinessSlug", slug);
+  }
+
+  window.location.href = redirectTo;
+}}
               >
                 Ir a cargar archivo
               </button>
@@ -635,9 +639,14 @@ async function recoverBusinessAccess() {
   <button
     type="button"
     style={styles.confirmAccessButton}
-    onClick={() => {
-      window.location.href = recoveredBusiness.redirectTo;
-    }}
+onClick={() => {
+  window.localStorage.setItem(
+    "jasodatos.currentBusinessSlug",
+    recoveredBusiness.slug
+  );
+
+  window.location.href = recoveredBusiness.redirectTo;
+}}
   >
     Sí, acceder a este negocio
   </button>
