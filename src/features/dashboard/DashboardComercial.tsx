@@ -797,19 +797,27 @@ return {
 }, [dashboardUploadHistory]);
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
-  const businessSlugFromUrl = params.get("business")?.trim();
+  const businessSlugFromUrl = params.get("business")?.trim() ?? "";
   const businessSlugFromStorage =
     window.localStorage.getItem(BUSINESS_SLUG_STORAGE_KEY)?.trim() ?? "";
 
-  const resolvedBusinessSlug = businessSlugFromUrl || businessSlugFromStorage;
-
-  if (resolvedBusinessSlug) {
-    setCurrentBusinessSlug(resolvedBusinessSlug);
+  if (businessSlugFromUrl) {
+    setCurrentBusinessSlug(businessSlugFromUrl);
     window.localStorage.setItem(
       BUSINESS_SLUG_STORAGE_KEY,
-      resolvedBusinessSlug
+      businessSlugFromUrl
     );
+    return;
   }
+
+  if (businessSlugFromStorage) {
+    window.location.replace(
+      `/cargas?business=${encodeURIComponent(businessSlugFromStorage)}`
+    );
+    return;
+  }
+
+  setCurrentBusinessSlug("");
 }, []);
 useEffect(() => {
   if (!currentBusinessSlug) {
