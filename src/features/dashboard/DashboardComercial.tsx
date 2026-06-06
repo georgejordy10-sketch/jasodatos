@@ -3885,13 +3885,13 @@ assistantCard: {
 },
 assistantTop: {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1.4fr) minmax(260px, 0.8fr)",
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
   gap: 14,
   alignItems: "start",
 },
 assistantBody: {
   display: "grid",
-  gridTemplateColumns: "minmax(220px, 0.75fr) minmax(0, 1.25fr)",
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
   gap: 14,
   alignItems: "start",
   padding: 10,
@@ -4065,15 +4065,18 @@ assistantInsights: {
     verticalAlign: "middle",
   },
 assistantChannelRow: {
-  minWidth: 420,
-  maxWidth: 680,
+  minWidth: 0,
+  width: "100%",
+  maxWidth: "100%",
+  boxSizing: "border-box",
   padding: "14px 16px",
   borderRadius: 18,
   background: "rgba(255,255,255,0.07)",
-border: "1px solid rgba(255,255,255,0.42)",
-boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
+  border: "1px solid rgba(255,255,255,0.42)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
   display: "grid",
   gap: 8,
+  overflowWrap: "anywhere",
 },
 
 assistantChannelBadge: {
@@ -4100,6 +4103,8 @@ assistantChannelText: {
   fontSize: 14,
   fontWeight: 650,
   lineHeight: 1.45,
+  overflowWrap: "anywhere",
+  wordBreak: "break-word",
 },
 
 disabledButton: {
@@ -4801,7 +4806,7 @@ secondaryActionsList: {
 
 secondaryActionCard: {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) auto",
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
   gap: 10,
   alignItems: "center",
   padding: "10px 12px",
