@@ -1,0 +1,213 @@
+{
+  "name": "JasoJevasa - Prospecto caliente alerta interna",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2f33f4a7-e51d-475d-84c6-dc99c461fa6f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "-5253795986",
+        "text": "=🔥 Prospecto caliente en JasoJevasa\n\nNegocio: {{$json.business_name}}\nContacto: {{$json.contact_name || \"-\"}}\nWhatsApp: {{$json.whatsapp || \"-\"}}\nCiudad: {{$json.city || \"-\"}}\nEstado: {{$json.pipeline_stage}}\nTemperatura: {{$json.lead_temperature}}\nPrioridad: {{$json.lead_priority}}\nResponsable: {{$json.owner_name || \"Sin asignar\"}}\n\nAcción sugerida:\nPriorizar seguimiento comercial. Este prospecto tiene señales de interés y puede avanzar a demo, diagnóstico o propuesta.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "ebe6a573-ac9f-4cf9-b0c5-50ecb0a501de",
+      "name": "Send a text message",
+      "webhookId": "ade56c50-11ea-45eb-8b0f-85db0de65ef8",
+      "credentials": {
+        "telegramApi": {
+          "id": "vKbe7hXfeuBINirC",
+          "name": "JasoJevasa Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into public.automation_logs (\n  prospect_id,\n  workflow_name,\n  event_type,\n  channel,\n  status,\n  dedupe_key,\n  processed_at,\n  request_payload,\n  response_payload\n)\nvalues (\n  '{{ $(\"Leer prospectos calientes\").item.json.id }}'::uuid,\n  'hot_prospect_internal_alert',\n  'hot_prospect_detected',\n  'telegram_internal',\n  'sent',\n  'hot_prospect:{{ $(\"Leer prospectos calientes\").item.json.id }}:{{ $(\"Leer prospectos calientes\").item.json.pipeline_stage }}',\n  now(),\n  jsonb_build_object(\n    'business_name', '{{ $(\"Leer prospectos calientes\").item.json.business_name || \"\" }}',\n    'contact_name', '{{ $(\"Leer prospectos calientes\").item.json.contact_name || \"\" }}',\n    'city', '{{ $(\"Leer prospectos calientes\").item.json.city || \"\" }}',\n    'pipeline_stage', '{{ $(\"Leer prospectos calientes\").item.json.pipeline_stage || \"\" }}',\n    'lead_temperature', '{{ $(\"Leer prospectos calientes\").item.json.lead_temperature || \"\" }}',\n    'lead_priority', '{{ $(\"Leer prospectos calientes\").item.json.lead_priority || \"\" }}'\n  ),\n  jsonb_build_object(\n    'telegram_sent', true\n  )\n)\non conflict (dedupe_key) do nothing;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        832,
+        0
+      ],
+      "id": "1081e7ed-f67b-4915-9f9b-df13214b4a2f",
+      "name": "Registrar log alerta",
+      "credentials": {
+        "postgres": {
+          "id": "yoncdvhiMOx2ijUw",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update public.prospects\nset\n  last_automation_at = now(),\n  last_notification_channel = 'telegram_internal',\n  notification_count = coalesce(notification_count, 0) + 1,\n  automation_status = 'processed',\n  last_reminder_at = now(),\n  updated_at = now()\nwhere id = '{{ $(\"Leer prospectos calientes\").item.json.id }}'::uuid;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "45c96d81-8dd5-4b12-bf72-ff41b0c2fd12",
+      "name": "Actualizar prospecto notificado",
+      "credentials": {
+        "postgres": {
+          "id": "yoncdvhiMOx2ijUw",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "afdb8a47-8f31-40f3-a997-800f0b35cdbe",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "c683995b-e576-4509-ac61-6a9cdf44fbbc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select *\nfrom public.automation_hot_prospects\nlimit 10;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9adf29aa-b4b5-459a-9bef-760edcc53c45",
+      "name": "Leer prospectos calientes",
+      "credentials": {
+        "postgres": {
+          "id": "yoncdvhiMOx2ijUw",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Leer prospectos calientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Registrar log alerta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar log alerta": {
+      "main": [
+        [
+          {
+            "node": "Actualizar prospecto notificado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Leer prospectos calientes": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "cec368c0-70db-4579-805c-d94e90029d96",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ab7dc1ab77c9920d17320a0f7ef15f6ea640fb09f3d5068127f7c9a0cfb636a8"
+  },
+  "id": "EjcQIXWBGAS5b5QE",
+  "tags": []
+}

@@ -1,0 +1,57 @@
+CREDENCIALES USADAS EN n8n - JASOJEVASA
+
+Fecha de configuración:
+2026-06-05
+
+Workflows respaldados:
+1. JasoJevasa - Nuevo prospecto alerta interna
+2. JasoJevasa - Acción vencida alerta interna
+3. JasoJevasa - Prospecto caliente alerta interna
+4. JasoJevasa - Cliente convertido alerta interna
+
+Credencial n8n:
+JasoJevasa Telegram Bot
+
+Uso:
+Enviar alertas internas al grupo privado de Telegram "JasoJevasa Alertas".
+
+Canal:
+Telegram interno
+
+Chat ID:
+-5253795986
+
+No guardar aquí:
+- Token del bot
+- claves privadas
+- capturas con token visible
+
+
+Credencial n8n:
+Postgres account
+
+Uso:
+Conectar n8n con Supabase/Postgres para leer vistas de automatización y registrar logs.
+
+Base de datos:
+Supabase - Proyecto JasoDatosPWA
+
+Database:
+postgres
+
+SSL:
+Require
+
+Ignore SSL Issues:
+Activado solo para n8n local por error de certificado SSL.
+
+No guardar aquí:
+- Password de Supabase
+- URI completa de conexión
+- connection string con contraseña
+
+
+Regla operativa:
+Telegram se usa solo para alertas internas.
+WhatsApp no está automatizado todavía.
+automation_logs controla deduplicación de alertas.

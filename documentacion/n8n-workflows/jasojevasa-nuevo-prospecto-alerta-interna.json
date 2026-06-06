@@ -1,0 +1,212 @@
+{
+  "name": "JasoJevasa - Nuevo prospecto alerta interna",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c28b07d4-6a24-4ea6-8ebb-f1911a5d9a7d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "-5253795986",
+        "text": "=🚨 Nuevo prospecto en JasoJevasa  Negocio: {{$json.business_name}} Contacto: {{$json.contact_name || \"-\"}} WhatsApp: {{$json.whatsapp || \"-\"}} Ciudad: {{$json.city || \"-\"}} Tipo: {{$json.business_type || \"-\"}} Prioridad: {{$json.lead_priority}} Responsable: {{$json.owner_name || \"Sin asignar\"}}  Acción sugerida: Revisar el prospecto y definir primer contacto comercial.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "43ff10df-0fe5-4eb5-a3f7-c35a818d7662",
+      "name": "Send a text message",
+      "webhookId": "738a2631-d2ac-4be8-8785-e9cb6b29d2bd",
+      "credentials": {
+        "telegramApi": {
+          "id": "vKbe7hXfeuBINirC",
+          "name": "JasoJevasa Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select *\nfrom public.automation_pending_new_prospects\nlimit 10;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a0b42ac1-5799-42c4-9d74-383ebadeaebc",
+      "name": "Leer prospectos pendientes",
+      "credentials": {
+        "postgres": {
+          "id": "yoncdvhiMOx2ijUw",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into public.automation_logs (\n  prospect_id,\n  workflow_name,\n  event_type,\n  channel,\n  status,\n  dedupe_key,\n  processed_at,\n  request_payload,\n  response_payload\n)\nvalues (\n  '{{ $(\"Leer prospectos pendientes\").item.json.id }}'::uuid,\n  'new_prospect_internal_alert',\n  'prospect_created',\n  'telegram_internal',\n  'sent',\n  'new_prospect:{{ $(\"Leer prospectos pendientes\").item.json.id }}',\n  now(),\n  jsonb_build_object(\n    'business_name', '{{ $(\"Leer prospectos pendientes\").item.json.business_name || \"\" }}',\n    'contact_name', '{{ $(\"Leer prospectos pendientes\").item.json.contact_name || \"\" }}',\n    'city', '{{ $(\"Leer prospectos pendientes\").item.json.city || \"\" }}',\n    'lead_priority', '{{ $(\"Leer prospectos pendientes\").item.json.lead_priority || \"\" }}'\n  ),\n  jsonb_build_object(\n    'telegram_sent', true\n  )\n)\non conflict (dedupe_key) do nothing;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        832,
+        0
+      ],
+      "id": "17443fbc-4889-4313-84f6-b3e7d58d00d3",
+      "name": "Registrar log alerta",
+      "credentials": {
+        "postgres": {
+          "id": "yoncdvhiMOx2ijUw",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update public.prospects\nset\n  last_automation_at = now(),\n  last_notification_channel = 'telegram_internal',\n  notification_count = coalesce(notification_count, 0) + 1,\n  automation_status = 'processed',\n  last_reminder_at = now(),\n  updated_at = now()\nwhere id = '{{ $(\"Leer prospectos pendientes\").item.json.id }}'::uuid;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "a9cdc7c9-50c2-4090-b86a-2264523eaf87",
+      "name": "Actualizar prospecto notificado",
+      "credentials": {
+        "postgres": {
+          "id": "yoncdvhiMOx2ijUw",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "afdb8a47-8f31-40f3-a997-800f0b35cdbe",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "39ae7101-bcd1-49f5-a3d5-4c7fd7c873ce",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Leer prospectos pendientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Registrar log alerta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer prospectos pendientes": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar log alerta": {
+      "main": [
+        [
+          {
+            "node": "Actualizar prospecto notificado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "493b3ebf-afec-4ea4-8a62-be3652f83953",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ab7dc1ab77c9920d17320a0f7ef15f6ea640fb09f3d5068127f7c9a0cfb636a8"
+  },
+  "id": "OCs6284FHbK99y7M",
+  "tags": []
+}

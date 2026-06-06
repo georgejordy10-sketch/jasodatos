@@ -1,0 +1,213 @@
+{
+  "name": "JasoJevasa - Cliente convertido alerta interna",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e18c3290-3d64-452b-9b67-903d8c144968",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "-5253795986",
+        "text": "=✅ Prospecto convertido en cliente  Negocio: {{$json.business_name}} Contacto: {{$json.contact_name || \"-\"}} WhatsApp: {{$json.whatsapp || \"-\"}} Ciudad: {{$json.city || \"-\"}} Plan sugerido: {{$json.recommended_plan || \"-\"}} Responsable: {{$json.owner_name || \"Sin asignar\"}} Fecha de conversión: {{$json.converted_at || \"-\"}}  Acción sugerida: Revisar el cliente en el CRM y confirmar que el negocio, plan y suscripción quedaron correctamente creados.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "b76d5b01-4443-49fb-86ce-e93b3055a477",
+      "name": "Send a text message",
+      "webhookId": "13eb2d88-df88-40c9-bd68-1ecabac4b558",
+      "credentials": {
+        "telegramApi": {
+          "id": "vKbe7hXfeuBINirC",
+          "name": "JasoJevasa Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into public.automation_logs (\n  prospect_id,\n  business_id,\n  workflow_name,\n  event_type,\n  channel,\n  status,\n  dedupe_key,\n  processed_at,\n  request_payload,\n  response_payload\n)\nvalues (\n  '{{ $(\"Leer clientes convertidos\").item.json.id }}'::uuid,\n  '{{ $(\"Leer clientes convertidos\").item.json.converted_business_id }}'::uuid,\n  'converted_client_internal_alert',\n  'prospect_converted',\n  'telegram_internal',\n  'sent',\n  'converted_client:{{ $(\"Leer clientes convertidos\").item.json.converted_business_id }}',\n  now(),\n  jsonb_build_object(\n    'business_name', '{{ $(\"Leer clientes convertidos\").item.json.business_name || \"\" }}',\n    'contact_name', '{{ $(\"Leer clientes convertidos\").item.json.contact_name || \"\" }}',\n    'city', '{{ $(\"Leer clientes convertidos\").item.json.city || \"\" }}',\n    'recommended_plan', '{{ $(\"Leer clientes convertidos\").item.json.recommended_plan || \"\" }}',\n    'converted_at', '{{ $(\"Leer clientes convertidos\").item.json.converted_at || \"\" }}'\n  ),\n  jsonb_build_object(\n    'telegram_sent', true\n  )\n)\non conflict (dedupe_key) do nothing;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        832,
+        0
+      ],
+      "id": "f9c9aa84-0811-4f70-ae8a-55e1e04ebb38",
+      "name": "Registrar log alerta",
+      "credentials": {
+        "postgres": {
+          "id": "yoncdvhiMOx2ijUw",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update public.prospects\nset\n  last_automation_at = now(),\n  last_notification_channel = 'telegram_internal',\n  notification_count = coalesce(notification_count, 0) + 1,\n  automation_status = 'processed',\n  updated_at = now()\nwhere id = '{{ $(\"Leer clientes convertidos\").item.json.id }}'::uuid;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "63aded2c-e4a3-44a0-b636-ad75f67bcd46",
+      "name": "Actualizar prospecto notificado",
+      "credentials": {
+        "postgres": {
+          "id": "yoncdvhiMOx2ijUw",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "afdb8a47-8f31-40f3-a997-800f0b35cdbe",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "8001e26c-cece-4785-bab4-7d8b04051ef6",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select *\nfrom public.automation_converted_clients\nlimit 10;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "53db8c94-4ef4-4b9b-a202-60aefa66598d",
+      "name": "Leer clientes convertidos",
+      "credentials": {
+        "postgres": {
+          "id": "yoncdvhiMOx2ijUw",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Leer clientes convertidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Registrar log alerta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar log alerta": {
+      "main": [
+        [
+          {
+            "node": "Actualizar prospecto notificado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Leer clientes convertidos": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f29bac67-e72b-4df2-8f63-72765218cd7c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ab7dc1ab77c9920d17320a0f7ef15f6ea640fb09f3d5068127f7c9a0cfb636a8"
+  },
+  "id": "rzfI1vnvGed4o9Eb",
+  "tags": []
+}
