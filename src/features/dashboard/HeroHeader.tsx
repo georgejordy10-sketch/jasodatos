@@ -98,7 +98,7 @@ return (
       onClick={onAdjustMapping}
       style={styles.secondaryButton}
     >
-      Ajustar mapeo
+      Volver al mapeo
     </button>
   ) : null}
 
