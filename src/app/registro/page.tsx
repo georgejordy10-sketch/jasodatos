@@ -756,11 +756,13 @@ const styles: Record<string, CSSProperties> = {
     boxShadow: "0 12px 24px rgba(67,56,202,0.22)",
   },
 
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 14,
-  },
+grid: {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: 14,
+  width: "100%",
+  minWidth: 0,
+},
 
   recoverGrid: {
     display: "grid",
@@ -768,25 +770,29 @@ const styles: Record<string, CSSProperties> = {
     gap: 14,
   },
 
-  label: {
-    display: "grid",
-    gap: 6,
-    color: "#172554",
-    fontSize: 12,
-    fontWeight: 900,
-  },
+label: {
+  display: "grid",
+  gap: 6,
+  color: "#172554",
+  fontSize: 12,
+  fontWeight: 900,
+  minWidth: 0,
+},
 
-  input: {
-    minHeight: 44,
-    borderRadius: 14,
-    border: "1px solid rgba(15,23,42,0.14)",
-    background: "#FFFFFF",
-    color: "#0F172A",
-    padding: "0 14px",
-    fontSize: 14,
-    fontWeight: 700,
-    outline: "none",
-  },
+input: {
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
+  minHeight: 44,
+  borderRadius: 14,
+  border: "1px solid rgba(15,23,42,0.14)",
+  background: "#FFFFFF",
+  color: "#0F172A",
+  padding: "0 14px",
+  fontSize: 14,
+  fontWeight: 700,
+  outline: "none",
+},
 
   recoverBox: {
     display: "grid",
