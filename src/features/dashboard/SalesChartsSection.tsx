@@ -293,8 +293,10 @@ export default function SalesChartsSection({
                         background: colors[index % colors.length],
                       }}
                     />
-                    <span style={styles.legendLabel}>{item.producto}</span>
-                    <span style={styles.legendPct}>{pct}%</span>
+<span style={styles.legendLabel} title={item.producto}>
+  {item.producto}
+</span>
+<span style={styles.legendPct}>{pct}%</span>
                   </div>
                 );
               })}
@@ -432,14 +434,18 @@ chartBox: {
 
 pieLayout: {
   display: "grid",
-  gridTemplateColumns: "minmax(340px, 0.95fr) minmax(260px, 1fr)",
+  gridTemplateColumns: "minmax(280px, 0.95fr) minmax(0, 1fr)",
   alignItems: "center",
   gap: 22,
   minHeight: 330,
+  minWidth: 0,
+  width: "100%",
 },
 pieBox: {
   position: "relative",
   minHeight: 330,
+  minWidth: 0,
+  width: "100%",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -475,35 +481,42 @@ pieBox: {
   },
 
   legendColumn: {
-    display: "grid",
-    gap: 7,
-    alignContent: "center",
-    alignSelf: "stretch",
-    paddingLeft: 0,
-  },
+  display: "grid",
+  gap: 7,
+  alignContent: "center",
+  minWidth: 0,
+  width: "100%",
+  maxWidth: "100%",
+  overflow: "hidden",
+  paddingLeft: 0,
+},
 
 legendItem: {
   display: "grid",
-  gridTemplateColumns: "10px minmax(210px, auto) 54px",
+  gridTemplateColumns: "10px minmax(0, 1fr) 64px",
   alignItems: "center",
-  justifyContent: "start",
   gap: 10,
+  minWidth: 0,
+  width: "100%",
+  maxWidth: "100%",
   color: "#FFFFFF",
   fontSize: 16,
 },
+
 legendDot: {
   width: 9,
   height: 9,
   borderRadius: 999,
+  flexShrink: 0,
 },
 
 legendLabel: {
   color: "#FFFFFF",
   fontSize: 16,
   fontWeight: 550,
-  lineHeight: 1.42,
-  whiteSpace: "nowrap",
+  minWidth: 0,
   overflow: "hidden",
+  whiteSpace: "nowrap",
   textOverflow: "ellipsis",
 },
 
@@ -511,10 +524,11 @@ legendPct: {
   color: "#FFFFFF",
   fontSize: 16,
   fontWeight: 700,
-  lineHeight: 1.42,
-  textAlign: "left",
-  justifySelf: "start",
+  minWidth: 64,
+  textAlign: "right",
+  whiteSpace: "nowrap",
 },
+
   productActions: {
     display: "flex",
     alignItems: "center",
