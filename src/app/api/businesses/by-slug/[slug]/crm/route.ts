@@ -82,6 +82,7 @@ export async function PATCH(request: Request, context: Params) {
       );
     }
 
+    const business_name = cleanText(body.business_name);
     const owner_name = cleanText(body.owner_name);
     const commercial_email = cleanText(body.commercial_email);
     const commercial_whatsapp = cleanText(body.commercial_whatsapp);
@@ -99,10 +100,11 @@ export async function PATCH(request: Request, context: Params) {
 
     const { data: business, error } = await supabase
       .from("businesses")
-      .update({
-        owner_name,
-        commercial_email,
-        commercial_whatsapp,
+.update({
+  business_name,
+  owner_name,
+  commercial_email,
+  commercial_whatsapp,
         ciudad,
         provincia,
         pais,

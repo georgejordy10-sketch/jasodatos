@@ -31,13 +31,16 @@ type ProfileSettingsPanelProps = {
   businessSlug: string;
   initialCrmData?: InitialCrmData | null;
   onSaveCrm?: (payload: {
-    owner_name: string;
-    commercial_email: string;
-    commercial_whatsapp: string;
-    ciudad: string;
-    provincia: string;
-    pais: string;
-  }) => Promise<void>;
+  business_name: string;
+  owner_name: string;
+  commercial_email: string;
+  commercial_whatsapp: string;
+  ciudad: string;
+  provincia: string;
+  pais: string;
+  commercial_notes: string;
+  last_contact_at: string | null;
+}) => Promise<void>;
 };
 
 function normalizeNumberInputText(value: string): string {
@@ -216,17 +219,20 @@ export default function ProfileSettingsPanel({
       setSavingCrm(true);
       setCrmNotice("");
 
-      await onSaveCrm({
-        owner_name: ownerName,
-        commercial_email: commercialEmail,
-        commercial_whatsapp: normalizeWhatsappPhone(
-          settings.businessWhatsapp,
-          settings.locale
-        ),
-        ciudad,
-        provincia,
-        pais,
-      });
+await onSaveCrm({
+  business_name: settings.businessName,
+  owner_name: ownerName,
+  commercial_email: commercialEmail,
+  commercial_whatsapp: normalizeWhatsappPhone(
+    settings.businessWhatsapp,
+    settings.locale
+  ),
+  ciudad,
+  provincia,
+  pais,
+  commercial_notes: "",
+  last_contact_at: null,
+});
 
       setCrmNotice("Datos CRM guardados correctamente.");
     } catch (error) {

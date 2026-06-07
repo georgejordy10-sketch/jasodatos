@@ -997,12 +997,12 @@ const businessContextMessage = !currentBusinessSlug
 const planLabel = PLAN_LABELS[currentPlan];
 
 const businessDisplayName =
-  settings.businessName?.trim() ||
   businessCrmData?.business_name?.trim() ||
-  businessPlanAny?.businessName ||
-  businessPlanAny?.business_name ||
-  businessPlanAny?.business?.businessName ||
-  businessPlanAny?.business?.business_name ||
+  businessPlanAny?.business?.business_name?.trim?.() ||
+  businessPlanAny?.business?.businessName?.trim?.() ||
+  businessPlanAny?.business_name?.trim?.() ||
+  businessPlanAny?.businessName?.trim?.() ||
+  settings.businessName?.trim() ||
   "JasoDatos";
 
 useEffect(() => {
