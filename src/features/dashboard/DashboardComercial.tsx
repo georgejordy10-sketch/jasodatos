@@ -47,6 +47,7 @@ type Props = {
 };
 type StockRiskRow = {
   producto: string;
+  sucursal: string;
   stock: number;
   minimo: number;
   estado: string;
@@ -270,44 +271,102 @@ function isWithinRange(value: unknown, fromDate: string, toDate: string): boolea
   if (toDate && key > toDate) return false;
   return true;
 }
+
+function normalizeCommercialText(value: unknown): string {
+  return toText(value, "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function getChannelDisplayName(key: ChannelKey): string {
   if (key === "ecommerce") return "e-commerce";
   if (key === "mayorista") return "mayorista";
   return "tienda física";
 }
+
 function normalizeChannelKey(value: unknown): ChannelKey | null {
-  const raw = toText(value, "").trim().toLowerCase();
+  const normalized = normalizeCommercialText(value);
 
-  if (!raw) return null;
-
-  const normalized = raw
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  if (!normalized) return null;
 
   if (
-    normalized === "e-commerce" ||
+    normalized === "e commerce" ||
     normalized === "ecommerce" ||
     normalized === "online" ||
     normalized === "canal online" ||
-    normalized === "web"
+    normalized === "web" ||
+    normalized === "digital" ||
+    normalized === "tienda online" ||
+    normalized === "venta online"
   ) {
     return "ecommerce";
   }
 
-  if (normalized === "mayorista" || normalized === "wholesale") {
+  if (
+    normalized === "mayorista" ||
+    normalized === "mayoreo" ||
+    normalized === "wholesale" ||
+    normalized === "distribuidor" ||
+    normalized === "distribucion" ||
+    normalized === "venta mayorista"
+  ) {
     return "mayorista";
   }
 
   if (
     normalized === "tienda fisica" ||
     normalized === "fisico" ||
+    normalized === "fisica" ||
+    normalized === "presencial" ||
+    normalized === "punto de venta" ||
+    normalized === "mostrador" ||
+    normalized === "sucursal" ||
     normalized === "retail" ||
-    normalized === "local"
+    normalized === "local" ||
+    normalized === "venta en tienda"
   ) {
     return "tiendaFisica";
   }
 
   return null;
+}
+
+function toDisplayChannelName(value: unknown): string | null {
+  const normalized = normalizeCommercialText(value);
+
+  if (!normalized) return null;
+
+  const standardKey = normalizeChannelKey(normalized);
+
+  if (standardKey) {
+    return getChannelDisplayName(standardKey);
+  }
+
+  const specialLabels: Record<string, string> = {
+    whatsapp: "WhatsApp",
+    instagram: "Instagram",
+    facebook: "Facebook",
+    tiktok: "TikTok",
+    marketplace: "Marketplace",
+    mercadolibre: "Mercado Libre",
+    "mercado libre": "Mercado Libre",
+  };
+
+  if (specialLabels[normalized]) {
+    return specialLabels[normalized];
+  }
+
+  return normalized
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function isRowChannelEnabled(
@@ -320,6 +379,7 @@ function isRowChannelEnabled(
 
   return channelsEnabled[key];
 }
+
 function buildTopProducts(rows: Record<string, unknown>[]): PiePoint[] {
   const map = new Map<string, number>();
 
@@ -334,6 +394,7 @@ function buildTopProducts(rows: Record<string, unknown>[]): PiePoint[] {
     .sort((a, b) => b.ventas - a.ventas)
     .slice(0, 8);
 }
+
 function buildProductComparisonRows(
   rows: Record<string, unknown>[],
   selectedProducts: string[],
@@ -419,8 +480,7 @@ function buildProductComparisonRows(
       const rentabilidadPct =
         value.ventas > 0 ? (margenEstimado / value.ventas) * 100 : 0;
 
-      const rotacion =
-        value.stock > 0 ? value.unidades / value.stock : 0;
+      const rotacion = value.stock > 0 ? value.unidades / value.stock : 0;
 
       const unidadesPromedioDia = value.unidades / daysInPeriod;
 
@@ -456,6 +516,7 @@ function buildProductComparisonRows(
     })
     .filter((row) => row.ventas > 0 || row.unidades > 0 || row.stock > 0);
 }
+
 function buildSalesTrend(rows: Record<string, unknown>[]): SalesPoint[] {
   const map = new Map<string, number>();
 
@@ -476,65 +537,97 @@ function buildSalesTrend(rows: Record<string, unknown>[]): SalesPoint[] {
 
 function buildStockRisk(
   rows: Record<string, unknown>[],
-  stockMin: number
+  stockMin: number,
+  selectedSucursal: string = "Todas"
 ): StockRiskRow[] {
-  const rowsWithStock = rows.filter(
-    (row) => row.stock !== undefined && row.stock !== null && row.stock !== ""
-  );
-
   const minimo = Math.max(0, stockMin);
   const criticalThreshold = Math.max(1, Math.round(minimo * 0.5));
 
-  return rowsWithStock
-    .map((row) => {
-      const stock = toNumber(row.stock);
-      const producto = toText(row.producto, "Sin producto");
-      const diasCobertura = stock <= 0 ? 0 : Math.max(1, Math.round(stock / 5));
+  const grouped = new Map<
+    string,
+    {
+      producto: string;
+      sucursal: string;
+      stock: number;
+    }
+  >();
+
+  for (const row of rows) {
+    if (row.stock === undefined || row.stock === null || row.stock === "") {
+      continue;
+    }
+
+    const producto = toText(row.producto, "Sin producto");
+    const sucursal = toText(row.sucursal, "Sin sucursal");
+
+    if (selectedSucursal !== "Todas" && sucursal !== selectedSucursal) {
+      continue;
+    }
+
+    const stock = toNumber(row.stock);
+    const key = `${sucursal}__${producto}`;
+    const current = grouped.get(key);
+
+    if (!current || stock < current.stock) {
+      grouped.set(key, {
+        producto,
+        sucursal,
+        stock,
+      });
+    }
+  }
+
+  return [...grouped.values()]
+    .map((item) => {
+      const diasCobertura =
+        item.stock <= 0 ? 0 : Math.max(1, Math.round(item.stock / 5));
 
       let estado = "Óptimo";
-      if (stock <= 0) estado = "Sin inventario";
-      else if (stock <= criticalThreshold) estado = "Crítico";
-      else if (stock < minimo) estado = "En riesgo";
+      if (item.stock <= 0) estado = "Sin inventario";
+      else if (item.stock <= criticalThreshold) estado = "Crítico";
+      else if (item.stock < minimo) estado = "En riesgo";
 
       return {
-        producto,
-        stock,
+        producto: item.producto,
+        sucursal: item.sucursal,
+        stock: item.stock,
         minimo,
         estado,
         diasCobertura,
       };
     })
-    .sort((a, b) => a.stock - b.stock)
+    .filter((row) => row.stock < minimo)
+    .sort(
+      (a, b) =>
+        a.stock - b.stock ||
+        a.sucursal.localeCompare(b.sucursal) ||
+        a.producto.localeCompare(b.producto)
+    )
     .slice(0, 6);
 }
-function buildChannelData(rows: Record<string, unknown>[]) {
-  const validRows = rows.filter((row) => {
-    const channelKey = normalizeChannelKey(row.canal);
-    return channelKey !== null;
-  });
 
+function buildChannelData(rows: Record<string, unknown>[]) {
   const byDateAndChannel = new Map<string, Record<string, number | string>>();
   const channels = new Set<string>();
 
-  for (const row of validRows) {
+  for (const row of rows) {
+    const channelName = toDisplayChannelName(row.canal);
+
+    if (!channelName) continue;
+
     const fecha = toDateKey(row.fecha);
-    const channelKey = normalizeChannelKey(row.canal);
-
-    if (!channelKey) continue;
-
     const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
 
-    channels.add(channelKey);
+    channels.add(channelName);
 
     const current = byDateAndChannel.get(fecha) ?? { fecha };
-    current[channelKey] = toNumber(current[channelKey]) + venta;
+    current[channelName] = toNumber(current[channelName]) + venta;
     byDateAndChannel.set(fecha, current);
   }
 
-  const channelList = [...channels];
+  const channelList = [...channels].sort((a, b) => a.localeCompare(b, "es"));
 
   const data = [...byDateAndChannel.values()]
-    .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))
     .map((item) => {
       const normalizedItem: Record<string, number | string> = {
         fecha: String(item.fecha),
@@ -545,12 +638,13 @@ function buildChannelData(rows: Record<string, unknown>[]) {
       }
 
       return normalizedItem;
-    });
+    })
+    .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
 
   return {
     data,
     channels: channelList,
-    hasChannelData: validRows.length > 0,
+    hasChannelData: channelList.length > 0,
   };
 }
 function buildJasoBotInsights(
