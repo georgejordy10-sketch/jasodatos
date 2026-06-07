@@ -493,7 +493,11 @@ saveUploadHistory(historyItem);
 setActiveUploadView("general");
 
 if (typeof window !== "undefined") {
-  window.history.replaceState(null, "", window.location.pathname);
+  window.history.replaceState(
+    null,
+    "",
+    `${window.location.pathname}${window.location.search}`
+  );
 }
 
 setProcessedData(result);
