@@ -43,6 +43,7 @@ type Props = {
   processedData: ProcessDatasetResult;
   onClearFile?: () => void;
   onSelectAnotherFile?: () => void;
+  onAdjustMapping?: () => void;
 };
 type StockRiskRow = {
   producto: string;
@@ -707,6 +708,7 @@ export default function DashboardComercial({
   processedData,
   onClearFile,
   onSelectAnotherFile,
+  onAdjustMapping,
 }: Props) {
   const [selectedSucursal, setSelectedSucursal] = useState("Todas");
   const [selectedProducto, setSelectedProducto] = useState("Todos");
@@ -2297,17 +2299,18 @@ return (
   <div id="dashboard-export">
     <div style={styles.page}>
 {isGeneralView ? (
-  <HeroHeader
-    businessName={businessDisplayName}
-    filteredCount={filteredRows.length}
-    fileName={processedData.fileName}
-    planLabel={planLabel}
-    onSelectAnotherFile={onSelectAnotherFile}
-    onExportExcel={exportarExcel}
-    onClearFile={onClearFile}
-    onOpenPlans={() => setPlansOpen(true)}
-    onOpenSettings={() => setSettingsOpen(true)}
-  />
+<HeroHeader
+  businessName={businessDisplayName}
+  filteredCount={filteredRows.length}
+  fileName={processedData.fileName}
+  planLabel={planLabel}
+  onAdjustMapping={onAdjustMapping}
+  onSelectAnotherFile={onSelectAnotherFile}
+  onExportExcel={exportarExcel}
+  onClearFile={onClearFile}
+  onOpenPlans={() => setPlansOpen(true)}
+  onOpenSettings={() => setSettingsOpen(true)}
+/>
 ) : null}
 {isGeneralView && businessLocationLabel ? (
   <div style={styles.businessLocationBar}>

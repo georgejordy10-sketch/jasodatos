@@ -7,6 +7,7 @@ type Props = {
   filteredCount: number;
   fileName: string;
   planLabel: string;
+  onAdjustMapping?: () => void;
   onSelectAnotherFile?: () => void;
   onExportExcel: () => void;
   onClearFile?: () => void;
@@ -19,6 +20,7 @@ export default function HeroHeader({
   filteredCount,
   fileName,
   planLabel,
+  onAdjustMapping,
   onSelectAnotherFile,
   onExportExcel,
   onClearFile,
@@ -89,22 +91,32 @@ return (
         </div>
       </div>
 
-      <div style={styles.actionsPanel}>
-        <button
-          type="button"
-          style={styles.primaryButton}
-          onClick={() => onSelectAnotherFile?.()}
-        >
-          Seleccionar archivo
-        </button>
+<div style={styles.actionsPanel}>
+  {onAdjustMapping ? (
+    <button
+      type="button"
+      onClick={onAdjustMapping}
+      style={styles.secondaryButton}
+    >
+      Ajustar mapeo
+    </button>
+  ) : null}
 
-        <button
-          type="button"
-          style={styles.secondaryButton}
-          onClick={onExportExcel}
-        >
-          Exportar Excel
-        </button>
+  <button
+    type="button"
+    style={styles.primaryButton}
+    onClick={() => onSelectAnotherFile?.()}
+  >
+    Seleccionar archivo
+  </button>
+
+  <button
+    type="button"
+    style={styles.secondaryButton}
+    onClick={onExportExcel}
+  >
+    Exportar Excel
+  </button>
 
         <button
           type="button"

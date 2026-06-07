@@ -510,7 +510,18 @@ function isSameDay(a: Date, b: Date) {
     a.getDate() === b.getDate()
   );
 }
+function returnToMapping() {
+  setProcessedData(null);
+  setActiveUploadView("general");
 
+  if (typeof window !== "undefined") {
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}`
+    );
+  }
+}
 function resetFlow() {
   setFile(null);
   setLoading(false);
@@ -1447,11 +1458,12 @@ title={
           ) : null}
 
 {!isUploadComparativoView ? (
-  <DashboardComercial
-    processedData={processedData}
-    onClearFile={resetFlow}
-    onSelectAnotherFile={resetFlow}
-  />
+<DashboardComercial
+  processedData={processedData}
+  onClearFile={resetFlow}
+  onSelectAnotherFile={resetFlow}
+  onAdjustMapping={returnToMapping}
+/>
 ) : null}
   </AppShell>
 ) : null}
