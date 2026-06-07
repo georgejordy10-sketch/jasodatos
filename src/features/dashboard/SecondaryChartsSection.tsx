@@ -23,6 +23,9 @@ type ChannelRow = Record<string, number | string>;
 type Props = {
   defaultStockMin: number;
   stockRiskRows: StockRiskRow[];
+  stockSucursalOptions: string[];
+  selectedStockSucursal: string;
+  onChangeStockSucursal: (value: string) => void;
   activeChannelsCount: number;
   activeChannelsLabel: string;
   channelResult: {
@@ -124,6 +127,9 @@ function getStockStateBarStyle(estado: string): CSSProperties {
 export default function SecondaryChartsSection({
   defaultStockMin,
   stockRiskRows,
+  stockSucursalOptions,
+  selectedStockSucursal,
+  onChangeStockSucursal,
   activeChannelsCount,
   activeChannelsLabel,
   channelResult,
@@ -141,11 +147,26 @@ export default function SecondaryChartsSection({
         <Card
           title="Stock en riesgo"
           subtitle={`Productos bajo seguimiento · mínimo configurado: ${defaultStockMin}`}
-          action={
-            <button type="button" style={styles.viewAllButton} onClick={onOpenStockDetails}>
-              Ver stock
-            </button>
-          }
+action={
+  <div style={styles.stockActions}>
+    <button type="button" style={styles.viewAllButton} onClick={onOpenStockDetails}>
+      Ver stock
+    </button>
+
+    <select
+      value={selectedStockSucursal}
+      onChange={(event) => onChangeStockSucursal(event.target.value)}
+      style={styles.stockBranchSelect}
+      aria-label="Filtrar stock por sucursal"
+    >
+      {stockSucursalOptions.map((sucursal) => (
+        <option key={sucursal} value={sucursal}>
+          {sucursal === "Todas" ? "Todas las sucursales" : sucursal}
+        </option>
+      ))}
+    </select>
+  </div>
+}
           fullHeight
         >
           <div style={styles.tableShell}>
@@ -407,7 +428,24 @@ viewAllButton: {
   fontWeight: 700,
   cursor: "pointer",
 },
+stockActions: {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  flexWrap: "wrap",
+},
 
+stockBranchSelect: {
+  minHeight: 36,
+  borderRadius: 999,
+  border: "1px solid rgba(255,255,255,0.42)",
+  background: "rgba(255,255,255,0.08)",
+  color: "#FFFFFF",
+  padding: "0 12px",
+  fontSize: 12,
+  fontWeight: 800,
+  outline: "none",
+},
   tableShell: {
     overflowX: "auto",
     borderRadius: 14,

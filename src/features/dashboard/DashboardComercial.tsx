@@ -805,6 +805,7 @@ export default function DashboardComercial({
   onAdjustMapping,
 }: Props) {
   const [selectedSucursal, setSelectedSucursal] = useState("Todas");
+  const [selectedStockSucursal, setSelectedStockSucursal] = useState("Todas");
   const [selectedProducto, setSelectedProducto] = useState("Todos");
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [fromDate, setFromDate] = useState("");
@@ -1573,9 +1574,22 @@ function clearProductComparison() {
   setSelectedComparisonProducts([]);
 }
   const tendenciaVentas = useMemo(() => buildSalesTrend(filteredRows), [filteredRows]);
-  const stockRiskRows = useMemo(() => {
-  return buildStockRisk(filteredRows, settings.defaultStockMin);
-}, [filteredRows, settings.defaultStockMin]);
+  const stockSucursalOptions = useMemo(() => {
+  return [
+    "Todas",
+    ...Array.from(
+      new Set(filteredRows.map((row) => toText(row.sucursal, "Sin sucursal")))
+    ).sort((a, b) => a.localeCompare(b, "es")),
+  ];
+}, [filteredRows]);
+
+const stockRiskRows = useMemo(() => {
+  return buildStockRisk(
+    filteredRows,
+    settings.defaultStockMin,
+    selectedStockSucursal
+  );
+}, [filteredRows, settings.defaultStockMin, selectedStockSucursal]);
   const channelResult = useMemo(() => buildChannelData(filteredRows), [filteredRows]);
 
 const hasStockData = useMemo(() => {
@@ -3360,9 +3374,12 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
 ) : null}
 {shouldShowSection("inventario") ? (
   <div id="inventario" style={{ scrollMarginTop: 96 }}>
-    <SecondaryChartsSection
-      defaultStockMin={settings.defaultStockMin}
-      stockRiskRows={stockRiskRows}
+<SecondaryChartsSection
+  defaultStockMin={settings.defaultStockMin}
+  stockRiskRows={stockRiskRows}
+  stockSucursalOptions={stockSucursalOptions}
+  selectedStockSucursal={selectedStockSucursal}
+  onChangeStockSucursal={setSelectedStockSucursal}
       activeChannelsCount={activeChannels.length}
       activeChannelsLabel={activeChannelsLabel}
       channelResult={channelResult}
