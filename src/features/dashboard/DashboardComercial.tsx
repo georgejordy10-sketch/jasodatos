@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { parseFlexibleNumber } from "@/core/numbers/parseFlexibleNumber";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { ProcessDatasetResult } from "@/core/ingestion/readDataset";
 import BenchmarkingSucursales from "@/features/dashboard/BenchmarkingSucursales";
@@ -140,32 +141,7 @@ function slugifyFileName(value: string): string {
     .toLowerCase();
 }
 function toNumber(value: unknown): number {
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-
-  if (typeof value === "string") {
-    const raw = value.trim();
-    if (!raw) return 0;
-
-    const hasComma = raw.includes(",");
-    const hasDot = raw.includes(".");
-
-    if (hasComma && hasDot) {
-      const normalized = raw.replace(/\./g, "").replace(",", ".");
-      const parsed = Number(normalized);
-      return Number.isFinite(parsed) ? parsed : 0;
-    }
-
-    if (hasComma && !hasDot) {
-      const normalized = raw.replace(",", ".");
-      const parsed = Number(normalized);
-      return Number.isFinite(parsed) ? parsed : 0;
-    }
-
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  return 0;
+  return parseFlexibleNumber(value);
 }
 
 function toText(value: unknown, fallback = "-"): string {

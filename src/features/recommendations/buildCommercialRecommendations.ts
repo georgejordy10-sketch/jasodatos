@@ -1,18 +1,11 @@
+import { parseFlexibleNumber } from "@/core/numbers/parseFlexibleNumber";
 import type {
   BuildCommercialRecommendationsInput,
   CommercialRecommendation,
 } from "./types";
 
 function toNumber(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-
-  if (typeof value === "string") {
-    const normalized = value.replace(",", ".").replace(/[^\d.-]/g, "");
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  return 0;
+  return parseFlexibleNumber(value);
 }
 
 function toText(value: unknown, fallback = "Sin dato"): string {

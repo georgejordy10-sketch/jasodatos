@@ -1,3 +1,4 @@
+import { parseFlexibleNumber } from "@/core/numbers/parseFlexibleNumber";
 import type { ConfirmedMapping } from "@/core/mapping/types";
 
 export type DataQualityStatus = "good" | "warning" | "blocked";
@@ -80,35 +81,11 @@ function normalizeText(value: unknown): string {
 }
 
 function toNumber(value: unknown): number | null {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : null;
-  }
+  if (value === null || value === undefined || value === "") return null;
 
-  if (typeof value === "string") {
-    const raw = value.trim();
-    if (!raw) return null;
+  const parsed = parseFlexibleNumber(value);
 
-    const cleaned = raw.replace(/\s/g, "");
-    const hasComma = cleaned.includes(",");
-    const hasDot = cleaned.includes(".");
-
-    if (hasComma && hasDot) {
-      const normalized = cleaned.replace(/\./g, "").replace(",", ".");
-      const parsed = Number(normalized);
-      return Number.isFinite(parsed) ? parsed : null;
-    }
-
-    if (hasComma && !hasDot) {
-      const normalized = cleaned.replace(",", ".");
-      const parsed = Number(normalized);
-      return Number.isFinite(parsed) ? parsed : null;
-    }
-
-    const parsed = Number(cleaned);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  return null;
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function toDate(value: unknown): Date | null {
