@@ -78,7 +78,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const business = businesses[0];
+    const business =
+  businesses.find((item) => item.status === "active") ??
+  businesses.find((item) => item.status === "trial") ??
+  businesses[0];
 
     if (business.status === "inactive") {
       return NextResponse.json(
