@@ -220,7 +220,7 @@ export default function ProfileSettingsPanel({
       setCrmNotice("");
 
 await onSaveCrm({
-  business_name: settings.businessName,
+  business_name: settings.businessName.trim(),
   owner_name: ownerName,
   commercial_email: commercialEmail,
   commercial_whatsapp: normalizeWhatsappPhone(
