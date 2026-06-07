@@ -480,7 +480,7 @@ pieBox: {
     fontWeight: 850,
   },
 
-  legendColumn: {
+legendColumn: {
   display: "grid",
   gap: 7,
   alignContent: "center",
@@ -489,13 +489,15 @@ pieBox: {
   maxWidth: "100%",
   overflow: "hidden",
   paddingLeft: 0,
+  paddingRight: 12,
+  boxSizing: "border-box",
 },
 
 legendItem: {
   display: "grid",
   gridTemplateColumns: "10px minmax(0, 1fr) 64px",
   alignItems: "center",
-  gap: 10,
+  columnGap: 10,
   minWidth: 0,
   width: "100%",
   maxWidth: "100%",
@@ -524,6 +526,7 @@ legendPct: {
   color: "#FFFFFF",
   fontSize: 16,
   fontWeight: 700,
+  justifySelf: "end",
   minWidth: 64,
   textAlign: "right",
   whiteSpace: "nowrap",
