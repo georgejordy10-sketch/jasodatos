@@ -84,15 +84,16 @@ export async function PATCH(request: Request, context: Params) {
 
     const business_name = cleanText(body.business_name);
 
-if (!business_name) {
-  return NextResponse.json(
-    {
-      ok: false,
-      error: "El nombre del negocio es obligatorio.",
-    },
-    { status: 400 }
-  );
-}
+    if (!business_name) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "El nombre del negocio es obligatorio.",
+        },
+        { status: 400 }
+      );
+    }
+
     const owner_name = cleanText(body.owner_name);
     const commercial_email = cleanText(body.commercial_email);
     const commercial_whatsapp = cleanText(body.commercial_whatsapp);
@@ -110,17 +111,17 @@ if (!business_name) {
 
     const { data: business, error } = await supabase
       .from("businesses")
-.update({
-  business_name,
-  owner_name,
-  commercial_email,
-  commercial_whatsapp,
-  ciudad,
-  provincia,
-  pais,
-  commercial_notes,
-  last_contact_at,
-})
+      .update({
+        business_name,
+        owner_name,
+        commercial_email,
+        commercial_whatsapp,
+        ciudad,
+        provincia,
+        pais,
+        commercial_notes,
+        last_contact_at,
+      })
       .eq("slug", businessSlug)
       .select(
         "id, slug, business_name, owner_name, commercial_email, commercial_whatsapp, ciudad, provincia, pais, commercial_notes, last_contact_at"
