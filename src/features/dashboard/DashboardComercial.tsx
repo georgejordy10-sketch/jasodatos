@@ -3016,16 +3016,10 @@ color: "#FFFFFF",
       isExportingPdf={isExportingPdf}
      onCompareProducts={() => {
   startProductComparison();
-  setActiveSectionView("productos");
-  window.history.replaceState(
-    null,
-    "",
-    `${window.location.pathname}${window.location.search}#comparar-productos`
-  );
-
+  setActiveSectionView("general");
   window.setTimeout(() => {
     focusProductComparison();
-  }, 80);
+  }, 120);
 }}
       onOpenProductDetails={() => {
         setDetailModal("products");
