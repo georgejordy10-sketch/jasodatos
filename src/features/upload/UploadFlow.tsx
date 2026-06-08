@@ -1328,13 +1328,19 @@ title={
 ) : null}
         </div>
       ) : null}
-        {processedData ? (
+{processedData ? (
   <div style={dashboardLayerStyle}>
-          {processedData.rowIssues.length > 0 ? (
-            <div style={analysisWarningStyle}>
-              Se detectaron errores en {processedData.rowIssues.length} filas. Puedes revisar el archivo o continuar solo con las filas válidas.
-            </div>
-          ) : null}
+    {processedData.rowIssues.length > 0 ? (
+      <div style={analysisWarningStyle}>
+        Se detectaron errores en {processedData.rowIssues.length} filas. Puedes revisar el archivo o continuar solo con las filas válidas.
+      </div>
+    ) : null}
+
+    {processedData.validRows.length === 0 ? (
+      <div style={analysisWarningStyle}>
+        No se encontraron filas válidas para generar el dashboard. Revisa el mapeo de columnas o la calidad del archivo.
+      </div>
+    ) : null}
         {processedData.profileId === "comercial" && processedData.validRows.length > 0 ? (
 <AppShell
   businessName="Panel comercial"
