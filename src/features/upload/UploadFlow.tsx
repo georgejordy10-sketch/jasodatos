@@ -1335,7 +1335,7 @@ title={
               Se detectaron errores en {processedData.rowIssues.length} filas. Puedes revisar el archivo o continuar solo con las filas válidas.
             </div>
           ) : null}
-        {processedData.analytics && processedData.profileId === "comercial" ? (
+        {processedData.profileId === "comercial" && processedData.validRows.length > 0 ? (
 <AppShell
   businessName="Panel comercial"
   periodLabel="Carga y análisis"
