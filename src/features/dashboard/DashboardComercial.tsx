@@ -3017,7 +3017,11 @@ color: "#FFFFFF",
      onCompareProducts={() => {
   startProductComparison();
   setActiveSectionView("productos");
-  window.location.hash = "productos";
+  window.history.replaceState(
+    null,
+    "",
+    `${window.location.pathname}${window.location.search}#comparar-productos`
+  );
 
   window.setTimeout(() => {
     focusProductComparison();

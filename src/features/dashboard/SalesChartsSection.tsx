@@ -242,7 +242,7 @@ export default function SalesChartsSection({
         >
           <div style={styles.pieLayout}>
             <div style={styles.pieBox}>
-              <div style={{ width: "100%", height: 300 }}>
+              <div style={{ width: "fit-content", height: 300 }}>
                 <ResponsiveContainer>
                   <PieChart>
         <Pie
@@ -495,11 +495,11 @@ legendColumn: {
 
 legendItem: {
   display: "grid",
-  gridTemplateColumns: "10px minmax(0, 1fr) 64px",
+  gridTemplateColumns: "10px minmax(120px, 170px) 48px",
   alignItems: "center",
-  columnGap: 10,
+  columnGap: 8,
   minWidth: 0,
-  width: "100%",
+  width: "fit-content",
   maxWidth: "100%",
   color: "#FFFFFF",
   fontSize: 16,
@@ -527,7 +527,7 @@ legendPct: {
   fontSize: 16,
   fontWeight: 700,
   justifySelf: "end",
-  minWidth: 64,
+  minWidth: 48,
   textAlign: "right",
   whiteSpace: "nowrap",
 },
