@@ -2310,10 +2310,9 @@ function shareJasoAlixByWhatsapp() {
 }
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
-  setActionNotice(`Campaña copiada. Puedes pegarla en WhatsApp, redes sociales o una lista de clientes: ${texto}`);
-  setTimeout(() => {
-    setActionNotice("");
-  }, 3000);
+  setActionNotice(
+    `Campaña copiada. Puedes pegarla en WhatsApp, redes sociales o una lista de clientes: ${texto}`
+  );
 }
 
 function normalizeWhatsappNumber(value: string, locale: string): string {
@@ -3591,8 +3590,17 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     </div>
   ) : null}
       {!isExportingPdf && actionNotice ? (
-    <div style={styles.actionNotice}>{actionNotice}</div>
-  ) : null}
+      <div style={styles.actionNotice}>
+        <span>{actionNotice}</span>
+        <button
+          type="button"
+          onClick={() => setActionNotice("")}
+          style={styles.actionNoticeClose}
+        >
+          Cerrar
+        </button>
+      </div>
+    ) : null}
 </div>
 </div>
 
@@ -4085,15 +4093,30 @@ actionButton: {
 },
 actionNotice: {
   marginTop: 10,
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: 12,
   padding: "12px 14px",
   borderRadius: 14,
-  border: "1px solid rgba(255,255,255,0.22)",
-  background: "rgba(80, 96, 220, 0.22)",
+  border: "1px solid rgba(74, 222, 128, 0.45)",
+  background: "rgba(22, 163, 74, 0.18)",
   color: "#FFFFFF",
   fontSize: 14,
-  fontWeight: 500,
+  fontWeight: 600,
   lineHeight: 1.5,
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+},
+actionNoticeClose: {
+  border: "1px solid rgba(255,255,255,0.45)",
+  borderRadius: 999,
+  background: "rgba(255,255,255,0.10)",
+  color: "#FFFFFF",
+  cursor: "pointer",
+  fontSize: 12,
+  fontWeight: 800,
+  padding: "7px 12px",
+  flexShrink: 0,
 },
 
 assistantPromoBadge: {
