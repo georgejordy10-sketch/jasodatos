@@ -4,8 +4,6 @@ import { FormEvent, Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
-const ADMIN_EMAILS = ["jaso.23@hotmail.com", "georgejordy.10@gmail.com"];
-
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,11 +28,6 @@ function LoginForm() {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (!ADMIN_EMAILS.includes(normalizedEmail)) {
-      setErrorMessage("Este correo no está autorizado para entrar al panel administrador.");
-      return;
-    }
-
     setStatus("loading");
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -44,10 +37,10 @@ function LoginForm() {
 
     setStatus("idle");
 
-if (error) {
-  setErrorMessage(error.message);
-  return;
-}
+    if (error) {
+      setErrorMessage("Correo o contraseña incorrectos.");
+      return;
+    }
 
     router.replace(nextPath);
     router.refresh();
