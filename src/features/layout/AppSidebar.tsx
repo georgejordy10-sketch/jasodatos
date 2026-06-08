@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from "react";
 
-const navItems = [
-  { label: "Vista general", href: "/cargas#general" },
-  { label: "Resumen", href: "/cargas#resumen" },
-  { label: "Acciones", href: "/cargas#acciones" },
-  { label: "Comparativo", href: "/cargas#comparativo" },
-  { label: "Alertas", href: "/cargas#alertas" },
-  { label: "Ventas", href: "/cargas#ventas" },
-  { label: "Inventario", href: "/cargas#inventario" },
-  { label: "Productos", href: "/cargas#productos" },
-  { label: "Archivo", href: "/cargas#reportes" },
-  { label: "Configuración", href: "/cargas#configuracion" },
+const NAV_ITEMS = [
+  { label: "Vista general", href: "#general" },
+  { label: "Resumen", href: "#resumen" },
+  { label: "Acciones", href: "#acciones" },
+  { label: "Comparativo", href: "#comparativo" },
+  { label: "Alertas", href: "#alertas" },
+  { label: "Ventas", href: "#ventas" },
+  { label: "Inventario", href: "#inventario" },
+  { label: "Productos", href: "#productos" },
+  { label: "Archivo", href: "#reportes" },
+  { label: "Configuración", href: "#configuracion" },
   { label: "Clientes", href: "/admin/clientes" },
   { label: "JasoJevasa", href: "/admin/prospectos" },
 ];
@@ -139,7 +139,7 @@ export function AppSidebar({
           gap: "8px",
         }}
       >
-        {navItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const itemTarget = item.href.includes("#")
             ? `#${item.href.split("#")[1]}`
             : item.href;
