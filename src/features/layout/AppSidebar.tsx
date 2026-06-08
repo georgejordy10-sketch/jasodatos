@@ -13,8 +13,6 @@ const NAV_ITEMS = [
   { label: "Productos", href: "#productos" },
   { label: "Archivo", href: "#reportes" },
   { label: "Configuración", href: "#configuracion" },
-  { label: "Clientes", href: "/admin/clientes" },
-  { label: "JasoJevasa", href: "/admin/prospectos" },
 ];
 
 type AppSidebarProps = {
