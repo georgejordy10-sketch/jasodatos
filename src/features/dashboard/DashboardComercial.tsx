@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import { parseFlexibleNumber } from "@/core/numbers/parseFlexibleNumber";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { ProcessDatasetResult } from "@/core/ingestion/readDataset";
 import BenchmarkingSucursales from "@/features/dashboard/BenchmarkingSucursales";
@@ -141,7 +140,32 @@ function slugifyFileName(value: string): string {
     .toLowerCase();
 }
 function toNumber(value: unknown): number {
-  return parseFlexibleNumber(value);
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+
+  if (typeof value === "string") {
+    const raw = value.trim();
+    if (!raw) return 0;
+
+    const hasComma = raw.includes(",");
+    const hasDot = raw.includes(".");
+
+    if (hasComma && hasDot) {
+      const normalized = raw.replace(/\./g, "").replace(",", ".");
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    if (hasComma && !hasDot) {
+      const normalized = raw.replace(",", ".");
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
 }
 
 function toText(value: unknown, fallback = "-"): string {
@@ -1550,14 +1574,8 @@ function clearProductComparison() {
   setSelectedComparisonProducts([]);
 }
   const tendenciaVentas = useMemo(() => buildSalesTrend(filteredRows), [filteredRows]);
-  const stockSucursalOptions = useMemo(() => {
-  return [
-    "Todas",
-    ...Array.from(
-      new Set(filteredRows.map((row) => toText(row.sucursal, "Sin sucursal")))
-    ).sort((a, b) => a.localeCompare(b, "es")),
-  ];
-}, [filteredRows]);
+
+  const channelResult = useMemo(() => buildChannelData(filteredRows), [filteredRows]);
 
 const stockRiskRows = useMemo(() => {
   return buildStockRisk(
@@ -1566,7 +1584,15 @@ const stockRiskRows = useMemo(() => {
     selectedStockSucursal
   );
 }, [filteredRows, settings.defaultStockMin, selectedStockSucursal]);
-  const channelResult = useMemo(() => buildChannelData(filteredRows), [filteredRows]);
+
+const stockSucursalOptions = useMemo(() => {
+  return [
+    "Todas",
+    ...Array.from(
+      new Set(filteredRows.map((row) => toText(row.sucursal, "Sin sucursal")))
+    ).sort((a, b) => a.localeCompare(b, "es")),
+  ];
+}, [filteredRows]);
 
 const hasStockData = useMemo(() => {
   return filteredRows.some(
@@ -2285,6 +2311,9 @@ function shareJasoAlixByWhatsapp() {
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
   setActionNotice(`Campaña copiada. Puedes pegarla en WhatsApp, redes sociales o una lista de clientes: ${texto}`);
+  setTimeout(() => {
+    setActionNotice("");
+  }, 3000);
 }
 
 function normalizeWhatsappNumber(value: string, locale: string): string {
@@ -2361,6 +2390,21 @@ function enviarPromoWhatsApp() {
 
   window.open(url, "_blank");
 }
+const fileDateRangeLabel = useMemo(() => {
+  const dateKeys = processedData.validRows
+    .map((row) => toDateKey(row.fecha))
+    .filter(Boolean)
+    .sort();
+
+  if (dateKeys.length === 0) {
+    return "Periodo del archivo: no detectado";
+  }
+
+  const startDate = dateKeys[0];
+  const endDate = dateKeys[dateKeys.length - 1];
+
+  return `Periodo del archivo: ${startDate} al ${endDate}`;
+}, [processedData.validRows]);
 
 function clearFilters() {
   setSelectedSucursal("Todas");
@@ -2414,19 +2458,20 @@ return (
   </div>
 ) : null}
 {isGeneralView ? (
-  <FilterBar
-    selectedSucursal={selectedSucursal}
-    selectedProducto={selectedProducto}
-    sucursalOptions={sucursalOptions}
-    productoOptions={productoOptions}
-    fromDate={fromDate}
-    toDate={toDate}
-    onChangeSucursal={setSelectedSucursal}
-    onChangeProducto={setSelectedProducto}
-    onChangeFromDate={setFromDate}
-    onChangeToDate={setToDate}
-    onClearFilters={clearFilters}
-  />
+<FilterBar
+  selectedSucursal={selectedSucursal}
+  selectedProducto={selectedProducto}
+  sucursalOptions={sucursalOptions}
+  productoOptions={productoOptions}
+  fromDate={fromDate}
+  toDate={toDate}
+  fileDateRangeLabel={fileDateRangeLabel}
+  onChangeSucursal={setSelectedSucursal}
+  onChangeProducto={setSelectedProducto}
+  onChangeFromDate={setFromDate}
+  onChangeToDate={setToDate}
+  onClearFilters={clearFilters}
+/>
 ) : null}
 <ProfileSettingsPanel
   open={settingsOpen}
@@ -2999,21 +3044,32 @@ color: "#FFFFFF",
 ) : null}
 {shouldShowSection("ventas") ? (
   <div id="ventas" style={{ scrollMarginTop: 96 }}>
-    <SalesChartsSection
-      tendenciaVentas={tendenciaVentas}
-      topProductos={topProductos}
-      ventasTotales={ventasTotales}
-      axisWidth={axisWidth}
-      tooltipStyle={tooltipStyle}
-      colors={COLORS}
-      formatCompactMoney={formatCompactMoney}
-      formatMoney={(value) =>
-        formatMoney(value, settings.locale, settings.currencyCode)
-      }
-      isExportingPdf={isExportingPdf}
-     onCompareProducts={() => {
+<SalesChartsSection
+  tendenciaVentas={tendenciaVentas}
+  topProductos={topProductos}
+  ventasTotales={ventasTotales}
+  axisWidth={axisWidth}
+  tooltipStyle={tooltipStyle}
+  colors={COLORS}
+  formatCompactMoney={formatCompactMoney}
+  formatMoney={(value) =>
+    formatMoney(value, settings.locale, settings.currencyCode)
+  }
+  isExportingPdf={isExportingPdf}
+  fileDateRangeLabel={fileDateRangeLabel}
+  onCompareProducts={() => {
   startProductComparison();
   setActiveSectionView("general");
+
+  if (typeof window !== "undefined") {
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}`
+    );
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  }
+
   window.setTimeout(() => {
     focusProductComparison();
   }, 120);
@@ -3535,16 +3591,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
     </div>
   ) : null}
       {!isExportingPdf && actionNotice ? (
-    <div style={styles.actionNotice}>
-      <span>{actionNotice}</span>
-      <button
-        type="button"
-        onClick={() => setActionNotice("")}
-        style={styles.actionNoticeClose}
-      >
-        Cerrar
-      </button>
-    </div>
+    <div style={styles.actionNotice}>{actionNotice}</div>
   ) : null}
 </div>
 </div>
@@ -4038,30 +4085,15 @@ actionButton: {
 },
 actionNotice: {
   marginTop: 10,
-  display: "flex",
-  alignItems: "flex-start",
-  justifyContent: "space-between",
-  gap: 12,
   padding: "12px 14px",
   borderRadius: 14,
-  border: "1px solid rgba(74, 222, 128, 0.45)",
-  background: "rgba(22, 163, 74, 0.18)",
+  border: "1px solid rgba(255,255,255,0.22)",
+  background: "rgba(80, 96, 220, 0.22)",
   color: "#FFFFFF",
   fontSize: 14,
-  fontWeight: 600,
+  fontWeight: 500,
   lineHeight: 1.5,
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-},
-actionNoticeClose: {
-  border: "1px solid rgba(255,255,255,0.45)",
-  borderRadius: 999,
-  background: "rgba(255,255,255,0.10)",
-  color: "#FFFFFF",
-  cursor: "pointer",
-  fontSize: 12,
-  fontWeight: 800,
-  padding: "7px 12px",
-  flexShrink: 0,
 },
 
 assistantPromoBadge: {

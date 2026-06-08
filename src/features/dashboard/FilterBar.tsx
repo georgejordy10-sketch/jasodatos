@@ -9,6 +9,7 @@ type Props = {
   productoOptions: string[];
   fromDate: string;
   toDate: string;
+  fileDateRangeLabel?: string;
   onChangeSucursal: (value: string) => void;
   onChangeProducto: (value: string) => void;
   onChangeFromDate: (value: string) => void;
@@ -76,6 +77,7 @@ export default function FilterBar({
   productoOptions,
   fromDate,
   toDate,
+  fileDateRangeLabel,
   onChangeSucursal,
   onChangeProducto,
   onChangeFromDate,
@@ -85,9 +87,15 @@ export default function FilterBar({
   return (
     <section style={styles.filterBar} aria-label="Filtros del análisis">
       <div style={styles.header}>
-        <div style={styles.titleWrap}>
-          <span style={styles.accentDot} />
-          <h2 style={styles.title}>Filtros</h2>
+        <div style={styles.titleBlock}>
+          <div style={styles.titleWrap}>
+            <span style={styles.accentDot} />
+            <h2 style={styles.title}>Filtros</h2>
+          </div>
+
+          {fileDateRangeLabel ? (
+            <p style={styles.fileDateRange}>{fileDateRangeLabel}</p>
+          ) : null}
         </div>
 
         <button
@@ -129,6 +137,7 @@ export default function FilterBar({
     </section>
   );
 }
+
 const styles: Record<string, CSSProperties> = {
   filterBar: {
     background: "var(--jd-gradient-container)",
@@ -141,12 +150,18 @@ const styles: Record<string, CSSProperties> = {
     gap: 8,
   },
 
-header: {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 10,
-},
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+
+  titleBlock: {
+    display: "grid",
+    gap: 4,
+    minWidth: 0,
+  },
 
   titleWrap: {
     display: "inline-flex",
@@ -171,6 +186,16 @@ header: {
     letterSpacing: "-0.02em",
   },
 
+fileDateRange: {
+  margin: 0,
+  color: "rgba(255,255,255,0.9)",
+  fontSize: 16,
+  fontWeight: 400,
+  lineHeight: 1.25,
+  letterSpacing: "0.01em",
+  paddingLeft: 16,
+},
+
   controlsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
@@ -183,18 +208,19 @@ header: {
     minWidth: 0,
   },
 
-filterLabel: {
-  color: "rgba(255,255,255,0.86)",
-  fontSize: 15,
-  fontWeight: 500,
-  lineHeight: 1.1,
-  paddingLeft: 8,
-  transform: "translateY(-2px)",
-},
+  filterLabel: {
+    color: "rgba(255,255,255,0.86)",
+    fontSize: 15,
+    fontWeight: 500,
+    lineHeight: 1.1,
+    paddingLeft: 8,
+    transform: "translateY(-2px)",
+  },
+
   filterControl: {
     width: "100%",
-background: "rgba(255,255,255,0.92)",
-color: "#111827",
+    background: "rgba(255,255,255,0.92)",
+    color: "#111827",
     borderRadius: 10,
     minHeight: 40,
     padding: "0 12px",
@@ -205,18 +231,18 @@ color: "#111827",
     boxShadow: "0 5px 12px rgba(15, 23, 42, 0.025)",
   },
 
-clearButtonTop: {
-  minHeight: 36,
-  borderRadius: 999,
-  border: "1px solid rgba(255,255,255,0.86)",
-  background: "rgba(56, 189, 248, 0.18)",
-  color: "#FFFFFF",
-  fontWeight: 700,
-  fontSize: 14,
-  cursor: "pointer",
-  padding: "0 18px",
-  whiteSpace: "nowrap",
-  boxShadow:
-    "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
-},
+  clearButtonTop: {
+    minHeight: 36,
+    borderRadius: 999,
+    border: "1px solid rgba(255,255,255,0.86)",
+    background: "rgba(56, 189, 248, 0.18)",
+    color: "#FFFFFF",
+    fontWeight: 700,
+    fontSize: 14,
+    cursor: "pointer",
+    padding: "0 18px",
+    whiteSpace: "nowrap",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 10px rgba(56,189,248,0.08)",
+  },
 };

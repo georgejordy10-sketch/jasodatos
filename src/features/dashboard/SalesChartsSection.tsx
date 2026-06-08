@@ -38,6 +38,7 @@ type Props = {
   onOpenProductDetails?: () => void;
   onCompareProducts?: () => void;
   isExportingPdf?: boolean;
+  fileDateRangeLabel?: string;
 };
 
 function Card({
@@ -87,16 +88,21 @@ export default function SalesChartsSection({
   onOpenProductDetails,
   onCompareProducts,
   isExportingPdf = false,
+  fileDateRangeLabel,
 }: Props) {
   return (
     <section style={styles.mainCharts}>
       <div id="tendencia-ventas" style={{ height: "100%" }}>
         <Card
-          title="Movimiento de ventas"
-          subtitle="Evolución del período frente a la referencia anterior."
-          fullHeight
-        >
-          <div style={styles.chartTopBar}>
+  title="Movimiento de ventas"
+  subtitle="Evolución del período frente a la referencia anterior."
+  fullHeight
+>
+  {fileDateRangeLabel ? (
+    <p style={styles.salesDateRange}>{fileDateRangeLabel}</p>
+  ) : null}
+
+  <div style={styles.chartTopBar}>
             <div style={styles.customLegend}>
               <div style={styles.customLegendItem}>
                 <span style={styles.legendLineSolid} />
@@ -482,40 +488,50 @@ pieBox: {
 
 legendColumn: {
   display: "grid",
-  gap: 7,
+  gap: 9,
   alignContent: "center",
+  justifyItems: "start",
   minWidth: 0,
   width: "100%",
   maxWidth: "100%",
   overflow: "hidden",
-  paddingLeft: 0,
-  paddingRight: 12,
+  paddingLeft: 6,
+  paddingRight: 34,
   boxSizing: "border-box",
 },
 
 legendItem: {
   display: "grid",
-  gridTemplateColumns: "10px minmax(150px, 210px) 52px",
+  gridTemplateColumns: "10px minmax(0, 215px) 62px",
   alignItems: "center",
-  columnGap: 12,
+  columnGap: 24,
   minWidth: 0,
-  width: "284px",
+  width: "335px",
   maxWidth: "100%",
   color: "#FFFFFF",
   fontSize: 16,
 },
+
 legendDot: {
   width: 9,
   height: 9,
   borderRadius: 999,
   flexShrink: 0,
 },
-
+salesDateRange: {
+  margin: "2px 0 4px",
+  color: "rgba(255,255,255,0.9)",
+  fontSize: 16,
+  fontWeight: 400,
+  lineHeight: 1.25,
+  letterSpacing: "0.01em",
+},
 legendLabel: {
   color: "#FFFFFF",
   fontSize: 16,
   fontWeight: 550,
   minWidth: 0,
+  paddingRight: 10,
   overflow: "hidden",
   whiteSpace: "nowrap",
   textOverflow: "ellipsis",
@@ -526,7 +542,8 @@ legendPct: {
   fontSize: 16,
   fontWeight: 700,
   justifySelf: "end",
-  minWidth: 52,
+  minWidth: 62,
+  paddingLeft: 14,
   textAlign: "right",
   whiteSpace: "nowrap",
 },
