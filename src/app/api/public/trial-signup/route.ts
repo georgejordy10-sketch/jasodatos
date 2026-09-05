@@ -71,21 +71,31 @@ function hashVerificationCode(code: string) {
 
 async function buildUniqueSlug(baseSlug: string) {
   const supabase = createAdminSupabaseClient();
+
   const fallback = baseSlug || "negocio";
   let candidate = fallback;
 
   for (let index = 1; index <= 30; index += 1) {
-    const { data, error } = await supabase
+    const result = await supabase
       .from("businesses")
       .select("id")
       .eq("slug", candidate)
-      .maybeSingle();
+      .limit(1);
 
-    if (error) {
-      throw new Error(error.message);
+    if (result.error) {
+      console.error(
+        "[trial-signup] Error comprobando slug:",
+        result.error
+      );
+
+      throw new Error(
+        "Error comprobando disponibilidad del nombre del negocio."
+      );
     }
 
-    if (!data) return candidate;
+    if (!result.data || result.data.length === 0) {
+      return candidate;
+    }
 
     candidate = `${fallback}-${index + 1}`;
   }
@@ -319,39 +329,44 @@ export async function POST(request: Request) {
 
     const supabase = createAdminSupabaseClient();
 
-    stage = "check_existing_email";
+stage = "check_existing_email";
 
-    console.log(
-      `[trial-signup] Iniciando etapa: ${stage}`
-    );
+console.log(
+  `[trial-signup] Iniciando etapa: ${stage}`
+);
 
-    const {
-      data: existingEmail,
-      error: existingEmailError,
-    } = await supabase
-      .from("businesses")
-      .select("id")
-      .eq("commercial_email", commercialEmail)
-      .maybeSingle();
+const existingEmailResult = await supabase
+  .from("businesses")
+  .select("id")
+  .eq("commercial_email", commercialEmail)
+  .limit(1);
 
-    if (existingEmailError) {
-      throw new Error(
-        `Error comprobando correo existente: ${existingEmailError.message}`
-      );
+if (existingEmailResult.error) {
+  console.error(
+    "[trial-signup] Error comprobando correo:",
+    existingEmailResult.error
+  );
+
+  throw new Error(
+    "Error comprobando el correo comercial."
+  );
+}
+
+if (
+  existingEmailResult.data &&
+  existingEmailResult.data.length > 0
+) {
+  return NextResponse.json(
+    {
+      ok: false,
+      error:
+        "Ya existe un negocio registrado con este correo comercial.",
+    },
+    {
+      status: 409,
     }
-
-    if (existingEmail?.id) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Ya existe un negocio registrado con este correo comercial.",
-        },
-        {
-          status: 409,
-        }
-      );
-    }
+  );
+}
 
     stage = "insert_business";
 
