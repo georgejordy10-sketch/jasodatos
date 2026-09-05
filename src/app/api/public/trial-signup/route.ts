@@ -112,7 +112,10 @@ async function sendVerificationEmail({
     }
 
     console.log(`[JasoDatos DEV] Código de verificación para ${to}: ${code}`);
-    return { sent: false };
+
+    return {
+      sent: false,
+    };
   }
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -129,13 +132,30 @@ async function sendVerificationEmail({
       html: `
         <div style="font-family: Arial, sans-serif; color: #0f172a;">
           <h2>Verifica tu correo para activar tu prueba gratis</h2>
-          <p>Hola. Recibimos el registro del negocio <strong>${businessName}</strong>.</p>
+
+          <p>
+            Hola. Recibimos el registro del negocio
+            <strong>${businessName}</strong>.
+          </p>
+
           <p>Tu código de verificación es:</p>
-          <div style="font-size: 28px; font-weight: 800; letter-spacing: 4px; margin: 18px 0;">
+
+          <div
+            style="
+              font-size: 28px;
+              font-weight: 800;
+              letter-spacing: 4px;
+              margin: 18px 0;
+            "
+          >
             ${code}
           </div>
+
           <p>Este código vence en 10 minutos.</p>
-          <p>Si no solicitaste este registro, puedes ignorar este correo.</p>
+
+          <p>
+            Si no solicitaste este registro, puedes ignorar este correo.
+          </p>
         </div>
       `,
       text: `Tu código de verificación de JasoDatos es: ${code}. Este código vence en 10 minutos.`,
@@ -144,131 +164,260 @@ async function sendVerificationEmail({
 
   if (!response.ok) {
     const raw = await response.text();
-    throw new Error(raw || "No se pudo enviar el correo de verificación.");
+
+    throw new Error(
+      raw || "No se pudo enviar el correo de verificación."
+    );
   }
 
-  return { sent: true };
+  return {
+    sent: true,
+  };
 }
 
 export async function POST(request: Request) {
+  let stage = "inicio";
+
   try {
+    stage = "leer_request";
+
     const body = (await request.json()) as TrialSignupBody;
+
+    stage = "normalizar_datos";
 
     const businessName = cleanText(body.business_name);
     const ownerName = cleanText(body.owner_name);
-    const commercialEmail = cleanText(body.commercial_email).toLowerCase();
+    const commercialEmail = cleanText(
+      body.commercial_email
+    ).toLowerCase();
+
     const rawWhatsapp = cleanText(body.commercial_whatsapp);
     const locale = cleanText(body.locale) || "es-EC";
     const ciudad = cleanText(body.ciudad);
     const provincia = cleanText(body.provincia);
     const pais = cleanText(body.pais) || "Ecuador";
-    const commercialWhatsapp = normalizeWhatsappPhone(rawWhatsapp, locale);
+
+    const commercialWhatsapp = normalizeWhatsappPhone(
+      rawWhatsapp,
+      locale
+    );
+
+    stage = "validar_datos";
 
     if (!businessName) {
       return NextResponse.json(
-        { ok: false, error: "El nombre del negocio es obligatorio." },
-        { status: 400 }
+        {
+          ok: false,
+          error: "El nombre del negocio es obligatorio.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     if (!ownerName) {
       return NextResponse.json(
-        { ok: false, error: "El nombre del responsable es obligatorio." },
-        { status: 400 }
+        {
+          ok: false,
+          error: "El nombre del responsable es obligatorio.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     if (!commercialEmail || !commercialEmail.includes("@")) {
       return NextResponse.json(
-        { ok: false, error: "Ingresa un correo comercial válido." },
-        { status: 400 }
+        {
+          ok: false,
+          error: "Ingresa un correo comercial válido.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     if (!commercialWhatsapp || commercialWhatsapp.length < 8) {
       return NextResponse.json(
-        { ok: false, error: "Ingresa un WhatsApp válido." },
-        { status: 400 }
+        {
+          ok: false,
+          error: "Ingresa un WhatsApp válido.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     if (!ciudad) {
       return NextResponse.json(
-        { ok: false, error: "La ciudad es obligatoria." },
-        { status: 400 }
+        {
+          ok: false,
+          error: "La ciudad es obligatoria.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     if (!provincia) {
       return NextResponse.json(
-        { ok: false, error: "La provincia es obligatoria." },
-        { status: 400 }
+        {
+          ok: false,
+          error: "La provincia es obligatoria.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     if (!pais) {
       return NextResponse.json(
-        { ok: false, error: "El país es obligatorio." },
-        { status: 400 }
+        {
+          ok: false,
+          error: "El país es obligatorio.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
+    stage = "generar_codigo_verificacion";
+
     const now = new Date();
+
     const verificationCode = generateVerificationCode();
-    const verificationCodeHash = hashVerificationCode(verificationCode);
-    const verificationExpiresAt = new Date(now.getTime() + 10 * 60 * 1000);
-    const slug = await buildUniqueSlug(slugify(businessName));
+
+    const verificationCodeHash =
+      hashVerificationCode(verificationCode);
+
+    const verificationExpiresAt = new Date(
+      now.getTime() + 10 * 60 * 1000
+    );
+
+    stage = "build_unique_slug";
+
+    console.log(
+      `[trial-signup] Iniciando etapa: ${stage}`
+    );
+
+    const slug = await buildUniqueSlug(
+      slugify(businessName)
+    );
+
+    stage = "crear_cliente_supabase";
+
+    console.log(
+      `[trial-signup] Iniciando etapa: ${stage}`
+    );
 
     const supabase = createAdminSupabaseClient();
 
-    const { data: existingEmail } = await supabase
+    stage = "check_existing_email";
+
+    console.log(
+      `[trial-signup] Iniciando etapa: ${stage}`
+    );
+
+    const {
+      data: existingEmail,
+      error: existingEmailError,
+    } = await supabase
       .from("businesses")
       .select("id")
       .eq("commercial_email", commercialEmail)
       .maybeSingle();
 
+    if (existingEmailError) {
+      throw new Error(
+        `Error comprobando correo existente: ${existingEmailError.message}`
+      );
+    }
+
     if (existingEmail?.id) {
       return NextResponse.json(
         {
           ok: false,
-          error: "Ya existe un negocio registrado con este correo comercial.",
+          error:
+            "Ya existe un negocio registrado con este correo comercial.",
         },
-        { status: 409 }
+        {
+          status: 409,
+        }
       );
     }
 
-    const { data: business, error: businessError } = await supabase
+    stage = "insert_business";
+
+    console.log(
+      `[trial-signup] Iniciando etapa: ${stage}`
+    );
+
+    const {
+      data: business,
+      error: businessError,
+    } = await supabase
       .from("businesses")
       .insert({
         business_name: businessName,
         slug,
         plan: "ultra",
         status: "suspended",
+
         owner_name: ownerName,
         owner_email: commercialEmail,
         owner_whatsapp: commercialWhatsapp,
+
         commercial_email: commercialEmail,
         commercial_whatsapp: commercialWhatsapp,
+
         ciudad,
         provincia,
         pais,
+
         commercial_notes:
           "Registro automático desde prueba gratis. Pendiente de verificación por correo.",
+
         signup_source: "landing_trial",
-        email_verification_code_hash: verificationCodeHash,
-        email_verification_expires_at: verificationExpiresAt.toISOString(),
+
+        email_verification_code_hash:
+          verificationCodeHash,
+
+        email_verification_expires_at:
+          verificationExpiresAt.toISOString(),
       })
       .select(
-        "id, slug, business_name, plan, status, ciudad, provincia, pais, commercial_email"
+        `
+          id,
+          slug,
+          business_name,
+          plan,
+          status,
+          ciudad,
+          provincia,
+          pais,
+          commercial_email
+        `
       )
       .single();
 
     if (businessError) {
-      return NextResponse.json(
-        { ok: false, error: businessError.message },
-        { status: 500 }
+      throw new Error(
+        `Error creando negocio: ${businessError.message}`
       );
     }
+
+    stage = "send_verification_email";
+
+    console.log(
+      `[trial-signup] Iniciando etapa: ${stage}`
+    );
 
     const emailResult = await sendVerificationEmail({
       to: commercialEmail,
@@ -276,21 +425,73 @@ export async function POST(request: Request) {
       code: verificationCode,
     });
 
+    stage = "registro_completado";
+
+    console.log(
+      `[trial-signup] Registro completado correctamente. Negocio: ${business.id}`
+    );
+
     return NextResponse.json({
       ok: true,
+
       verification_required: true,
+
       business,
+
       slug: business.slug,
-      message: "Te enviamos un código de verificación al correo registrado.",
+
+      message:
+        "Te enviamos un código de verificación al correo registrado.",
+
       debug_verification_code:
-        !emailResult.sent && process.env.NODE_ENV !== "production"
+        !emailResult.sent &&
+        process.env.NODE_ENV !== "production"
           ? verificationCode
           : undefined,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "No se pudo crear la prueba.";
+    console.error(
+      `[trial-signup] FALLÓ EN ETAPA: ${stage}`
+    );
 
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    console.error(
+      "[trial-signup] ERROR COMPLETO:",
+      error
+    );
+
+    if (error instanceof Error) {
+      console.error(
+        "[trial-signup] MESSAGE:",
+        error.message
+      );
+
+      console.error(
+        "[trial-signup] STACK:",
+        error.stack
+      );
+
+      console.error(
+        "[trial-signup] CAUSE:",
+        "cause" in error
+          ? error.cause
+          : undefined
+      );
+    }
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo crear la prueba.";
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: message,
+        diagnostic_stage: stage,
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }
