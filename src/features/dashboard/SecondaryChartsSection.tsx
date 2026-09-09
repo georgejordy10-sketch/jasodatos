@@ -15,7 +15,6 @@ type StockRiskRow = {
   stock: number;
   minimo: number;
   estado: string;
-  diasCobertura: number;
 };
 
 type ChannelRow = Record<string, number | string>;
@@ -177,7 +176,6 @@ action={
                   <th style={styles.thCompact}>Stock</th>
                   <th style={styles.thCompact}>Mínimo</th>
                   <th style={styles.thCompact}>Situación</th>
-                  <th style={styles.thCompact}>Cobertura</th>
                 </tr>
               </thead>
 
@@ -194,7 +192,6 @@ action={
   </div>
 </div>
                     </td>
-                    <td style={styles.tdCompact}>-</td>
                   </tr>
                 ) : (
                   stockRiskRows.map((row, index) => {
@@ -212,7 +209,6 @@ action={
   </div>
 </div>
                         </td>
-                        <td style={styles.tdCompact}>{row.diasCobertura} días</td>
                       </tr>
                     );
                   })

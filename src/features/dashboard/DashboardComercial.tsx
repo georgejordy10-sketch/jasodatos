@@ -51,7 +51,6 @@ type StockRiskRow = {
   stock: number;
   minimo: number;
   estado: string;
-  diasCobertura: number;
 };
 
 type SalesPoint = {
@@ -579,8 +578,6 @@ function buildStockRisk(
 
   return [...grouped.values()]
     .map((item) => {
-      const diasCobertura =
-        item.stock <= 0 ? 0 : Math.max(1, Math.round(item.stock / 5));
 
       let estado = "Óptimo";
       if (item.stock <= 0) estado = "Sin inventario";
@@ -593,7 +590,6 @@ function buildStockRisk(
         stock: item.stock,
         minimo,
         estado,
-        diasCobertura,
       };
     })
     .filter((row) => row.stock < minimo)
@@ -3858,7 +3854,6 @@ function DetailModal({
 <th style={detailStyles.th}>Unidades disponibles</th>
 <th style={detailStyles.th}>Mínimo esperado</th>
 <th style={detailStyles.th}>Situación</th>
-<th style={detailStyles.th}>Días estimados</th>
 <th style={detailStyles.th}>Qué hacer</th>
                 </tr>
               </thead>
@@ -3877,7 +3872,6 @@ function DetailModal({
     ? "Sin inventario"
     : row.estado}
 </td>
-                    <td style={detailStyles.td}>{row.diasCobertura} días</td>
                     <td style={detailStyles.td}>
 {row.estado === "Crítico"
   ? "Revisa este producto primero. Puede quedarse sin unidades para vender."
