@@ -709,11 +709,11 @@ function buildJasoBotInsights(
   let promoWhatsApp = "";
   let tipoPromo = "general";
 
-  if (productosCriticos.length > 0) {
-    const critico = productosCriticos[0].producto;
-    tipoPromo = "liquidacion";
-    promoWhatsApp = `Buen día. Oferta rápida: ${critico} con precio especial por liquidación de inventario. Disponible hasta agotar existencias. Responde QUIERO para reservar.`;
-  } else if (lowSucursal && topProducto) {
+if (productosCriticos.length > 0) {
+  const critico = productosCriticos[0].producto;
+  tipoPromo = "reposicion";
+  promoWhatsApp = `Alerta de inventario: ${critico} está en nivel crítico. Revisa disponibilidad y planifica reposición antes de realizar acciones comerciales que incrementen su demanda.`;
+} else if (lowSucursal && topProducto) {
     const top = topProducto[0];
     tipoPromo = "impulso_sucursal";
 
