@@ -773,10 +773,11 @@ if (productosCriticos.length > 0) {
     insights.push(`Canal con mayor aporte: ${nombreCanalTop}`);
   }
 
-  if (productosCriticos.length > 0) {
-    const nombresCriticos = productosCriticos.map((p) => p.producto).join(", ");
-    insights[1] = `Productos críticos: ${nombresCriticos}`;
-  }
+if (productosCriticos.length > 0) {
+  const nombresCriticos = productosCriticos.map((p) => p.producto).join(", ");
+  insights[0] = `Prioridad: reponer ${productosCriticos[0].producto}`;
+  insights[1] = `Productos críticos: ${nombresCriticos}`;
+}
 
   return {
     mensajePrincipal,
