@@ -696,10 +696,21 @@ function buildJasoBotInsights(
   const lowSucursal = [...ventasPorSucursal.entries()].sort((a, b) => a[1] - b[1])[0];
   const topCanal = [...ventasPorCanal.entries()].sort((a, b) => b[1] - a[1])[0];
 
-  const productosCriticos = productosConStock
-    .filter((item) => item.stock <= stockMin)
-    .sort((a, b) => a.stock - b.stock)
-    .slice(0, 3);
+const productosCriticosMap = new Map<string, number>();
+
+for (const item of productosConStock) {
+  const stockActual = productosCriticosMap.get(item.producto);
+
+  if (stockActual === undefined || item.stock < stockActual) {
+    productosCriticosMap.set(item.producto, item.stock);
+  }
+}
+
+const productosCriticos = [...productosCriticosMap.entries()]
+  .map(([producto, stock]) => ({ producto, stock }))
+  .filter((item) => item.stock <= stockMin)
+  .sort((a, b) => a.stock - b.stock)
+  .slice(0, 3);
 
   const recomendaciones: string[] = commercialRecommendations.map(
     (item) => `${item.title}. ${item.message}`
