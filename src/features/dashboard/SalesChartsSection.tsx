@@ -95,7 +95,7 @@ export default function SalesChartsSection({
       <div id="tendencia-ventas" style={{ height: "100%" }}>
         <Card
   title="Movimiento de ventas"
-  subtitle="Evolución del período frente a la referencia anterior."
+  subtitle="Evolución de las ventas durante el período analizado."
   fullHeight
 >
   {fileDateRangeLabel ? (
@@ -107,11 +107,6 @@ export default function SalesChartsSection({
               <div style={styles.customLegendItem}>
                 <span style={styles.legendLineSolid} />
                 <span>Actual</span>
-              </div>
-
-              <div style={styles.customLegendItem}>
-                <span style={styles.legendLineDashed} />
-                <span>Referencia</span>
               </div>
             </div>
 
@@ -191,21 +186,6 @@ export default function SalesChartsSection({
   activeDot={{
     r: 6,
     fill: "#BFDBFE",
-    stroke: "#FFFFFF",
-    strokeWidth: 2,
-  }}
-/>
-<Line
-  type="monotone"
-  dataKey="comparativo"
-  name="Referencia"
-  stroke="#D8B4FE"
-  strokeDasharray="4 5"
-  strokeWidth={2}
-  dot={false}
-  activeDot={{
-    r: 4,
-    fill: "#D8B4FE",
     stroke: "#FFFFFF",
     strokeWidth: 2,
   }}
