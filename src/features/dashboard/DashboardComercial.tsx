@@ -1312,9 +1312,9 @@ const secondaryActiveChannelsLabel = secondaryActiveChannels.length
 const variationPct = useMemo(() => {
   const rowsWithDate = processedData.validRows.filter((row) => parseDateLike(row.fecha));
 
-  if (rowsWithDate.length === 0) {
-    return 0;
-  }
+if (rowsWithDate.length === 0) {
+  return null;
+}
 
   const sortedDates = rowsWithDate
     .map((row) => parseDateLike(row.fecha) as Date)
@@ -1366,7 +1366,7 @@ const variationPct = useMemo(() => {
     .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
 
   const variationAbs = currentSales - previousSales;
-  return previousSales > 0 ? (variationAbs / previousSales) * 100 : 0;
+  return previousSales > 0 ? (variationAbs / previousSales) * 100 : null;
 }, [
   processedData.validRows,
   fromDate,
@@ -2192,16 +2192,22 @@ const kpiItems = [
   {
     title: "Ventas totales",
     value: formatMoney(ventasTotales, settings.locale, settings.currencyCode),
-    badge: `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
-    subtitle: "vs. Período anterior",
+     badge:
+  variationPct === null
+    ? "Sin comparación"
+    : `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
+subtitle:
+  variationPct === null
+    ? "No existe período anterior comparable"
+    : "vs. período anterior",
     helpText:
       "Aquí ves cuánto vendiste en el período seleccionado, según la información cargada en tu archivo.",
   },
   {
     title: "Unidades totales",
     value: formatInt(unidadesTotales),
-    badge: `${variationPct >= 0 ? "+" : ""}${variationPct.toFixed(1)}%`,
-    subtitle: "vs. Período anterior",
+badge: "Total período",
+subtitle: "Unidades vendidas",
     helpText:
       "Aquí ves cuántas unidades se vendieron en el período seleccionado.",
   },
