@@ -83,6 +83,7 @@ type ProductComparisonRow = {
   participacion: number;
   precioPromedio: number;
   costoPromedio: number;
+  costoIncompleto: boolean;
   margenEstimado: number;
   stock: number;
   rotacion: number;
@@ -411,6 +412,7 @@ function buildProductComparisonRows(
       ventas: number;
       unidades: number;
       costoTotal: number;
+      costoIncompleto: boolean;
       stock: number;
       ventasPrimerPeriodo: number;
       ventasSegundoPeriodo: number;
@@ -424,7 +426,17 @@ function buildProductComparisonRows(
 
     const cantidad = toNumber(row.cantidad);
     const precioUnitario = toNumber(row.precio_unitario);
-    const costoUnitario = toNumber(row.costo_unitario);
+
+    const costoDisponible =
+      row.costo_unitario !== undefined &&
+      row.costo_unitario !== null &&
+      row.costo_unitario !== "" &&
+      toNumber(row.costo_unitario) > 0;
+
+    const costoUnitario = costoDisponible
+      ? toNumber(row.costo_unitario)
+      : 0;
+
     const venta = cantidad * precioUnitario;
     const costoTotal = cantidad * costoUnitario;
     const stock = toNumber(row.stock);
@@ -434,6 +446,7 @@ function buildProductComparisonRows(
       ventas: 0,
       unidades: 0,
       costoTotal: 0,
+      costoIncompleto: false,
       stock: 0,
       ventasPrimerPeriodo: 0,
       ventasSegundoPeriodo: 0,
@@ -443,6 +456,7 @@ function buildProductComparisonRows(
       ventas: current.ventas + venta,
       unidades: current.unidades + cantidad,
       costoTotal: current.costoTotal + costoTotal,
+      costoIncompleto: current.costoIncompleto || !costoDisponible,
       stock: stock > 0 ? stock : current.stock,
       ventasPrimerPeriodo:
         current.ventasPrimerPeriodo +
@@ -463,6 +477,7 @@ function buildProductComparisonRows(
         ventas: 0,
         unidades: 0,
         costoTotal: 0,
+        costoIncompleto: false,
         stock: 0,
         ventasPrimerPeriodo: 0,
         ventasSegundoPeriodo: 0,
@@ -471,15 +486,23 @@ function buildProductComparisonRows(
       const precioPromedio =
         value.unidades > 0 ? value.ventas / value.unidades : 0;
 
-      const costoPromedio =
-        value.unidades > 0 ? value.costoTotal / value.unidades : 0;
+const costoPromedio =
+  !value.costoIncompleto && value.unidades > 0
+    ? value.costoTotal / value.unidades
+    : 0;
 
-      const margenEstimado = value.ventas - value.costoTotal;
+const margenEstimado =
+  value.costoIncompleto
+    ? 0
+    : value.ventas - value.costoTotal;
 
-      const rentabilidadPct =
-        value.ventas > 0 ? (margenEstimado / value.ventas) * 100 : 0;
+const rentabilidadPct =
+  !value.costoIncompleto && value.ventas > 0
+    ? (margenEstimado / value.ventas) * 100
+    : 0;
 
-      const rotacion = value.stock > 0 ? value.unidades / value.stock : 0;
+      const rotacion =
+        value.stock > 0 ? value.unidades / value.stock : 0;
 
       const unidadesPromedioDia = value.unidades / daysInPeriod;
 
@@ -503,9 +526,10 @@ function buildProductComparisonRows(
         unidades: value.unidades,
         participacion:
           ventasTotales > 0 ? (value.ventas / ventasTotales) * 100 : 0,
-        precioPromedio,
-        costoPromedio,
-        margenEstimado,
+precioPromedio,
+costoPromedio,
+costoIncompleto: value.costoIncompleto,
+margenEstimado,
         stock: value.stock,
         rotacion,
         diasCobertura,
@@ -513,7 +537,12 @@ function buildProductComparisonRows(
         tendenciaPct,
       };
     })
-    .filter((row) => row.ventas > 0 || row.unidades > 0 || row.stock > 0);
+    .filter(
+      (row) =>
+        row.ventas > 0 ||
+        row.unidades > 0 ||
+        row.stock > 0
+    );
 }
 
 function buildSalesTrend(rows: Record<string, unknown>[]): SalesPoint[] {
@@ -1405,35 +1434,46 @@ if (rowsWithDate.length === 0) {
 ]);
 
 const productComparisonTotal = useMemo(() => {
-  const total = productComparisonRows.reduce(
-    (acc, row) => ({
-      ventas: acc.ventas + row.ventas,
-      unidades: acc.unidades + row.unidades,
-      costoTotal:
-        acc.costoTotal + row.costoPromedio * row.unidades,
-      margenEstimado: acc.margenEstimado + row.margenEstimado,
-      stock: acc.stock + row.stock,
-    }),
-    {
-      ventas: 0,
-      unidades: 0,
-      costoTotal: 0,
-      margenEstimado: 0,
-      stock: 0,
-    }
-  );
+const total = productComparisonRows.reduce(
+  (acc, row) => ({
+    ventas: acc.ventas + row.ventas,
+    unidades: acc.unidades + row.unidades,
+    costoTotal:
+      acc.costoTotal + row.costoPromedio * row.unidades,
+    margenEstimado: acc.margenEstimado + row.margenEstimado,
+    stock: acc.stock + row.stock,
+    costoIncompleto: acc.costoIncompleto || row.costoIncompleto,
+  }),
+  {
+    ventas: 0,
+    unidades: 0,
+    costoTotal: 0,
+    margenEstimado: 0,
+    stock: 0,
+    costoIncompleto: false,
+  }
+);
 
   const precioPromedio =
     total.unidades > 0 ? total.ventas / total.unidades : 0;
+const costoPromedio =
+  !total.costoIncompleto && total.unidades > 0
+    ? total.costoTotal / total.unidades
+    : 0;
 
-  const costoPromedio =
-    total.unidades > 0 ? total.costoTotal / total.unidades : 0;
+const margenEstimado =
+  total.costoIncompleto
+    ? 0
+    : total.margenEstimado;
 
-  const rentabilidadPct =
-    total.ventas > 0 ? (total.margenEstimado / total.ventas) * 100 : 0;
+const rentabilidadPct =
+  !total.costoIncompleto && total.ventas > 0
+    ? (margenEstimado / total.ventas) * 100
+    : 0;
 
   return {
     ...total,
+    margenEstimado,
     precioPromedio,
     costoPromedio,
     participacion:
