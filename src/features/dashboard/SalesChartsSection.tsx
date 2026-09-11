@@ -18,7 +18,6 @@ import {
 type SalesPoint = {
   fecha: string;
   ventas: number;
-  comparativo: number;
 };
 
 type PiePoint = {

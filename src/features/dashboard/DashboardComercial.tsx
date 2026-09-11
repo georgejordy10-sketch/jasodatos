@@ -56,7 +56,6 @@ type StockRiskRow = {
 type SalesPoint = {
   fecha: string;
   ventas: number;
-  comparativo: number;
 };
 
 type PiePoint = {
@@ -555,11 +554,10 @@ function buildSalesTrend(rows: Record<string, unknown>[]): SalesPoint[] {
   }
 
   return [...map.entries()]
-    .map(([fecha, ventas]) => ({
-      fecha,
-      ventas,
-      comparativo: Number((ventas * 0.72).toFixed(2)),
-    }))
+.map(([fecha, ventas]) => ({
+  fecha,
+  ventas,
+}))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
 
