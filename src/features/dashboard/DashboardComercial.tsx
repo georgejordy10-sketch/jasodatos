@@ -1482,7 +1482,18 @@ const rentabilidadPct =
   };
 }, [productComparisonRows, ventasTotales]);
 
-function formatComparisonMetricValue(value: number): string {
+function formatComparisonMetricValue(
+  value: number,
+  costoIncompleto = false
+): string {
+  const metricRequiresCost =
+    comparisonMetric === "costoPromedio" ||
+    comparisonMetric === "margenEstimado" ||
+    comparisonMetric === "rentabilidadPct";
+
+  if (metricRequiresCost && costoIncompleto) {
+    return "Sin datos";
+  }
   if (
     comparisonMetric === "ventas" ||
     comparisonMetric === "precioPromedio" ||
@@ -3295,7 +3306,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
             return (
               <div key={row.producto} style={styles.comparisonBarItem}>
                 <span style={styles.comparisonBarValue}>
-                  {formatComparisonMetricValue(metricValue)}
+                  {formatComparisonMetricValue(metricValue, row.costoIncompleto)}
                 </span>
 
                 <div
