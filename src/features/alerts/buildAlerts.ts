@@ -9,21 +9,27 @@ export function buildAlerts(input: BuildAlertsInput): BusinessAlert[] {
   const alerts: BusinessAlert[] = [];
 
   const stockCriticalCount = Number(input.stockCriticalCount ?? 0);
+
   const salesChangePct =
-    typeof input.salesChangePct === "number" && Number.isFinite(input.salesChangePct)
+    typeof input.salesChangePct === "number" &&
+    Number.isFinite(input.salesChangePct)
       ? input.salesChangePct
       : null;
+
   const weakestBranchName = (input.weakestBranchName ?? "").trim();
+
   const weakestBranchSharePct =
     typeof input.weakestBranchSharePct === "number" &&
     Number.isFinite(input.weakestBranchSharePct)
       ? input.weakestBranchSharePct
       : null;
+
   const topProductSharePct =
     typeof input.topProductSharePct === "number" &&
     Number.isFinite(input.topProductSharePct)
       ? input.topProductSharePct
       : null;
+
   const topProductName = (input.topProductName ?? "").trim();
 
   if (stockCriticalCount > 0) {
@@ -33,9 +39,14 @@ export function buildAlerts(input: BuildAlertsInput): BusinessAlert[] {
       title: "Stock crítico detectado",
       message:
         stockCriticalCount === 1
-          ? "Hay 1 producto en estado crítico. Conviene revisar inventario y rotación."
-          : `Hay ${stockCriticalCount} productos en estado crítico. Conviene revisar inventario y priorizar salida comercial.`,
-      severity: stockCriticalCount >= 4 ? "alta" : stockCriticalCount >= 2 ? "media" : "baja",
+          ? "Hay 1 producto en estado crítico. Revisa disponibilidad y planifica reposición antes de impulsar su demanda."
+          : `Hay ${stockCriticalCount} productos en estado crítico. Revisa disponibilidad y prioriza reposición antes de impulsar su demanda.`,
+      severity:
+        stockCriticalCount >= 4
+          ? "alta"
+          : stockCriticalCount >= 2
+          ? "media"
+          : "baja",
       status: "nueva",
       metric: stockCriticalCount,
       actionLabel: "Ver stock",
@@ -51,7 +62,9 @@ export function buildAlerts(input: BuildAlertsInput): BusinessAlert[] {
         id: "caida-ventas",
         type: "caida_ventas",
         title: "Caída de ventas",
-        message: `Las ventas bajaron ${round(absDrop)}% frente al período de referencia.`,
+        message: `Las ventas bajaron ${round(
+          absDrop
+        )}% frente al período de referencia.`,
         severity: "alta",
         status: "nueva",
         metric: salesChangePct,
@@ -63,7 +76,9 @@ export function buildAlerts(input: BuildAlertsInput): BusinessAlert[] {
         id: "caida-ventas",
         type: "caida_ventas",
         title: "Desaceleración comercial",
-        message: `Las ventas bajaron ${round(absDrop)}%. Todavía no es crítico, pero requiere seguimiento.`,
+        message: `Las ventas bajaron ${round(
+          absDrop
+        )}%. Todavía no es crítico, pero requiere seguimiento.`,
         severity: "media",
         status: "nueva",
         metric: salesChangePct,
@@ -111,5 +126,7 @@ export function buildAlerts(input: BuildAlertsInput): BusinessAlert[] {
 
   const order = { alta: 0, media: 1, baja: 2 };
 
-  return alerts.sort((a, b) => order[a.severity] - order[b.severity]);
+  return alerts.sort(
+    (a, b) => order[a.severity] - order[b.severity]
+  );
 }
