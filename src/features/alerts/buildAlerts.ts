@@ -15,7 +15,17 @@ export function buildAlerts(input: BuildAlertsInput): BusinessAlert[] {
     Number.isFinite(input.salesChangePct)
       ? input.salesChangePct
       : null;
+const salesDropMediumPct =
+  typeof input.salesDropMediumPct === "number" &&
+  Number.isFinite(input.salesDropMediumPct)
+    ? Math.max(0, input.salesDropMediumPct)
+    : 8;
 
+const salesDropHighPct =
+  typeof input.salesDropHighPct === "number" &&
+  Number.isFinite(input.salesDropHighPct)
+    ? Math.max(salesDropMediumPct, input.salesDropHighPct)
+    : 15;
   const weakestBranchName = (input.weakestBranchName ?? "").trim();
 
   const weakestBranchSharePct =
@@ -57,7 +67,7 @@ export function buildAlerts(input: BuildAlertsInput): BusinessAlert[] {
   if (salesChangePct !== null && salesChangePct < 0) {
     const absDrop = Math.abs(salesChangePct);
 
-    if (absDrop >= 15) {
+    if (absDrop >= salesDropHighPct) {
       alerts.push({
         id: "caida-ventas",
         type: "caida_ventas",
@@ -71,7 +81,7 @@ export function buildAlerts(input: BuildAlertsInput): BusinessAlert[] {
         actionLabel: "Ver tendencia",
         anchorId: "tendencia-ventas",
       });
-    } else if (absDrop >= 8) {
+    } else if (absDrop >= salesDropMediumPct) {
       alerts.push({
         id: "caida-ventas",
         type: "caida_ventas",

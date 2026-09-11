@@ -2214,6 +2214,8 @@ const alerts = useMemo(() => {
   return buildAlerts({
     stockCriticalCount: stockCritico,
     salesChangePct: variationPct,
+    salesDropMediumPct: settings.salesDropMediumPct,
+salesDropHighPct: settings.salesDropHighPct,
     weakestBranchName: weakestBranch?.sucursal ?? null,
     weakestBranchSharePct: weakestBranch?.participacion ?? null,
     topProductSharePct: Number(porcentajeTop),

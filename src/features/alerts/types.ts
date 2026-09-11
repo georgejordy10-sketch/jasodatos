@@ -22,6 +22,8 @@ export type BusinessAlert = {
 export type BuildAlertsInput = {
   stockCriticalCount?: number | null;
   salesChangePct?: number | null;
+  salesDropMediumPct?: number | null;
+  salesDropHighPct?: number | null;
   weakestBranchName?: string | null;
   weakestBranchSharePct?: number | null;
   topProductSharePct?: number | null;
