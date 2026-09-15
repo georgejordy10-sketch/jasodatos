@@ -811,7 +811,11 @@ if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
   const topSucursal = [...ventasPorSucursal.entries()].sort((a, b) => b[1] - a[1])[0];
   const lowSucursal = [...ventasPorSucursal.entries()].sort((a, b) => a[1] - b[1])[0];
   const topCanal = [...ventasPorCanal.entries()].sort((a, b) => b[1] - a[1])[0];
-
+const stockMinimum = Math.max(0, stockMin);
+const criticalStockThreshold = Math.max(
+  1,
+  Math.round(stockMinimum * 0.5)
+);
 const productosCriticos = [...latestStockByProductBranch.entries()]
   .flatMap(([producto, branchStocks]) => {
     const lowestBranch = [...branchStocks.entries()].sort(
@@ -830,7 +834,11 @@ const productosCriticos = [...latestStockByProductBranch.entries()]
       },
     ];
   })
-  .filter((item) => item.stock <= stockMin)
+.filter(
+  (item) =>
+    item.stock < stockMinimum &&
+    item.stock <= criticalStockThreshold
+)
   .sort((a, b) => a.stock - b.stock)
   .slice(0, 3);
 
