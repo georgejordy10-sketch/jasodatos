@@ -22,17 +22,34 @@ function safeParse(value: string | null): ProfileSettings | null {
       currencySymbol?: string;
     };
 
-    return {
-      ...DEFAULT_PROFILE_SETTINGS,
-      ...parsed,
-      currencyCode:
-        parsed.currencyCode ??
-        symbolToCurrencyCode(parsed.currencySymbol),
-      channelsEnabled: {
-        ...DEFAULT_PROFILE_SETTINGS.channelsEnabled,
-        ...(parsed.channelsEnabled ?? {}),
-      },
-    };
+const salesDropMediumPct =
+  typeof parsed.salesDropMediumPct === "number" &&
+  Number.isFinite(parsed.salesDropMediumPct)
+    ? Math.max(0, parsed.salesDropMediumPct)
+    : DEFAULT_PROFILE_SETTINGS.salesDropMediumPct;
+
+const salesDropHighPct =
+  typeof parsed.salesDropHighPct === "number" &&
+  Number.isFinite(parsed.salesDropHighPct)
+    ? Math.max(salesDropMediumPct, parsed.salesDropHighPct)
+    : Math.max(
+        salesDropMediumPct,
+        DEFAULT_PROFILE_SETTINGS.salesDropHighPct
+      );
+
+return {
+  ...DEFAULT_PROFILE_SETTINGS,
+  ...parsed,
+  salesDropMediumPct,
+  salesDropHighPct,
+  currencyCode:
+    parsed.currencyCode ??
+    symbolToCurrencyCode(parsed.currencySymbol),
+  channelsEnabled: {
+    ...DEFAULT_PROFILE_SETTINGS.channelsEnabled,
+    ...(parsed.channelsEnabled ?? {}),
+  },
+};
   } catch {
     return null;
   }
