@@ -1642,9 +1642,12 @@ const ordered = [...comparableRows].sort(
   const leaderValue = getComparisonMetricValue(leader, comparisonMetric);
   const secondValue = getComparisonMetricValue(second, comparisonMetric);
 
-  if (leaderValue <= 0) {
-    return "La variable seleccionada no tiene valores suficientes para comparar estos productos.";
-  }
+if (
+  comparisonMetric !== "tendenciaPct" &&
+  leaderValue <= 0
+) {
+  return "La variable seleccionada no tiene valores suficientes para comparar estos productos.";
+}
 
   if (comparisonMetric === "ventas") {
     if (secondValue <= 0) {
