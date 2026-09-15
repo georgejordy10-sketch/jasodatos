@@ -1729,17 +1729,17 @@ if (
   return "La variable seleccionada no tiene valores suficientes para comparar estos productos.";
 }
 
-  if (comparisonMetric === "ventas") {
-    if (secondValue <= 0) {
-      return `${leader.producto} concentra la mayor venta. Conviene mantenerlo visible y usarlo como producto ancla en promociones.`;
-    }
-
-    const diffPct = ((leaderValue - secondValue) / secondValue) * 100;
-
-    return `${leader.producto} es el producto con mejor venta. Está ${diffPct.toFixed(
-      0
-    )}% por encima de ${second.producto}, por lo que puede usarse como gancho comercial para impulsar productos de menor rotación.`;
+if (comparisonMetric === "ventas") {
+  if (secondValue <= 0) {
+    return `${leader.producto} concentra la mayor venta dentro de los productos comparados. No hay una segunda referencia con ventas suficientes para inferir una acción promocional.`;
   }
+
+  const diffPct = ((leaderValue - secondValue) / secondValue) * 100;
+
+  return `${leader.producto} registra la mayor venta y está ${diffPct.toFixed(
+    0
+  )}% por encima de ${second.producto} en el período analizado. Revisa si esta diferencia se mantiene por sucursal, canal y período antes de definir una acción comercial.`;
+}
 
   if (comparisonMetric === "unidades") {
     return `${leader.producto} mueve más unidades. Es un buen candidato para promociones por volumen, combos o campañas de alta rotación.`;
