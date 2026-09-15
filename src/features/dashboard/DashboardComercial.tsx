@@ -822,7 +822,24 @@ if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
 }
   const topProducto = [...ventasPorProducto.entries()].sort((a, b) => b[1] - a[1])[0];
   const topSucursal = [...ventasPorSucursal.entries()].sort((a, b) => b[1] - a[1])[0];
-  const lowSucursal = [...ventasPorSucursal.entries()].sort((a, b) => a[1] - b[1])[0];
+  const sucursalesOrdenadas = [...ventasPorSucursal.entries()].sort(
+  (a, b) => a[1] - b[1]
+);
+
+const totalVentasSucursales = sucursalesOrdenadas.reduce(
+  (total, [, ventas]) => total + ventas,
+  0
+);
+
+const lowestSucursalCandidate = sucursalesOrdenadas[0];
+
+const lowSucursal =
+  sucursalesOrdenadas.length >= 2 &&
+  lowestSucursalCandidate &&
+  totalVentasSucursales > 0 &&
+  (lowestSucursalCandidate[1] / totalVentasSucursales) * 100 <= 18
+    ? lowestSucursalCandidate
+    : undefined;
   const topCanal = [...ventasPorCanal.entries()].sort((a, b) => b[1] - a[1])[0];
 const stockMinimum = Math.max(0, stockMin);
 const criticalStockThreshold = Math.max(
