@@ -833,11 +833,22 @@ const totalVentasSucursales = sucursalesOrdenadas.reduce(
 
 const lowestSucursalCandidate = sucursalesOrdenadas[0];
 
+const expectedSucursalSharePct =
+  sucursalesOrdenadas.length >= 2
+    ? 100 / sucursalesOrdenadas.length
+    : 0;
+
+const weakSucursalThresholdPct = Math.min(
+  18,
+  expectedSucursalSharePct * 0.75
+);
+
 const lowSucursal =
   sucursalesOrdenadas.length >= 2 &&
   lowestSucursalCandidate &&
   totalVentasSucursales > 0 &&
-  (lowestSucursalCandidate[1] / totalVentasSucursales) * 100 <= 18
+  (lowestSucursalCandidate[1] / totalVentasSucursales) * 100 <=
+    weakSucursalThresholdPct
     ? lowestSucursalCandidate
     : undefined;
   const topCanal = [...ventasPorCanal.entries()].sort((a, b) => b[1] - a[1])[0];
