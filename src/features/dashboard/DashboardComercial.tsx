@@ -637,14 +637,15 @@ function buildStockRisk(
   const minimo = Math.max(0, stockMin);
   const criticalThreshold = Math.max(1, Math.round(minimo * 0.5));
 
-  const grouped = new Map<
-    string,
-    {
-      producto: string;
-      sucursal: string;
-      stock: number;
-    }
-  >();
+const grouped = new Map<
+  string,
+  {
+    producto: string;
+    sucursal: string;
+    stock: number;
+    timestamp: number;
+  }
+>();
 
   for (const row of rows) {
     if (row.stock === undefined || row.stock === null || row.stock === "") {
@@ -658,19 +659,23 @@ function buildStockRisk(
       continue;
     }
 
-    const stock = toNumber(row.stock);
-    const key = `${sucursal}__${producto}`;
-    const current = grouped.get(key);
+const stock = Math.max(0, toNumber(row.stock));
+const parsedDate = parseDateLike(row.fecha);
+const timestamp =
+  parsedDate?.getTime() ?? Number.NEGATIVE_INFINITY;
 
-    if (!current || stock < current.stock) {
-      grouped.set(key, {
-        producto,
-        sucursal,
-        stock,
-      });
-    }
-  }
+const key = `${sucursal}__${producto}`;
+const current = grouped.get(key);
 
+if (!current || timestamp >= current.timestamp) {
+  grouped.set(key, {
+    producto,
+    sucursal,
+    stock,
+    timestamp,
+  });
+}
+}
   return [...grouped.values()]
     .map((item) => {
 
