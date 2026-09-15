@@ -915,7 +915,8 @@ if (productosCriticos.length > 0) {
   const nombreSucursalBaja = lowSucursal?.[0] ?? "tu sucursal con menor participación";
   const nombreCanalTop = topCanal?.[0] ?? "tu canal principal";
 
-  let mensajePrincipal = `Prioriza ${nombreProductoTop} como producto ancla y ejecútalo primero en ${nombreSucursalTop} para acelerar ventas en ${nombreCanalTop}.`;
+let mensajePrincipal =
+  "No hay suficiente información comercial para generar una recomendación específica en este momento.";
 
 if (tipoPromo === "reposicion" && productosCriticos.length > 0) {
   mensajePrincipal = `Detectamos inventario crítico en ${productosCriticos[0].producto} en ${productosCriticos[0].sucursal}. La prioridad es revisar disponibilidad y planificar reposición antes de perder oportunidades de venta.`;
