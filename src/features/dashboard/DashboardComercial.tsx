@@ -889,12 +889,6 @@ if (productosCriticos.length > 0) {
     tipoPromo = "impulso_sucursal";
 
     promoWhatsApp = `Buen día. Estamos impulsando ${top} con una propuesta especial en ${lowSucursal[0]}. Disponible hasta agotar existencias. Responde QUIERO para reservar.`;
-  } else if (productosOrdenados.length > 1) {
-    const top = productosOrdenados[0][0];
-    const bajo = productosOrdenados[productosOrdenados.length - 1][0];
-    tipoPromo = "combo";
-
-    promoWhatsApp = `Buen día. Te compartimos una promoción especial: lleva ${top} y combínalo con ${bajo}. Es una excelente oportunidad para aprovechar una compra más completa. Disponible hasta agotar existencias. Responde QUIERO para reservar.`;
   } else if (topProducto) {
     const top = topProducto[0];
     tipoPromo = "producto_estrella";
@@ -916,10 +910,6 @@ if (productosCriticos.length > 0) {
     mensajePrincipal = `Detectamos inventario crítico en ${productosCriticos[0].producto}. La prioridad es revisar disponibilidad y planificar reposición antes de perder oportunidades de venta.`;
   } else if (tipoPromo === "impulso_sucursal") {
     mensajePrincipal = `Existe una oportunidad clara para recuperar desempeño en ${nombreSucursalBaja}. Activa una promoción enfocada con ${nombreProductoTop} para levantar conversión en esa sucursal.`;
-  } else if (tipoPromo === "combo" && productosOrdenados.length > 1) {
-    const top = productosOrdenados[0][0];
-    const bajo = productosOrdenados[productosOrdenados.length - 1][0];
-    mensajePrincipal = `La mejor acción inmediata es empaquetar ${top} con ${bajo}. Ese combo puede aumentar ticket promedio y mover productos con menor tracción.`;
   } else if (tipoPromo === "producto_estrella") {
     mensajePrincipal = `Tu mejor palanca comercial hoy es ${nombreProductoTop}. Conviene destacarlo como producto ancla y usarlo para empujar más ventas en ${nombreCanalTop}.`;
   }
