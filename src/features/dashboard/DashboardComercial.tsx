@@ -501,7 +501,6 @@ const isSecondPeriod =
 
       latestStockByProductBranch.set(producto, branchStocks);
     }
-
     const current = map.get(producto) ?? {
       ventas: 0,
       unidades: 0,
@@ -767,7 +766,10 @@ function buildJasoBotInsights(
   const ventasPorProducto = new Map<string, number>();
   const ventasPorSucursal = new Map<string, number>();
   const ventasPorCanal = new Map<string, number>();
-  const productosConStock: { producto: string; stock: number }[] = [];
+  const latestStockByProductBranch = new Map<
+  string,
+  Map<string, { stock: number; timestamp: number }>
+>();
 
   for (const row of rows) {
     const producto = toText(row.producto, "Sin producto");
@@ -779,31 +781,55 @@ function buildJasoBotInsights(
     ventasPorSucursal.set(sucursal, (ventasPorSucursal.get(sucursal) ?? 0) + venta);
     ventasPorCanal.set(canal, (ventasPorCanal.get(canal) ?? 0) + venta);
 
-    if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
-      productosConStock.push({
-        producto,
-        stock: toNumber(row.stock),
-      });
-    }
+if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
+  const parsedDate = parseDateLike(row.fecha);
+  const timestamp =
+    parsedDate?.getTime() ?? Number.NEGATIVE_INFINITY;
+
+  const stock = Math.max(0, toNumber(row.stock));
+
+  const branchStocks =
+    latestStockByProductBranch.get(producto) ??
+    new Map<string, { stock: number; timestamp: number }>();
+
+  const currentSnapshot = branchStocks.get(sucursal);
+
+  if (
+    !currentSnapshot ||
+    timestamp >= currentSnapshot.timestamp
+  ) {
+    branchStocks.set(sucursal, {
+      stock,
+      timestamp,
+    });
   }
 
+  latestStockByProductBranch.set(producto, branchStocks);
+}
+}
   const topProducto = [...ventasPorProducto.entries()].sort((a, b) => b[1] - a[1])[0];
   const topSucursal = [...ventasPorSucursal.entries()].sort((a, b) => b[1] - a[1])[0];
   const lowSucursal = [...ventasPorSucursal.entries()].sort((a, b) => a[1] - b[1])[0];
   const topCanal = [...ventasPorCanal.entries()].sort((a, b) => b[1] - a[1])[0];
 
-const productosCriticosMap = new Map<string, number>();
+const productosCriticos = [...latestStockByProductBranch.entries()]
+  .flatMap(([producto, branchStocks]) => {
+    const lowestBranch = [...branchStocks.entries()].sort(
+      (a, b) => a[1].stock - b[1].stock
+    )[0];
 
-for (const item of productosConStock) {
-  const stockActual = productosCriticosMap.get(item.producto);
+    if (!lowestBranch) return [];
 
-  if (stockActual === undefined || item.stock < stockActual) {
-    productosCriticosMap.set(item.producto, item.stock);
-  }
-}
+    const [sucursal, snapshot] = lowestBranch;
 
-const productosCriticos = [...productosCriticosMap.entries()]
-  .map(([producto, stock]) => ({ producto, stock }))
+    return [
+      {
+        producto,
+        sucursal,
+        stock: snapshot.stock,
+      },
+    ];
+  })
   .filter((item) => item.stock <= stockMin)
   .sort((a, b) => a.stock - b.stock)
   .slice(0, 3);
