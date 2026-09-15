@@ -89,6 +89,7 @@ type ProductComparisonRow = {
   diasCobertura: number;
   rentabilidadPct: number;
   tendenciaPct: number;
+  tendenciaDisponible: boolean;
 };
 const COMPARISON_METRIC_OPTIONS: {
   key: ComparisonMetric;
@@ -562,15 +563,16 @@ const daysInPeriod =
           ? stock / unidadesPromedioDia
           : 0;
 
-      const tendenciaPct =
-        value.ventasPrimerPeriodo > 0
-          ? ((value.ventasSegundoPeriodo -
-              value.ventasPrimerPeriodo) /
-              value.ventasPrimerPeriodo) *
-            100
-          : value.ventasSegundoPeriodo > 0
-          ? 100
-          : 0;
+const tendenciaDisponible =
+  value.ventasPrimerPeriodo > 0;
+
+const tendenciaPct =
+  tendenciaDisponible
+    ? ((value.ventasSegundoPeriodo -
+        value.ventasPrimerPeriodo) /
+        value.ventasPrimerPeriodo) *
+      100
+    : 0;
 
       return {
         producto,
@@ -589,6 +591,7 @@ const daysInPeriod =
         diasCobertura,
         rentabilidadPct,
         tendenciaPct,
+        tendenciaDisponible,
       };
     })
     .filter(
@@ -1537,7 +1540,8 @@ const rentabilidadPct =
 
 function formatComparisonMetricValue(
   value: number,
-  costoIncompleto = false
+  costoIncompleto = false,
+  tendenciaDisponible = true
 ): string {
   const metricRequiresCost =
     comparisonMetric === "costoPromedio" ||
@@ -1547,6 +1551,12 @@ function formatComparisonMetricValue(
   if (metricRequiresCost && costoIncompleto) {
     return "Sin datos";
   }
+  if (
+  comparisonMetric === "tendenciaPct" &&
+  !tendenciaDisponible
+) {
+  return "Sin datos";
+}
   if (
     comparisonMetric === "ventas" ||
     comparisonMetric === "precioPromedio" ||
@@ -1585,14 +1595,25 @@ const metricRequiresCost =
   comparisonMetric === "margenEstimado" ||
   comparisonMetric === "rentabilidadPct";
 
+const metricRequiresTrend =
+  comparisonMetric === "tendenciaPct";
+
 const comparableRows = metricRequiresCost
   ? productComparisonRows.filter((row) => !row.costoIncompleto)
+  : metricRequiresTrend
+  ? productComparisonRows.filter((row) => row.tendenciaDisponible)
   : productComparisonRows;
 
 if (comparableRows.length < 2) {
-  return metricRequiresCost
-    ? "No hay suficientes productos con datos de costo completos para comparar esta variable."
-    : "No hay datos suficientes para generar una recomendación.";
+  if (metricRequiresCost) {
+    return "No hay suficientes productos con datos de costo completos para comparar esta variable.";
+  }
+
+  if (metricRequiresTrend) {
+    return "No hay suficientes productos con un período base válido para comparar la tendencia.";
+  }
+
+  return "No hay datos suficientes para generar una recomendación.";
 }
 
 const ordered = [...comparableRows].sort(
@@ -3374,7 +3395,11 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
             return (
               <div key={row.producto} style={styles.comparisonBarItem}>
                 <span style={styles.comparisonBarValue}>
-                  {formatComparisonMetricValue(metricValue, row.costoIncompleto)}
+                  {formatComparisonMetricValue(
+  metricValue,
+  row.costoIncompleto,
+  row.tendenciaDisponible
+)}
                 </span>
 
                 <div
