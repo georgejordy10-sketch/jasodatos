@@ -498,7 +498,21 @@ function buildProductComparisonRows(
     });
   }
 
-  const daysInPeriod = Math.max(1, dateKeys.length);
+  const validDates = rows
+  .map((row) => parseDateLike(row.fecha))
+  .filter((date): date is Date => date !== null)
+  .sort((a, b) => a.getTime() - b.getTime());
+
+const daysInPeriod =
+  validDates.length > 0
+    ? Math.max(
+        1,
+        diffDays(
+          validDates[0],
+          validDates[validDates.length - 1]
+        ) + 1
+      )
+    : 1;
 
   return selectedProducts
     .map((producto) => {
