@@ -508,10 +508,17 @@ onChange={(e) => {
                 style={styles.compactNumberInput}
                 value={salesDropMediumInput}
                 onChange={(e) => {
-                  const nextValue = normalizeNumberInputText(e.target.value);
-                  setSalesDropMediumInput(nextValue);
-                  updateThreshold("salesDropMediumPct", toNumber(nextValue));
-                }}
+  const nextValue = normalizeNumberInputText(e.target.value);
+  const nextMedium = toNumber(nextValue);
+
+  setSalesDropMediumInput(nextValue);
+  updateThreshold("salesDropMediumPct", nextMedium);
+
+  if (nextMedium > settings.salesDropHighPct) {
+    setSalesDropHighInput(String(nextMedium));
+    updateThreshold("salesDropHighPct", nextMedium);
+  }
+}}
                 onBlur={() => {
                   if (salesDropMediumInput === "") {
                     setSalesDropMediumInput("0");
@@ -533,10 +540,17 @@ onChange={(e) => {
                 style={styles.compactNumberInput}
                 value={salesDropHighInput}
                 onChange={(e) => {
-                  const nextValue = normalizeNumberInputText(e.target.value);
-                  setSalesDropHighInput(nextValue);
-                  updateThreshold("salesDropHighPct", toNumber(nextValue));
-                }}
+  const nextValue = normalizeNumberInputText(e.target.value);
+  const nextHigh = toNumber(nextValue);
+
+  setSalesDropHighInput(nextValue);
+  updateThreshold("salesDropHighPct", nextHigh);
+
+  if (nextHigh < settings.salesDropMediumPct) {
+    setSalesDropMediumInput(String(nextHigh));
+    updateThreshold("salesDropMediumPct", nextHigh);
+  }
+}}
                 onBlur={() => {
                   if (salesDropHighInput === "") {
                     setSalesDropHighInput("0");
