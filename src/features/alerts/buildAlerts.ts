@@ -25,7 +25,7 @@ const salesDropHighPct =
   typeof input.salesDropHighPct === "number" &&
   Number.isFinite(input.salesDropHighPct)
     ? Math.max(salesDropMediumPct, input.salesDropHighPct)
-    : 15;
+    : Math.max(salesDropMediumPct, 15);
   const weakestBranchName = (input.weakestBranchName ?? "").trim();
 
   const weakestBranchSharePct =
