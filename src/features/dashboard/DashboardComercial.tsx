@@ -891,10 +891,10 @@ let promoWhatsApp = "";
 let tipoPromo = "general";
 
 if (productosCriticos.length > 0) {
-  const critico = productosCriticos[0].producto;
+  const critico = productosCriticos[0];
   tipoPromo = "reposicion";
 
-  promoWhatsApp = `Alerta de inventario: ${critico} está en nivel crítico. Revisa disponibilidad y planifica reposición antes de realizar acciones comerciales que incrementen su demanda.`;
+  promoWhatsApp = `Alerta de inventario: ${critico.producto} está en nivel crítico en ${critico.sucursal}. Revisa disponibilidad y planifica reposición antes de realizar acciones comerciales que incrementen su demanda.`;
 } else if (lowSucursal && topProducto) {
   const top = topProducto[0];
   tipoPromo = "impulso_sucursal";
