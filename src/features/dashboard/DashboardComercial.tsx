@@ -925,23 +925,33 @@ if (tipoPromo === "reposicion" && productosCriticos.length > 0) {
 } else if (tipoPromo === "producto_estrella") {
   mensajePrincipal = `${nombreProductoTop} lidera actualmente las ventas. Úsalo como referencia para revisar dónde se concentra su mejor desempeño antes de definir la siguiente acción comercial.`;
 }
-
-  const insights: string[] = [];
-
-insights.push(`Enfócate en: ${nombreProductoTop}`);
-insights.push(`Sucursal líder: ${nombreSucursalTop}`);
-
-if (lowSucursal) {
-  insights.push(`Sucursal a reforzar: ${lowSucursal[0]}`);
-}
-  if (nombreCanalTop && nombreCanalTop !== "tu canal principal") {
-    insights.push(`Canal con mayor aporte: ${nombreCanalTop}`);
-  }
+const insights: string[] = [];
 
 if (productosCriticos.length > 0) {
-  const nombresCriticos = productosCriticos.map((p) => p.producto).join(", ");
-  insights[0] = `Prioridad: reponer ${productosCriticos[0].producto}`;
-  insights[1] = `Productos críticos: ${nombresCriticos}`;
+  const detalleCriticos = productosCriticos
+    .map((p) => `${p.producto} (${p.sucursal})`)
+    .join(", ");
+
+  insights.push(
+    `Prioridad: reponer ${productosCriticos[0].producto} en ${productosCriticos[0].sucursal}`
+  );
+  insights.push(`Inventario crítico: ${detalleCriticos}`);
+}
+
+if (topProducto) {
+  insights.push(`Producto con mayor venta: ${topProducto[0]}`);
+}
+
+if (topSucursal) {
+  insights.push(`Sucursal líder: ${topSucursal[0]}`);
+}
+
+if (lowSucursal) {
+  insights.push(`Sucursal a revisar: ${lowSucursal[0]}`);
+}
+
+if (topCanal) {
+  insights.push(`Canal con mayor aporte: ${topCanal[0]}`);
 }
 
   return {
