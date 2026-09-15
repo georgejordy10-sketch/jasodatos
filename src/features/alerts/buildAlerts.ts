@@ -97,25 +97,42 @@ const salesDropHighPct =
       });
     }
   }
+  const branchCount =
+  typeof input.branchCount === "number" &&
+  Number.isFinite(input.branchCount)
+    ? Math.max(0, Math.floor(input.branchCount))
+    : 0;
 
-  if (weakestBranchName && weakestBranchSharePct !== null) {
-    if (weakestBranchSharePct <= 18) {
-      alerts.push({
-        id: "sucursal-rezagada",
-        type: "sucursal_rezagada",
-        title: "Sucursal rezagada",
-        message: `${weakestBranchName} aporta solo ${round(
-          weakestBranchSharePct
-        )}% del total. Conviene revisar surtido, canal y ejecución comercial.`,
-        severity: weakestBranchSharePct <= 12 ? "alta" : "media",
-        status: "nueva",
-        metric: weakestBranchSharePct,
-        actionLabel: "Ver sucursal",
-        anchorId: "benchmarking-sucursales",
-      });
-    }
+if (
+  weakestBranchName &&
+  weakestBranchSharePct !== null &&
+  branchCount >= 2
+) {
+  const expectedSharePct = 100 / branchCount;
+  const weakBranchThresholdPct = Math.min(
+    18,
+    expectedSharePct * 0.75
+  );
+
+  if (weakestBranchSharePct <= weakBranchThresholdPct) {
+    alerts.push({
+      id: "sucursal-rezagada",
+      type: "sucursal_rezagada",
+      title: "Sucursal rezagada",
+      message: `${weakestBranchName} aporta solo ${round(
+        weakestBranchSharePct
+      )}% del total. Conviene revisar surtido, canal y ejecución comercial.`,
+      severity:
+  weakestBranchSharePct <= expectedSharePct * 0.5
+    ? "alta"
+    : "media",
+      status: "nueva",
+      metric: weakestBranchSharePct,
+      actionLabel: "Ver sucursal",
+      anchorId: "benchmarking-sucursales",
+    });
   }
-
+}
   if (topProductSharePct !== null && topProductName) {
     if (topProductSharePct >= 35) {
       alerts.push({

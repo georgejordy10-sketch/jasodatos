@@ -2387,8 +2387,9 @@ const alerts = useMemo(() => {
     salesChangePct: variationPct,
     salesDropMediumPct: settings.salesDropMediumPct,
 salesDropHighPct: settings.salesDropHighPct,
-    weakestBranchName: weakestBranch?.sucursal ?? null,
-    weakestBranchSharePct: weakestBranch?.participacion ?? null,
+weakestBranchName: weakestBranch?.sucursal ?? null,
+weakestBranchSharePct: weakestBranch?.participacion ?? null,
+branchCount: benchmarkSummary.length,
     topProductSharePct: Number(porcentajeTop),
     topProductName: productoTop?.producto ?? null,
   });

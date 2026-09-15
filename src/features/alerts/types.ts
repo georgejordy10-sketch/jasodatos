@@ -26,6 +26,7 @@ export type BuildAlertsInput = {
   salesDropHighPct?: number | null;
   weakestBranchName?: string | null;
   weakestBranchSharePct?: number | null;
+  branchCount?: number | null;
   topProductSharePct?: number | null;
   topProductName?: string | null;
 };
