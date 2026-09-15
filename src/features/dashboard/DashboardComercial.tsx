@@ -401,9 +401,25 @@ function buildProductComparisonRows(
 ): ProductComparisonRow[] {
   const selectedSet = new Set(selectedProducts);
 
-  const dateKeys = [...new Set(rows.map((row) => toDateKey(row.fecha)))].sort();
-  const midpoint = Math.max(1, Math.floor(dateKeys.length / 2));
-  const firstPeriodDates = new Set(dateKeys.slice(0, midpoint));
+const validDates = rows
+  .map((row) => parseDateLike(row.fecha))
+  .filter((date): date is Date => date !== null)
+  .sort((a, b) => a.getTime() - b.getTime());
+
+const firstDate = validDates[0] ?? null;
+const lastDate = validDates[validDates.length - 1] ?? null;
+
+const daysInPeriod =
+  firstDate && lastDate
+    ? Math.max(1, diffDays(firstDate, lastDate) + 1)
+    : 1;
+
+const firstPeriodEnd = firstDate
+  ? addDays(
+      firstDate,
+      Math.max(0, Math.floor((daysInPeriod - 1) / 2))
+    )
+  : null;
 
   const latestStockByProductBranch = new Map<
     string,
@@ -442,7 +458,17 @@ function buildProductComparisonRows(
 
     const venta = cantidad * precioUnitario;
     const costoTotal = cantidad * costoUnitario;
-    const dateKey = toDateKey(row.fecha);
+    const rowDate = parseDateLike(row.fecha);
+
+const isFirstPeriod =
+  rowDate !== null &&
+  firstPeriodEnd !== null &&
+  rowDate.getTime() <= firstPeriodEnd.getTime();
+
+const isSecondPeriod =
+  rowDate !== null &&
+  firstPeriodEnd !== null &&
+  rowDate.getTime() > firstPeriodEnd.getTime();
 
     const stockDisponible =
       row.stock !== undefined &&
@@ -490,30 +516,14 @@ function buildProductComparisonRows(
       unidades: current.unidades + cantidad,
       costoTotal: current.costoTotal + costoTotal,
       costoIncompleto: current.costoIncompleto || !costoDisponible,
-      ventasPrimerPeriodo:
-        current.ventasPrimerPeriodo +
-        (firstPeriodDates.has(dateKey) ? venta : 0),
-      ventasSegundoPeriodo:
-        current.ventasSegundoPeriodo +
-        (!firstPeriodDates.has(dateKey) ? venta : 0),
+ventasPrimerPeriodo:
+  current.ventasPrimerPeriodo +
+  (isFirstPeriod ? venta : 0),
+ventasSegundoPeriodo:
+  current.ventasSegundoPeriodo +
+  (isSecondPeriod ? venta : 0),
     });
   }
-
-  const validDates = rows
-  .map((row) => parseDateLike(row.fecha))
-  .filter((date): date is Date => date !== null)
-  .sort((a, b) => a.getTime() - b.getTime());
-
-const daysInPeriod =
-  validDates.length > 0
-    ? Math.max(
-        1,
-        diffDays(
-          validDates[0],
-          validDates[validDates.length - 1]
-        ) + 1
-      )
-    : 1;
 
   return selectedProducts
     .map((producto) => {
