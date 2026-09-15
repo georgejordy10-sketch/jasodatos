@@ -393,7 +393,6 @@ function buildTopProducts(rows: Record<string, unknown>[]): PiePoint[] {
     .sort((a, b) => b.ventas - a.ventas)
     .slice(0, 8);
 }
-
 function buildProductComparisonRows(
   rows: Record<string, unknown>[],
   selectedProducts: string[],
@@ -405,6 +404,11 @@ function buildProductComparisonRows(
   const midpoint = Math.max(1, Math.floor(dateKeys.length / 2));
   const firstPeriodDates = new Set(dateKeys.slice(0, midpoint));
 
+  const latestStockByProductBranch = new Map<
+    string,
+    Map<string, { stock: number; timestamp: number }>
+  >();
+
   const map = new Map<
     string,
     {
@@ -412,7 +416,6 @@ function buildProductComparisonRows(
       unidades: number;
       costoTotal: number;
       costoIncompleto: boolean;
-      stock: number;
       ventasPrimerPeriodo: number;
       ventasSegundoPeriodo: number;
     }
@@ -438,34 +441,61 @@ function buildProductComparisonRows(
 
     const venta = cantidad * precioUnitario;
     const costoTotal = cantidad * costoUnitario;
-    const stock = toNumber(row.stock);
     const dateKey = toDateKey(row.fecha);
+
+    const stockDisponible =
+      row.stock !== undefined &&
+      row.stock !== null &&
+      row.stock !== "";
+
+    if (stockDisponible) {
+      const sucursal = toText(row.sucursal, "Sin sucursal");
+      const parsedDate = parseDateLike(row.fecha);
+      const timestamp =
+        parsedDate?.getTime() ?? Number.NEGATIVE_INFINITY;
+
+      const stock = Math.max(0, toNumber(row.stock));
+
+      const branchStocks =
+        latestStockByProductBranch.get(producto) ??
+        new Map<string, { stock: number; timestamp: number }>();
+
+      const currentSnapshot = branchStocks.get(sucursal);
+
+      if (
+        !currentSnapshot ||
+        timestamp >= currentSnapshot.timestamp
+      ) {
+        branchStocks.set(sucursal, {
+          stock,
+          timestamp,
+        });
+      }
+
+      latestStockByProductBranch.set(producto, branchStocks);
+    }
 
     const current = map.get(producto) ?? {
       ventas: 0,
       unidades: 0,
       costoTotal: 0,
       costoIncompleto: false,
-      stock: 0,
       ventasPrimerPeriodo: 0,
       ventasSegundoPeriodo: 0,
     };
 
-    const next = {
+    map.set(producto, {
       ventas: current.ventas + venta,
       unidades: current.unidades + cantidad,
       costoTotal: current.costoTotal + costoTotal,
       costoIncompleto: current.costoIncompleto || !costoDisponible,
-      stock: stock > 0 ? stock : current.stock,
       ventasPrimerPeriodo:
         current.ventasPrimerPeriodo +
         (firstPeriodDates.has(dateKey) ? venta : 0),
       ventasSegundoPeriodo:
         current.ventasSegundoPeriodo +
         (!firstPeriodDates.has(dateKey) ? venta : 0),
-    };
-
-    map.set(producto, next);
+    });
   }
 
   const daysInPeriod = Math.max(1, dateKeys.length);
@@ -477,42 +507,51 @@ function buildProductComparisonRows(
         unidades: 0,
         costoTotal: 0,
         costoIncompleto: false,
-        stock: 0,
         ventasPrimerPeriodo: 0,
         ventasSegundoPeriodo: 0,
       };
 
+      const branchStocks = latestStockByProductBranch.get(producto);
+
+      const stock = branchStocks
+        ? [...branchStocks.values()].reduce(
+            (sum, snapshot) => sum + snapshot.stock,
+            0
+          )
+        : 0;
+
       const precioPromedio =
         value.unidades > 0 ? value.ventas / value.unidades : 0;
 
-const costoPromedio =
-  !value.costoIncompleto && value.unidades > 0
-    ? value.costoTotal / value.unidades
-    : 0;
+      const costoPromedio =
+        !value.costoIncompleto && value.unidades > 0
+          ? value.costoTotal / value.unidades
+          : 0;
 
-const margenEstimado =
-  value.costoIncompleto
-    ? 0
-    : value.ventas - value.costoTotal;
+      const margenEstimado = value.costoIncompleto
+        ? 0
+        : value.ventas - value.costoTotal;
 
-const rentabilidadPct =
-  !value.costoIncompleto && value.ventas > 0
-    ? (margenEstimado / value.ventas) * 100
-    : 0;
+      const rentabilidadPct =
+        !value.costoIncompleto && value.ventas > 0
+          ? (margenEstimado / value.ventas) * 100
+          : 0;
 
       const rotacion =
-        value.stock > 0 ? value.unidades / value.stock : 0;
+        stock > 0 ? value.unidades / stock : 0;
 
-      const unidadesPromedioDia = value.unidades / daysInPeriod;
+      const unidadesPromedioDia =
+        value.unidades / daysInPeriod;
 
       const diasCobertura =
-        unidadesPromedioDia > 0 && value.stock > 0
-          ? value.stock / unidadesPromedioDia
+        unidadesPromedioDia > 0 && stock > 0
+          ? stock / unidadesPromedioDia
           : 0;
 
       const tendenciaPct =
         value.ventasPrimerPeriodo > 0
-          ? ((value.ventasSegundoPeriodo - value.ventasPrimerPeriodo) /
+          ? ((value.ventasSegundoPeriodo -
+              value.ventasPrimerPeriodo) /
               value.ventasPrimerPeriodo) *
             100
           : value.ventasSegundoPeriodo > 0
@@ -524,12 +563,14 @@ const rentabilidadPct =
         ventas: value.ventas,
         unidades: value.unidades,
         participacion:
-          ventasTotales > 0 ? (value.ventas / ventasTotales) * 100 : 0,
-precioPromedio,
-costoPromedio,
-costoIncompleto: value.costoIncompleto,
-margenEstimado,
-        stock: value.stock,
+          ventasTotales > 0
+            ? (value.ventas / ventasTotales) * 100
+            : 0,
+        precioPromedio,
+        costoPromedio,
+        costoIncompleto: value.costoIncompleto,
+        margenEstimado,
+        stock,
         rotacion,
         diasCobertura,
         rentabilidadPct,
