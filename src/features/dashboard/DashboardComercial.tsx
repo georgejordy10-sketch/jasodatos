@@ -876,28 +876,28 @@ const productosCriticos = [...latestStockByProductBranch.entries()]
     (item) => `${item.title}. ${item.message}`
   );
   const productosOrdenados = [...ventasPorProducto.entries()].sort((a, b) => b[1] - a[1]);
-
-  let promoWhatsApp = "";
-  let tipoPromo = "general";
+let promoWhatsApp = "";
+let tipoPromo = "general";
 
 if (productosCriticos.length > 0) {
   const critico = productosCriticos[0].producto;
   tipoPromo = "reposicion";
+
   promoWhatsApp = `Alerta de inventario: ${critico} está en nivel crítico. Revisa disponibilidad y planifica reposición antes de realizar acciones comerciales que incrementen su demanda.`;
 } else if (lowSucursal && topProducto) {
-    const top = topProducto[0];
-    tipoPromo = "impulso_sucursal";
+  const top = topProducto[0];
+  tipoPromo = "impulso_sucursal";
 
-    promoWhatsApp = `Buen día. Estamos impulsando ${top} con una propuesta especial en ${lowSucursal[0]}. Disponible hasta agotar existencias. Responde QUIERO para reservar.`;
-  } else if (topProducto) {
-    const top = topProducto[0];
-    tipoPromo = "producto_estrella";
+  promoWhatsApp = `Buen día. ${top} es uno de nuestros productos con mayor nivel de ventas. Si deseas conocer disponibilidad y opciones de compra en ${lowSucursal[0]}, escríbenos.`;
+} else if (topProducto) {
+  const top = topProducto[0];
+  tipoPromo = "producto_estrella";
 
-    promoWhatsApp = `Buen día. Hoy queremos recomendarte ${top}, uno de nuestros productos destacados. Si deseas conocer la promoción vigente, escríbenos y te compartimos la información.`;
-  } else {
-    promoWhatsApp =
-      "Buen día. Tenemos promociones especiales disponibles. escríbenos para conocer las mejores opciones para ti.";
-  }
+  promoWhatsApp = `Buen día. ${top} es uno de nuestros productos con mayor nivel de ventas. Si deseas conocer disponibilidad o información de compra, escríbenos.`;
+} else {
+  promoWhatsApp =
+    "Buen día. Si deseas conocer nuestros productos y disponibilidad, escríbenos y te compartimos información.";
+}
 
   const nombreProductoTop = topProducto?.[0] ?? "tu producto líder";
   const nombreSucursalTop = topSucursal?.[0] ?? "tu mejor sucursal";
