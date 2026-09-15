@@ -1483,18 +1483,14 @@ if (rowsWithDate.length === 0) {
   }, [filteredRows]);
 
   const topProductos = useMemo(() => buildTopProducts(filteredRows), [filteredRows]);
- const productComparisonRows = useMemo(() => {
-  const baseRows =
-    filteredRows.length > 0 ? filteredRows : processedData.validRows;
-
+const productComparisonRows = useMemo(() => {
   return buildProductComparisonRows(
-    baseRows,
+    filteredRows,
     selectedComparisonProducts,
     ventasTotales
   );
 }, [
   filteredRows,
-  processedData.validRows,
   selectedComparisonProducts,
   ventasTotales,
 ]);
