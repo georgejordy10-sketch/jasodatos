@@ -916,9 +916,12 @@ if (productosCriticos.length > 0) {
 
   const insights: string[] = [];
 
-  insights.push(`Enfócate en: ${nombreProductoTop}`);
-  insights.push(`Sucursal líder: ${nombreSucursalTop}`);
-  insights.push(`Sucursal a reforzar: ${nombreSucursalBaja}`);
+insights.push(`Enfócate en: ${nombreProductoTop}`);
+insights.push(`Sucursal líder: ${nombreSucursalTop}`);
+
+if (lowSucursal) {
+  insights.push(`Sucursal a reforzar: ${lowSucursal[0]}`);
+}
   if (nombreCanalTop && nombreCanalTop !== "tu canal principal") {
     insights.push(`Canal con mayor aporte: ${nombreCanalTop}`);
   }
