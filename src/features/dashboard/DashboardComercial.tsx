@@ -420,7 +420,8 @@ const firstPeriodEnd = firstDate
       Math.max(0, Math.floor((daysInPeriod - 1) / 2))
     )
   : null;
-
+ const firstPeriodDays = Math.ceil(daysInPeriod / 2);
+const secondPeriodDays = Math.floor(daysInPeriod / 2);
   const latestStockByProductBranch = new Map<
     string,
     Map<string, { stock: number; timestamp: number }>
@@ -573,13 +574,25 @@ ventasSegundoPeriodo:
           : 0;
 
 const tendenciaDisponible =
+  firstPeriodDays > 0 &&
+  secondPeriodDays > 0 &&
   value.ventasPrimerPeriodo > 0;
+
+const promedioVentasPrimerPeriodo =
+  tendenciaDisponible
+    ? value.ventasPrimerPeriodo / firstPeriodDays
+    : 0;
+
+const promedioVentasSegundoPeriodo =
+  tendenciaDisponible
+    ? value.ventasSegundoPeriodo / secondPeriodDays
+    : 0;
 
 const tendenciaPct =
   tendenciaDisponible
-    ? ((value.ventasSegundoPeriodo -
-        value.ventasPrimerPeriodo) /
-        value.ventasPrimerPeriodo) *
+    ? ((promedioVentasSegundoPeriodo -
+        promedioVentasPrimerPeriodo) /
+        promedioVentasPrimerPeriodo) *
       100
     : 0;
 
