@@ -917,8 +917,8 @@ if (productosCriticos.length > 0) {
 
   let mensajePrincipal = `Prioriza ${nombreProductoTop} como producto ancla y ejecútalo primero en ${nombreSucursalTop} para acelerar ventas en ${nombreCanalTop}.`;
 
-  if (tipoPromo === "reposicion" && productosCriticos.length > 0) {
-    mensajePrincipal = `Detectamos inventario crítico en ${productosCriticos[0].producto}. La prioridad es revisar disponibilidad y planificar reposición antes de perder oportunidades de venta.`;
+if (tipoPromo === "reposicion" && productosCriticos.length > 0) {
+  mensajePrincipal = `Detectamos inventario crítico en ${productosCriticos[0].producto} en ${productosCriticos[0].sucursal}. La prioridad es revisar disponibilidad y planificar reposición antes de perder oportunidades de venta.`;
   } else if (tipoPromo === "impulso_sucursal") {
     mensajePrincipal = `Existe una oportunidad clara para recuperar desempeño en ${nombreSucursalBaja}. Activa una promoción enfocada con ${nombreProductoTop} para levantar conversión en esa sucursal.`;
   } else if (tipoPromo === "producto_estrella") {
