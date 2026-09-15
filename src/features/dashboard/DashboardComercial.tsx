@@ -1521,11 +1521,26 @@ function formatComparisonMetricValue(
 }
 
 const productComparisonInsight = useMemo(() => {
-  if (productComparisonRows.length < 2) {
-    return "Selecciona al menos dos productos para generar una lectura comercial.";
-  }
+if (productComparisonRows.length < 2) {
+  return "Selecciona al menos dos productos para generar una lectura comercial.";
+}
 
-  const ordered = [...productComparisonRows].sort(
+const metricRequiresCost =
+  comparisonMetric === "costoPromedio" ||
+  comparisonMetric === "margenEstimado" ||
+  comparisonMetric === "rentabilidadPct";
+
+const comparableRows = metricRequiresCost
+  ? productComparisonRows.filter((row) => !row.costoIncompleto)
+  : productComparisonRows;
+
+if (comparableRows.length < 2) {
+  return metricRequiresCost
+    ? "No hay suficientes productos con datos de costo completos para comparar esta variable."
+    : "No hay datos suficientes para generar una recomendación.";
+}
+
+const ordered = [...comparableRows].sort(
     (a, b) =>
       getComparisonMetricValue(b, comparisonMetric) -
       getComparisonMetricValue(a, comparisonMetric)
