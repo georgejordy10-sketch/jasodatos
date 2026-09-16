@@ -102,7 +102,7 @@ const COMPARISON_METRIC_OPTIONS: {
   { key: "costoPromedio", label: "Costo promedio" },
   { key: "margenEstimado", label: "Margen estimado" },
   { key: "stock", label: "Inventario" },
-  { key: "rotacion", label: "rotación" },
+  { key: "rotacion", label: "Unidades por día" },
   { key: "diasCobertura", label: "días de cobertura" },
   { key: "rentabilidadPct", label: "Rentabilidad %" },
   { key: "tendenciaPct", label: "Tendencia %" },
@@ -618,11 +618,12 @@ ventasSegundoPeriodo:
           ? (margenEstimado / value.ventas) * 100
           : 0;
 
-      const rotacion =
-        stock > 0 ? value.unidades / stock : 0;
+const unidadesPromedioDia =
+  daysInPeriod > 0
+    ? value.unidades / daysInPeriod
+    : 0;
 
-      const unidadesPromedioDia =
-        value.unidades / daysInPeriod;
+const rotacion = unidadesPromedioDia;
 
       const diasCobertura =
         unidadesPromedioDia > 0 && stock > 0
@@ -1826,9 +1827,8 @@ if (comparisonMetric === "stock") {
 }
 
 if (comparisonMetric === "rotacion") {
-  return `${leader.producto} registra la mayor rotación entre los productos comparados. Revisa también su inventario disponible y días de cobertura antes de ajustar decisiones de abastecimiento.`;
+  return `${leader.producto} registra el mayor promedio diario de unidades vendidas entre los productos comparados. Revisa este ritmo junto con el inventario disponible y los días de cobertura antes de ajustar el abastecimiento.`;
 }
-
 if (comparisonMetric === "diasCobertura") {
   return `${leader.producto} presenta la mayor cantidad de días de cobertura entre los productos comparados. Contrasta este nivel con sus ventas y rotación para determinar si el inventario está alineado con la demanda.`;
 }
@@ -1964,7 +1964,8 @@ async function exportarExcel() {
 
   const workbook = new ExcelJS.Workbook();
 
-  const businessName = settings.businessName || "JasoDatos";
+  const businessName =
+  businessDisplayName || settings.businessName || "JasoDatos";
   const locale = settings.locale || "es-EC";
   const currencyCode = settings.currencyCode || "USD";
 
@@ -2409,7 +2410,9 @@ async function exportarPDF() {
     let position = 0;
 
     pdf.setProperties({
-      title: `Reporte Comercial - ${settings.businessName || "JasoDatos"}`,
+      title: `Reporte Comercial - ${
+  businessDisplayName || settings.businessName || "JasoDatos"
+}`,
       subject: "Reporte comercial",
       author: "JasoDatos",
     });
@@ -2424,7 +2427,9 @@ async function exportarPDF() {
       heightLeft -= pageHeight;
     }
 
-    const business = slugifyFileName(settings.businessName || "JasoDatos");
+    const business = slugifyFileName(
+  businessDisplayName || settings.businessName || "JasoDatos"
+);
     const fecha = new Intl.DateTimeFormat(settings.locale || "es-EC", {
       year: "numeric",
       month: "2-digit",
@@ -3010,15 +3015,17 @@ style={{
   }}
 >
         Actual:{" "}
-        {dashboardHistorySummary.currentSales.toLocaleString("es-EC", {
-          style: "currency",
-          currency: "USD",
-        })}{" "}
+{formatMoney(
+  dashboardHistorySummary.currentSales,
+  settings.locale,
+  settings.currencyCode
+)}{" "}
         · Anterior:{" "}
-        {dashboardHistorySummary.previousSales.toLocaleString("es-EC", {
-          style: "currency",
-          currency: "USD",
-        })}
+{formatMoney(
+  dashboardHistorySummary.previousSales,
+  settings.locale,
+  settings.currencyCode
+)}
       </span>
     </div>
 
@@ -3175,8 +3182,8 @@ style={{
       >
         {dashboardUploadHistory[0]
           ? new Date(dashboardUploadHistory[0].uploaded_at).toLocaleString(
-              "es-EC"
-            )
+  settings.locale || "es-EC"
+)
           : ""}
         {" · "}
         {dashboardUploadHistory[0]?.total_rows} filas
