@@ -1756,9 +1756,9 @@ if (comparisonMetric === "ventas") {
     return `${leader.producto} aporta el mayor margen estimado. Priorizarlo puede mejorar la rentabilidad sin depender únicamente de vender más unidades.`;
   }
 
-  if (comparisonMetric === "stock") {
-    return `${leader.producto} tiene mayor inventario disponible. Si su venta no acompaña esa cantidad acumulada, conviene activar promoción antes de que se convierta en dinero detenido.`;
-  }
+if (comparisonMetric === "stock") {
+  return `${leader.producto} tiene el mayor inventario disponible entre los productos comparados. Revisa este nivel junto con sus ventas y rotación antes de decidir si requiere reposición, mantener stock o aplicar una acción comercial.`;
+}
 
   if (comparisonMetric === "rotacion") {
     return `${leader.producto} rota más rápido. Es un producto fuerte para mantener disponibilidad y evitar quedarse sin unidades para vender.`;
