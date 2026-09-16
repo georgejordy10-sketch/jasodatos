@@ -47,10 +47,10 @@ const salesDropHighPct =
       id: "stock-critico",
       type: "stock_critico",
       title: "Stock crítico detectado",
-      message:
-        stockCriticalCount === 1
-          ? "Hay 1 producto en estado crítico. Revisa disponibilidad y planifica reposición antes de impulsar su demanda."
-          : `Hay ${stockCriticalCount} productos en estado crítico. Revisa disponibilidad y prioriza reposición antes de impulsar su demanda.`,
+message:
+  stockCriticalCount === 1
+    ? "Hay 1 caso de inventario crítico. Revisa disponibilidad y planifica reposición antes de impulsar su demanda."
+    : `Hay ${stockCriticalCount} casos de inventario crítico. Revisa disponibilidad y prioriza reposición antes de impulsar su demanda.`,
       severity:
         stockCriticalCount >= 4
           ? "alta"
