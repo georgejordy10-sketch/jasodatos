@@ -2622,7 +2622,7 @@ subtitle: "Unidades vendidas",
   {
     title: "Producto más vendido",
     value: productoTop?.producto ?? "Sin datos",
-    badge: `${porcentajeTop}%`,
+    badge: productoTop ? `${porcentajeTop}%` : "Sin datos",
     subtitle: "del total de ventas",
     helpText:
       "Aquí ves el producto que más aportó a tus ventas dentro de la información cargada.",
@@ -2634,7 +2634,7 @@ subtitle: "Unidades vendidas",
     subtitle: "Revisar inventario",
     accent: "danger" as const,
     helpText:
-      "Aquí ves cuántos productos tienen pocas unidades disponibles y necesitan revisión.",
+  "Aquí ves cuántos casos producto-sucursal tienen inventario crítico y necesitan revisión.",
   },
 ];
 const commercialRecommendations = useMemo<CommercialRecommendation[]>(() => {
