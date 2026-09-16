@@ -133,24 +133,50 @@ if (
     });
   }
 }
-  if (topProductSharePct !== null && topProductName) {
-    if (topProductSharePct >= 35) {
-      alerts.push({
-        id: "concentracion-producto",
-        type: "concentracion_producto",
-        title: "Alta concentración en un producto",
-        message: `${topProductName} concentra ${round(
-          topProductSharePct
-        )}% de las ventas. Hay dependencia comercial relevante.`,
-        severity: topProductSharePct >= 45 ? "alta" : "media",
-        status: "nueva",
-        metric: topProductSharePct,
-        actionLabel: "Ver mix",
-        anchorId: "participacion-producto",
-      });
-    }
-  }
+const productCount =
+  typeof input.productCount === "number" &&
+  Number.isFinite(input.productCount)
+    ? Math.max(0, Math.floor(input.productCount))
+    : 0;
 
+if (
+  topProductSharePct !== null &&
+  topProductName &&
+  productCount >= 2
+) {
+  const uniformSharePct = 100 / productCount;
+
+  const concentrationThresholdPct = Math.max(
+    35,
+    uniformSharePct * 1.5
+  );
+
+  const highConcentrationThresholdPct = Math.max(
+    45,
+    uniformSharePct * 1.75
+  );
+
+  if (topProductSharePct >= concentrationThresholdPct) {
+    alerts.push({
+      id: "concentracion-producto",
+      type: "concentracion_producto",
+      title: "Concentración de ventas en un producto",
+      message: `${topProductName} concentra ${round(
+        topProductSharePct
+      )}% de las ventas, frente a una referencia uniforme de ${round(
+        uniformSharePct
+      )}% considerando ${productCount} productos. Revisa si esta concentración se mantiene por período, sucursal y canal.`,
+      severity:
+        topProductSharePct >= highConcentrationThresholdPct
+          ? "alta"
+          : "media",
+      status: "nueva",
+      metric: topProductSharePct,
+      actionLabel: "Ver mix",
+      anchorId: "participacion-producto",
+    });
+  }
+}
   const order = { alta: 0, media: 1, baja: 2 };
 
   return alerts.sort(

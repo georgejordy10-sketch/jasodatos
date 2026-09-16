@@ -29,4 +29,5 @@ export type BuildAlertsInput = {
   branchCount?: number | null;
   topProductSharePct?: number | null;
   topProductName?: string | null;
+  productCount?: number | null;
 };

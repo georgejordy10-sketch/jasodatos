@@ -1740,41 +1740,41 @@ if (comparisonMetric === "unidades") {
   return `${leader.producto} registra la mayor cantidad de unidades vendidas entre los productos comparados. Revisa su comportamiento por período, sucursal y canal antes de definir una acción comercial.`;
 }
 
-  if (comparisonMetric === "participacion") {
-    return `${leader.producto} tiene mayor peso dentro de las ventas seleccionadas. Si depende demasiado de este producto, conviene diversificar la oferta para reducir concentración.`;
-  }
+if (comparisonMetric === "participacion") {
+  return `${leader.producto} tiene la mayor participación dentro de las ventas seleccionadas. Revisa si esta concentración se mantiene en otros períodos, sucursales y canales antes de evaluar una posible dependencia comercial.`;
+}
 
-  if (comparisonMetric === "precioPromedio") {
-    return `${leader.producto} tiene el precio promedio más alto. Puede funcionar mejor como producto premium, mientras que los productos de menor precio pueden apoyar volumen o combos.`;
-  }
+if (comparisonMetric === "precioPromedio") {
+  return `${leader.producto} registra el precio promedio más alto entre los productos comparados. Contrasta este dato con unidades vendidas, margen y comportamiento por período antes de definir su posicionamiento comercial.`;
+}
 
-  if (comparisonMetric === "costoPromedio") {
-    return `${leader.producto} tiene el costo promedio más alto. Revisa si su precio de venta compensa adecuadamente el costo para no sacrificar margen.`;
-  }
+if (comparisonMetric === "costoPromedio") {
+  return `${leader.producto} registra el costo promedio más alto entre los productos comparados. Revisa su precio de venta y margen estimado para evaluar cómo este costo impacta su desempeño comercial.`;
+}
 
-  if (comparisonMetric === "margenEstimado") {
-    return `${leader.producto} aporta el mayor margen estimado. Priorizarlo puede mejorar la rentabilidad sin depender únicamente de vender más unidades.`;
-  }
+if (comparisonMetric === "margenEstimado") {
+  return `${leader.producto} aporta el mayor margen estimado entre los productos comparados. Confirma que los datos de costo sean completos y revisa si este resultado se mantiene por período antes de priorizar una acción comercial.`;
+}
 
 if (comparisonMetric === "stock") {
   return `${leader.producto} tiene el mayor inventario disponible entre los productos comparados. Revisa este nivel junto con sus ventas y rotación antes de decidir si requiere reposición, mantener stock o aplicar una acción comercial.`;
 }
 
-  if (comparisonMetric === "rotacion") {
-    return `${leader.producto} rota más rápido. Es un producto fuerte para mantener disponibilidad y evitar quedarse sin unidades para vender.`;
-  }
+if (comparisonMetric === "rotacion") {
+  return `${leader.producto} registra la mayor rotación entre los productos comparados. Revisa también su inventario disponible y días de cobertura antes de ajustar decisiones de abastecimiento.`;
+}
 
-  if (comparisonMetric === "diasCobertura") {
-    return `${leader.producto} tiene más días de cobertura. Revisa si ese inventario está alineado con la demanda real o si requiere impulso comercial.`;
-  }
+if (comparisonMetric === "diasCobertura") {
+  return `${leader.producto} presenta la mayor cantidad de días de cobertura entre los productos comparados. Contrasta este nivel con sus ventas y rotación para determinar si el inventario está alineado con la demanda.`;
+}
 
-  if (comparisonMetric === "rentabilidadPct") {
-    return `${leader.producto} muestra la mejor rentabilidad porcentual. Puede ser más estratégico priorizarlo que vender solo el producto con mayor volumen.`;
-  }
+if (comparisonMetric === "rentabilidadPct") {
+  return `${leader.producto} registra la mayor rentabilidad porcentual entre los productos comparados. Verifica la integridad de los datos de costo y el volumen vendido antes de utilizar este resultado para priorizar decisiones comerciales.`;
+}
 
-  if (comparisonMetric === "tendenciaPct") {
-    return `${leader.producto} muestra la mejor tendencia reciente. Puede ser una oportunidad para reforzar exhibición, campaña o abastecimiento.`;
-  }
+if (comparisonMetric === "tendenciaPct") {
+  return `${leader.producto} muestra la mejor tendencia reciente entre los productos comparados. Revisa si este comportamiento se mantiene durante un período suficiente y en diferentes sucursales o canales antes de definir una acción comercial.`;
+}
 
   return `${leader.producto} lidera en la variable seleccionada. Revisa su comportamiento frente al resto para definir una acción comercial.`;
 }, [productComparisonRows, comparisonMetric]);
@@ -2397,7 +2397,13 @@ const benchmarkSummary = useMemo(() => {
 const weakestBranch = benchmarkSummary.length
   ? benchmarkSummary[benchmarkSummary.length - 1]
   : null;
-
+const productCount = useMemo(() => {
+  return new Set(
+    filteredRows.map((row) =>
+      toText(row.producto, "Sin producto")
+    )
+  ).size;
+}, [filteredRows]);
 const alerts = useMemo(() => {
   return buildAlerts({
     stockCriticalCount: stockCritico,
@@ -2409,6 +2415,7 @@ weakestBranchSharePct: weakestBranch?.participacion ?? null,
 branchCount: benchmarkSummary.length,
     topProductSharePct: Number(porcentajeTop),
     topProductName: productoTop?.producto ?? null,
+    productCount,
   });
 }, [
   stockCritico,
@@ -2418,6 +2425,7 @@ branchCount: benchmarkSummary.length,
   weakestBranch,
   porcentajeTop,
   productoTop,
+  productCount,
 ]);
 const kpiItems = [
   {
