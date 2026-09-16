@@ -86,8 +86,9 @@ type ProductComparisonRow = {
   margenEstimado: number;
   stock: number;
   rotacion: number;
-  diasCobertura: number;
-  rentabilidadPct: number;
+diasCobertura: number;
+diasCoberturaDisponible: boolean;
+rentabilidadPct: number;
   tendenciaPct: number;
   tendenciaDisponible: boolean;
 };
@@ -625,10 +626,13 @@ const unidadesPromedioDia =
 
 const rotacion = unidadesPromedioDia;
 
-      const diasCobertura =
-        unidadesPromedioDia > 0 && stock > 0
-          ? stock / unidadesPromedioDia
-          : 0;
+const diasCoberturaDisponible =
+  unidadesPromedioDia > 0;
+
+const diasCobertura =
+  diasCoberturaDisponible && stock > 0
+    ? stock / unidadesPromedioDia
+    : 0;
 
 const tendenciaDisponible =
   firstPeriodDays > 0 &&
@@ -654,7 +658,7 @@ const tendenciaPct =
     : 0;
 
       return {
-        producto,
+        producto, 
         ventas: value.ventas,
         unidades: value.unidades,
         participacion:
@@ -668,6 +672,7 @@ const tendenciaPct =
         stock,
         rotacion,
         diasCobertura,
+        diasCoberturaDisponible,
         rentabilidadPct,
         tendenciaPct,
         tendenciaDisponible,
@@ -1692,7 +1697,8 @@ const rentabilidadPct =
 function formatComparisonMetricValue(
   value: number,
   costoIncompleto = false,
-  tendenciaDisponible = true
+  tendenciaDisponible = true,
+  diasCoberturaDisponible = true
 ): string {
   const metricRequiresCost =
     comparisonMetric === "costoPromedio" ||
@@ -1702,20 +1708,28 @@ function formatComparisonMetricValue(
   if (metricRequiresCost && costoIncompleto) {
     return "Sin datos";
   }
-  if (
+if (
   comparisonMetric === "tendenciaPct" &&
   !tendenciaDisponible
 ) {
   return "Sin datos";
 }
-  if (
-    comparisonMetric === "ventas" ||
-    comparisonMetric === "precioPromedio" ||
-    comparisonMetric === "costoPromedio" ||
-    comparisonMetric === "margenEstimado"
-  ) {
-    return formatMoney(value, settings.locale, settings.currencyCode);
-  }
+
+if (
+  comparisonMetric === "diasCobertura" &&
+  !diasCoberturaDisponible
+) {
+  return "Sin datos";
+}
+
+if (
+  comparisonMetric === "ventas" ||
+  comparisonMetric === "precioPromedio" ||
+  comparisonMetric === "costoPromedio" ||
+  comparisonMetric === "margenEstimado"
+) {
+  return formatMoney(value, settings.locale, settings.currencyCode);
+}
 
   if (
     comparisonMetric === "participacion" ||
@@ -1748,11 +1762,15 @@ const metricRequiresCost =
 
 const metricRequiresTrend =
   comparisonMetric === "tendenciaPct";
+  const metricRequiresCoverage =
+  comparisonMetric === "diasCobertura";
 
 const comparableRows = metricRequiresCost
   ? productComparisonRows.filter((row) => !row.costoIncompleto)
   : metricRequiresTrend
   ? productComparisonRows.filter((row) => row.tendenciaDisponible)
+  : metricRequiresCoverage
+  ? productComparisonRows.filter((row) => row.diasCoberturaDisponible)
   : productComparisonRows;
 
 if (comparableRows.length < 2) {
@@ -1763,7 +1781,9 @@ if (comparableRows.length < 2) {
   if (metricRequiresTrend) {
     return "No hay suficientes productos con un período base válido para comparar la tendencia.";
   }
-
+  if (metricRequiresCoverage) {
+  return "No hay suficientes productos con ventas registradas para calcular y comparar los días de cobertura.";
+}
   return "No hay datos suficientes para generar una recomendación.";
 }
 
@@ -3579,10 +3599,11 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
             return (
               <div key={row.producto} style={styles.comparisonBarItem}>
                 <span style={styles.comparisonBarValue}>
-                  {formatComparisonMetricValue(
+                 {formatComparisonMetricValue(
   metricValue,
   row.costoIncompleto,
-  row.tendenciaDisponible
+  row.tendenciaDisponible,
+  row.diasCoberturaDisponible
 )}
                 </span>
 
@@ -3672,9 +3693,11 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
                   <td style={styles.productComparisonTd}>
                     {row.rotacion.toFixed(2)}
                   </td>
-                  <td style={styles.productComparisonTd}>
-                    {row.diasCobertura.toFixed(1)} días
-                  </td>
+                 <td style={styles.productComparisonTd}>
+  {row.diasCoberturaDisponible
+    ? `${row.diasCobertura.toFixed(1)} días`
+    : "Sin datos"}
+</td>
                   <td style={styles.productComparisonTd}>
                     {row.rentabilidadPct.toFixed(1)}%
                   </td>
