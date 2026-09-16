@@ -1736,9 +1736,9 @@ if (comparisonMetric === "ventas") {
   )}% por encima de ${second.producto} en el período analizado. Revisa si esta diferencia se mantiene por sucursal, canal y período antes de definir una acción comercial.`;
 }
 
-  if (comparisonMetric === "unidades") {
-    return `${leader.producto} mueve más unidades. Es un buen candidato para promociones por volumen, combos o campañas de alta rotación.`;
-  }
+if (comparisonMetric === "unidades") {
+  return `${leader.producto} registra la mayor cantidad de unidades vendidas entre los productos comparados. Revisa su comportamiento por período, sucursal y canal antes de definir una acción comercial.`;
+}
 
   if (comparisonMetric === "participacion") {
     return `${leader.producto} tiene mayor peso dentro de las ventas seleccionadas. Si depende demasiado de este producto, conviene diversificar la oferta para reducir concentración.`;
