@@ -3333,7 +3333,9 @@ color: "#FFFFFF",
                   fontWeight: 700,
                 }}
               >
-                {new Date(item.uploaded_at).toLocaleString("es-EC")}
+                {new Date(item.uploaded_at).toLocaleString(
+  settings.locale || "es-EC"
+)}
               </span>
             </div>
 
@@ -3350,10 +3352,11 @@ color: "#FFFFFF",
 
               <span style={{ color: "var(--jd-text-secondary)", fontSize: 12, fontWeight: 800 }}>
                 Ventas:{" "}
-                {Number(item.total_sales).toLocaleString("es-EC", {
-                  style: "currency",
-                  currency: "USD",
-                })}
+                {formatMoney(
+  Number(item.total_sales),
+  settings.locale,
+  settings.currencyCode
+)}
               </span>
 
               <span style={{ color: "var(--jd-text-secondary)", fontSize: 12, fontWeight: 800 }}>
@@ -3436,7 +3439,7 @@ color: "#FFFFFF",
 
       <p style={styles.productComparisonSubtitle}>
 Compara productos por ventas, unidades, participación, precios, margen,
-inventario, rotación, cobertura, rentabilidad y tendencia.
+inventario, unidades por día, cobertura, rentabilidad y tendencia.
       </p>
     </div>
 
@@ -3502,7 +3505,7 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
       <h4 style={styles.emptyTitle}>Selecciona productos para comparar</h4>
       <p style={styles.emptyText}>
         Usa este módulo para revisar qué productos venden más, cuáles tienen mejor
-        margen, cuáles rotan mejor y cuáles necesitan impulso comercial. Este bloque
+        margen, cuáles venden más unidades por día y cuáles necesitan impulso comercial. Este bloque
         se exportará en el PDF.
       </p>
     </div>
@@ -3613,8 +3616,8 @@ inventario, rotación, cobertura, rentabilidad y tendencia.
 <th style={styles.productComparisonTh}>Costo promedio</th>
 <th style={styles.productComparisonTh}>Ganancia estimada</th>
 <th style={styles.productComparisonTh}>Inventario disponible</th>
-<th style={styles.productComparisonTh}>Rotación</th>
-<th style={styles.productComparisonTh}>Días disponibles</th>
+<th style={styles.productComparisonTh}>Unidades por día</th>
+<th style={styles.productComparisonTh}>Días de cobertura</th>
 <th style={styles.productComparisonTh}>Rentabilidad</th>
               </tr>
             </thead>
