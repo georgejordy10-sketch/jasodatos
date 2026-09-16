@@ -3725,9 +3725,7 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
                   {formatInt(productComparisonTotal.unidades)}
                 </td>
 <td style={styles.productComparisonTotalTd}>
-  {productComparisonTotal.costoIncompleto
-    ? "Sin datos"
-    : `${productComparisonTotal.rentabilidadPct.toFixed(1)}%`}
+  {productComparisonTotal.participacion.toFixed(1)}%
 </td>
                 <td style={styles.productComparisonTotalTd}>
                   {formatMoney(
@@ -3759,9 +3757,11 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
                 </td>
                 <td style={styles.productComparisonTotalTd}>-</td>
                 <td style={styles.productComparisonTotalTd}>-</td>
-                <td style={styles.productComparisonTotalTd}>
-                  {productComparisonTotal.rentabilidadPct.toFixed(1)}%
-                </td>
+<td style={styles.productComparisonTotalTd}>
+  {productComparisonTotal.costoIncompleto
+    ? "Sin datos"
+    : `${productComparisonTotal.rentabilidadPct.toFixed(1)}%`}
+</td>
               </tr>
             </tbody>
           </table>
