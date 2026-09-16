@@ -89,9 +89,10 @@ export default function RecommendedActionsSection({
             <span style={styles.eyebrow}>Prioridades detectadas</span>
             <h3 style={styles.title}>Qué deberías hacer primero</h3>
             <p style={styles.subtitle}>
-              Aún no hay acciones claras para recomendar. Carga datos de ventas,
-              inventario y canales para recibir sugerencias útiles.
-            </p>
+  No se detectaron riesgos o prioridades comerciales suficientemente
+  claras en la selección actual. Esto no significa que falten datos;
+  revisa los indicadores antes de tomar una decisión.
+</p>
           </div>
         </div>
       </section>
@@ -111,7 +112,10 @@ export default function RecommendedActionsSection({
         </div>
 
         {!isExportingPdf ? (
-          <span style={styles.countBadge}>{recommendations.length} acciones</span>
+          <span style={styles.countBadge}>
+  {recommendations.length}{" "}
+  {recommendations.length === 1 ? "acción" : "acciones"}
+</span>
         ) : null}
       </div>
 
