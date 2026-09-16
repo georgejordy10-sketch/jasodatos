@@ -1474,13 +1474,8 @@ const whatsappDisabledReason = !canUseWhatsappByPlan
   : activeChannels.length === 0
   ? "Activa al menos un canal para usar acciones de WhatsApp."
   : "";
-
 const pdfDisabledReason = !canExportPdf
   ? "Disponible desde Crecimiento."
-  : !hasValidWhatsapp
-  ? "Configura un WhatsApp válido en Configuración del negocio."
-  : activeChannels.length === 0
-  ? "Activa al menos un canal para compartir."
   : "";
   const secondaryActiveChannels = activeChannels.filter(
   (channel) => channel !== topActiveChannel
