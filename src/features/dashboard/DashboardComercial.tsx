@@ -2508,6 +2508,7 @@ const productCount = useMemo(() => {
 const alerts = useMemo(() => {
   return buildAlerts({
     stockCriticalCount: stockCritico,
+    stockCaseCount: hasStockData ? stockRiskRows.length : null,
     salesChangePct: variationPct,
     salesDropMediumPct: settings.salesDropMediumPct,
 salesDropHighPct: settings.salesDropHighPct,
@@ -2520,6 +2521,8 @@ branchCount: benchmarkSummary.length,
   });
 }, [
   stockCritico,
+  hasStockData,
+  stockRiskRows.length,
   variationPct,
   settings.salesDropMediumPct,
   settings.salesDropHighPct,

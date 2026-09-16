@@ -9,7 +9,15 @@ export function buildAlerts(input: BuildAlertsInput): BusinessAlert[] {
   const alerts: BusinessAlert[] = [];
 
   const stockCriticalCount = Number(input.stockCriticalCount ?? 0);
-
+  const stockCaseCount =
+  typeof input.stockCaseCount === "number" &&
+  Number.isFinite(input.stockCaseCount)
+    ? Math.max(0, Math.floor(input.stockCaseCount))
+    : 0;
+   const stockCriticalSharePct =
+  stockCaseCount > 0
+    ? (stockCriticalCount / stockCaseCount) * 100
+    : null;
   const salesChangePct =
     typeof input.salesChangePct === "number" &&
     Number.isFinite(input.salesChangePct)
@@ -51,12 +59,18 @@ message:
   stockCriticalCount === 1
     ? "Hay 1 caso de inventario crítico. Revisa disponibilidad y planifica reposición antes de impulsar su demanda."
     : `Hay ${stockCriticalCount} casos de inventario crítico. Revisa disponibilidad y prioriza reposición antes de impulsar su demanda.`,
-      severity:
-        stockCriticalCount >= 4
-          ? "alta"
-          : stockCriticalCount >= 2
-          ? "media"
-          : "baja",
+severity:
+  stockCriticalSharePct !== null
+    ? stockCriticalSharePct >= 50
+      ? "alta"
+      : stockCriticalSharePct >= 25
+      ? "media"
+      : "baja"
+    : stockCriticalCount >= 4
+    ? "alta"
+    : stockCriticalCount >= 2
+    ? "media"
+    : "baja",
       status: "nueva",
       metric: stockCriticalCount,
       actionLabel: "Ver stock",
