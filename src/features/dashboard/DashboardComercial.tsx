@@ -269,17 +269,38 @@ function parseDateLike(value: unknown): Date | null {
   const direct = new Date(raw);
   return Number.isNaN(direct.getTime()) ? null : direct;
 }
+function formatDateInput(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
+  return `${year}-${month}-${day}`;
+}
 function toDateKey(value: unknown): string {
-  const d = parseDateLike(value);
-  if (!d) return toText(value, "Sin fecha");
-  return d.toISOString().slice(0, 10);
+  const date = parseDateLike(value);
+
+  if (!date) {
+    return toText(value, "Sin fecha");
+  }
+
+  return formatDateInput(date);
 }
 
 function diffDays(start: Date, end: Date): number {
   const msPerDay = 1000 * 60 * 60 * 24;
-  const utcStart = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
-  const utcEnd = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+
+  const utcStart = Date.UTC(
+    start.getFullYear(),
+    start.getMonth(),
+    start.getDate()
+  );
+
+  const utcEnd = Date.UTC(
+    end.getFullYear(),
+    end.getMonth(),
+    end.getDate()
+  );
+
   return Math.floor((utcEnd - utcStart) / msPerDay);
 }
 
@@ -289,17 +310,24 @@ function addDays(date: Date, days: number): Date {
   return copy;
 }
 
-function formatDateInput(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
+function isWithinRange(
+  value: unknown,
+  fromDate: string,
+  toDate: string
+): boolean {
+  const date = parseDateLike(value);
 
-function isWithinRange(value: unknown, fromDate: string, toDate: string): boolean {
-  const key = toDateKey(value);
+  if (!date) {
+    return !fromDate && !toDate;
+  }
+
+  const key = formatDateInput(date);
+
   if (fromDate && key < fromDate) return false;
   if (toDate && key > toDate) return false;
+
   return true;
 }
-
 function normalizeCommercialText(value: unknown): string {
   return toText(value, "")
     .trim()
@@ -651,24 +679,28 @@ const tendenciaPct =
         row.stock > 0
     );
 }
-
 function buildSalesTrend(rows: Record<string, unknown>[]): SalesPoint[] {
   const map = new Map<string, number>();
 
   for (const row of rows) {
-    const fecha = toDateKey(row.fecha);
-    const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
+    const parsedDate = parseDateLike(row.fecha);
+
+    if (!parsedDate) continue;
+
+    const fecha = formatDateInput(parsedDate);
+    const venta =
+      toNumber(row.cantidad) * toNumber(row.precio_unitario);
+
     map.set(fecha, (map.get(fecha) ?? 0) + venta);
   }
 
   return [...map.entries()]
-.map(([fecha, ventas]) => ({
-  fecha,
-  ventas,
-}))
+    .map(([fecha, ventas]) => ({
+      fecha,
+      ventas,
+    }))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
-
 function buildStockRisk(
   rows: Record<string, unknown>[],
   stockMin: number,
@@ -751,8 +783,13 @@ function buildChannelData(rows: Record<string, unknown>[]) {
 
     if (!channelName) continue;
 
-    const fecha = toDateKey(row.fecha);
-    const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
+    const parsedDate = parseDateLike(row.fecha);
+
+if (!parsedDate) continue;
+
+const fecha = formatDateInput(parsedDate);
+const venta =
+  toNumber(row.cantidad) * toNumber(row.precio_unitario);
 
     channels.add(channelName);
 
@@ -2682,10 +2719,11 @@ function enviarPromoWhatsApp() {
   window.open(url, "_blank");
 }
 const fileDateRangeLabel = useMemo(() => {
-  const dateKeys = processedData.validRows
-    .map((row) => toDateKey(row.fecha))
-    .filter(Boolean)
-    .sort();
+const dateKeys = processedData.validRows
+  .map((row) => parseDateLike(row.fecha))
+  .filter((date): date is Date => date !== null)
+  .map(formatDateInput)
+  .sort();
 
   if (dateKeys.length === 0) {
     return "Periodo del archivo: no detectado";
