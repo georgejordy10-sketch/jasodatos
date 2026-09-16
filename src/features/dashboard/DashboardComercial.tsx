@@ -779,7 +779,63 @@ if (!current || timestamp >= current.timestamp) {
     )
     .slice(0, 6);
 }
+function buildStockSummary(
+  rows: Record<string, unknown>[],
+  stockMin: number
+): {
+  criticalCount: number;
+  totalCaseCount: number;
+} {
+  const minimo = Math.max(0, stockMin);
+  const criticalThreshold = Math.max(1, Math.round(minimo * 0.5));
 
+  const latestStock = new Map<
+    string,
+    {
+      stock: number;
+      timestamp: number;
+    }
+  >();
+
+  for (const row of rows) {
+    if (
+      row.stock === undefined ||
+      row.stock === null ||
+      row.stock === ""
+    ) {
+      continue;
+    }
+
+    const producto = toText(row.producto, "Sin producto");
+    const sucursal = toText(row.sucursal, "Sin sucursal");
+    const stock = Math.max(0, toNumber(row.stock));
+
+    const parsedDate = parseDateLike(row.fecha);
+    const timestamp =
+      parsedDate?.getTime() ?? Number.NEGATIVE_INFINITY;
+
+    const key = `${sucursal}__${producto}`;
+    const current = latestStock.get(key);
+
+    if (!current || timestamp >= current.timestamp) {
+      latestStock.set(key, {
+        stock,
+        timestamp,
+      });
+    }
+  }
+
+  const snapshots = [...latestStock.values()];
+
+  const criticalCount = snapshots.filter(
+    (item) => item.stock <= criticalThreshold
+  ).length;
+
+  return {
+    criticalCount,
+    totalCaseCount: snapshots.length,
+  };
+}
 function buildChannelData(rows: Record<string, unknown>[]) {
   const byDateAndChannel = new Map<string, Record<string, number | string>>();
   const channels = new Set<string>();
@@ -1920,14 +1976,23 @@ const hasStockData = useMemo(() => {
     (row) => row.stock !== undefined && row.stock !== null && row.stock !== ""
   );
 }, [filteredRows]);
+const stockSummary = useMemo(() => {
+  if (!hasStockData) {
+    return {
+      criticalCount: 0,
+      totalCaseCount: 0,
+    };
+  }
 
-const stockCritico = useMemo(() => {
-  if (!hasStockData) return null;
-
-  return stockRiskRows.filter(
-    (row) => row.estado === "Crítico" || row.estado === "Sin inventario"
-  ).length;
-}, [hasStockData, stockRiskRows]);
+  return buildStockSummary(
+    filteredRows,
+    settings.defaultStockMin
+  );
+}, [filteredRows, settings.defaultStockMin, hasStockData]);
+const stockCritico =
+  hasStockData
+    ? stockSummary.criticalCount
+    : null;
 
 const searchedRows = useMemo(() => {
   const term = searchTerm.trim().toLowerCase();
@@ -2508,7 +2573,7 @@ const productCount = useMemo(() => {
 const alerts = useMemo(() => {
   return buildAlerts({
     stockCriticalCount: stockCritico,
-    stockCaseCount: hasStockData ? stockRiskRows.length : null,
+    stockCaseCount: hasStockData ? stockSummary.totalCaseCount : null,
     salesChangePct: variationPct,
     salesDropMediumPct: settings.salesDropMediumPct,
 salesDropHighPct: settings.salesDropHighPct,
@@ -2522,7 +2587,7 @@ branchCount: benchmarkSummary.length,
 }, [
   stockCritico,
   hasStockData,
-  stockRiskRows.length,
+  stockSummary.totalCaseCount,
   variationPct,
   settings.salesDropMediumPct,
   settings.salesDropHighPct,
