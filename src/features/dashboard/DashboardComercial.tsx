@@ -2707,9 +2707,9 @@ function enviarWhatsApp() {
     : " No se identificaron acciones prioritarias en este momento.";
 
   const mensaje = encodeURIComponent(
-    `Cmo ests.
+`Hola.
 
-Te comparto un breve resumen comercial generado en ${settings.businessName || "JasoDatos"}.
+Te comparto un breve resumen comercial generado en ${businessDisplayName || settings.businessName || "JasoDatos"}.
 
 ${jasoBot.mensajePrincipal}
 
@@ -2719,7 +2719,7 @@ ${jasoBot.insights.map((item) => ` ${item}`).join("\n")}
 Acciones sugeridas:
 ${recomendaciones}
 
-El reporte PDF se descargó correctamente. Puedes adjuntarlo y compartirlo por WhatsApp.`
+Si descargaste el reporte PDF, puedes adjuntarlo y compartirlo por WhatsApp.`
   );
 
 const phone = normalizeWhatsappNumber(settings.businessWhatsapp, settings.locale);
@@ -2733,7 +2733,7 @@ const phone = normalizeWhatsappNumber(settings.businessWhatsapp, settings.locale
 function enviarPromoWhatsApp() {
   const mensaje = encodeURIComponent(
     jasoBot.promoWhatsApp ??
-      `Hola, te escribimos desde ${settings.businessName || "JasoDatos"}. Tenemos promociones especiales disponibles. escríbenos para más información.`
+      `Hola, te escribimos desde ${businessDisplayName || settings.businessName || "JasoDatos"}. Queremos compartirte información comercial. Escríbenos para más detalles.`
   );
 
   const phone = normalizeWhatsappNumber(settings.businessWhatsapp, settings.locale);
