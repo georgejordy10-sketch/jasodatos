@@ -1890,10 +1890,6 @@ const searchedRows = useMemo(() => {
 row.costo_unitario === null ||
 row.costo_unitario === ""
   ? "No Disponible"
-  : row.costo_unitario === undefined ||
-row.costo_unitario === null ||
-row.costo_unitario === ""
-  ? "No Disponible"
   : formatMoney(
       toNumber(row.costo_unitario),
       settings.locale,
