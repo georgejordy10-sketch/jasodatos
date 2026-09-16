@@ -3674,19 +3674,23 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
                     )}
                   </td>
                   <td style={styles.productComparisonTd}>
-                    {formatMoney(
-                      row.costoPromedio,
-                      settings.locale,
-                      settings.currencyCode
-                    )}
-                  </td>
-                  <td style={styles.productComparisonTd}>
-                    {formatMoney(
-                      row.margenEstimado,
-                      settings.locale,
-                      settings.currencyCode
-                    )}
-                  </td>
+  {row.costoIncompleto
+    ? "Sin datos"
+    : formatMoney(
+        row.costoPromedio,
+        settings.locale,
+        settings.currencyCode
+      )}
+</td>
+<td style={styles.productComparisonTd}>
+  {row.costoIncompleto
+    ? "Sin datos"
+    : formatMoney(
+        row.margenEstimado,
+        settings.locale,
+        settings.currencyCode
+      )}
+</td>
                   <td style={styles.productComparisonTd}>
                     {formatInt(row.stock)}
                   </td>
@@ -3698,9 +3702,11 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
     ? `${row.diasCobertura.toFixed(1)} días`
     : "Sin datos"}
 </td>
-                  <td style={styles.productComparisonTd}>
-                    {row.rentabilidadPct.toFixed(1)}%
-                  </td>
+<td style={styles.productComparisonTd}>
+  {row.costoIncompleto
+    ? "Sin datos"
+    : `${row.rentabilidadPct.toFixed(1)}%`}
+</td>
                 </tr>
               ))}
 
@@ -3718,9 +3724,11 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
                 <td style={styles.productComparisonTotalTd}>
                   {formatInt(productComparisonTotal.unidades)}
                 </td>
-                <td style={styles.productComparisonTotalTd}>
-                  {productComparisonTotal.participacion.toFixed(1)}%
-                </td>
+<td style={styles.productComparisonTotalTd}>
+  {productComparisonTotal.costoIncompleto
+    ? "Sin datos"
+    : `${productComparisonTotal.rentabilidadPct.toFixed(1)}%`}
+</td>
                 <td style={styles.productComparisonTotalTd}>
                   {formatMoney(
                     productComparisonTotal.precioPromedio,
@@ -3729,19 +3737,23 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
                   )}
                 </td>
                 <td style={styles.productComparisonTotalTd}>
-                  {formatMoney(
-                    productComparisonTotal.costoPromedio,
-                    settings.locale,
-                    settings.currencyCode
-                  )}
-                </td>
-                <td style={styles.productComparisonTotalTd}>
-                  {formatMoney(
-                    productComparisonTotal.margenEstimado,
-                    settings.locale,
-                    settings.currencyCode
-                  )}
-                </td>
+  {productComparisonTotal.costoIncompleto
+    ? "Sin datos"
+    : formatMoney(
+        productComparisonTotal.costoPromedio,
+        settings.locale,
+        settings.currencyCode
+      )}
+</td>
+<td style={styles.productComparisonTotalTd}>
+  {productComparisonTotal.costoIncompleto
+    ? "Sin datos"
+    : formatMoney(
+        productComparisonTotal.margenEstimado,
+        settings.locale,
+        settings.currencyCode
+      )}
+</td>
                 <td style={styles.productComparisonTotalTd}>
                   {formatInt(productComparisonTotal.stock)}
                 </td>
