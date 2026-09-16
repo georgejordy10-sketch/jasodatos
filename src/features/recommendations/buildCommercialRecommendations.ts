@@ -34,33 +34,48 @@ function parseDateLike(value: unknown): Date | null {
   const raw = value.trim();
   if (!raw) return null;
 
-  const direct = new Date(raw);
+  const ymd = raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
 
-  if (!Number.isNaN(direct.getTime())) {
-    return direct;
-  }
+  if (ymd) {
+    const year = Number(ymd[1]);
+    const month = Number(ymd[2]);
+    const day = Number(ymd[3]);
 
-  const parts = raw.split(/[\/\-]/);
+    const localDate = new Date(year, month - 1, day);
 
-  if (parts.length === 3) {
-    const [a, b, c] = parts;
-
-    if (a.length === 4) {
-      const isoDate = new Date(`${a}-${b}-${c}`);
-
-      if (!Number.isNaN(isoDate.getTime())) {
-        return isoDate;
-      }
-    } else {
-      const localDate = new Date(`${c}-${b}-${a}`);
-
-      if (!Number.isNaN(localDate.getTime())) {
-        return localDate;
-      }
+    if (
+      localDate.getFullYear() === year &&
+      localDate.getMonth() === month - 1 &&
+      localDate.getDate() === day
+    ) {
+      return localDate;
     }
+
+    return null;
   }
 
-  return null;
+  const dmy = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+
+  if (dmy) {
+    const day = Number(dmy[1]);
+    const month = Number(dmy[2]);
+    const year = Number(dmy[3]);
+
+    const localDate = new Date(year, month - 1, day);
+
+    if (
+      localDate.getFullYear() === year &&
+      localDate.getMonth() === month - 1 &&
+      localDate.getDate() === day
+    ) {
+      return localDate;
+    }
+
+    return null;
+  }
+
+  const direct = new Date(raw);
+  return Number.isNaN(direct.getTime()) ? null : direct;
 }
 
 export function buildCommercialRecommendations(

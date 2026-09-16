@@ -217,29 +217,57 @@ function formatInt(value: number, locale = "es-EC"): string {
   }
 }
 function parseDateLike(value: unknown): Date | null {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
-
-  if (typeof value === "string") {
-    const raw = value.trim();
-    if (!raw) return null;
-
-    const d1 = new Date(raw);
-    if (!Number.isNaN(d1.getTime())) return d1;
-
-    const parts = raw.split(/[\/\-]/);
-    if (parts.length === 3) {
-      const [a, b, c] = parts;
-      if (a.length === 4) {
-        const d2 = new Date(`${a}-${b}-${c}`);
-        if (!Number.isNaN(d2.getTime())) return d2;
-      } else {
-        const d2 = new Date(`${c}-${b}-${a}`);
-        if (!Number.isNaN(d2.getTime())) return d2;
-      }
-    }
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
   }
 
-  return null;
+  if (typeof value !== "string") return null;
+
+  const raw = value.trim();
+  if (!raw) return null;
+
+  const ymd = raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+
+  if (ymd) {
+    const year = Number(ymd[1]);
+    const month = Number(ymd[2]);
+    const day = Number(ymd[3]);
+
+    const localDate = new Date(year, month - 1, day);
+
+    if (
+      localDate.getFullYear() === year &&
+      localDate.getMonth() === month - 1 &&
+      localDate.getDate() === day
+    ) {
+      return localDate;
+    }
+
+    return null;
+  }
+
+  const dmy = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+
+  if (dmy) {
+    const day = Number(dmy[1]);
+    const month = Number(dmy[2]);
+    const year = Number(dmy[3]);
+
+    const localDate = new Date(year, month - 1, day);
+
+    if (
+      localDate.getFullYear() === year &&
+      localDate.getMonth() === month - 1 &&
+      localDate.getDate() === day
+    ) {
+      return localDate;
+    }
+
+    return null;
+  }
+
+  const direct = new Date(raw);
+  return Number.isNaN(direct.getTime()) ? null : direct;
 }
 
 function toDateKey(value: unknown): string {
@@ -1858,7 +1886,19 @@ const searchedRows = useMemo(() => {
       toText(row.producto),
       toText(row.tipo_movimiento, "-"),
       formatInt(toNumber(row.cantidad)),
-      formatMoney(toNumber(row.costo_unitario), settings.locale, settings.currencyCode),
+      row.costo_unitario === undefined ||
+row.costo_unitario === null ||
+row.costo_unitario === ""
+  ? "No Disponible"
+  : row.costo_unitario === undefined ||
+row.costo_unitario === null ||
+row.costo_unitario === ""
+  ? "No Disponible"
+  : formatMoney(
+      toNumber(row.costo_unitario),
+      settings.locale,
+      settings.currencyCode
+    ),
       formatMoney(toNumber(row.precio_unitario), settings.locale, settings.currencyCode),
       toText(row.canal, "-"),
       row.stock === undefined || row.stock === null || row.stock === ""
@@ -1947,22 +1987,25 @@ const metadataRows = [
   ];
 
   worksheet.addRow(headers);
-
-  const data = filas.map((row) => [
-    toDateKey(row.fecha),
-    toText(row.sucursal),
-    toText(row.bodega, "-"),
-    toText(row.sku, "-"),
-    toText(row.producto),
-    toText(row.tipo_movimiento, "-"),
-    toNumber(row.cantidad),
-    toNumber(row.costo_unitario),
-    toNumber(row.precio_unitario),
-    toText(row.canal, "-"),
-    row.stock === undefined || row.stock === null || row.stock === ""
-      ? ""
-      : toNumber(row.stock),
-  ]);
+const data = filas.map((row) => [
+  toDateKey(row.fecha),
+  toText(row.sucursal),
+  toText(row.bodega, "-"),
+  toText(row.sku, "-"),
+  toText(row.producto),
+  toText(row.tipo_movimiento, "-"),
+  toNumber(row.cantidad),
+  row.costo_unitario === undefined ||
+  row.costo_unitario === null ||
+  row.costo_unitario === ""
+    ? ""
+    : toNumber(row.costo_unitario),
+  toNumber(row.precio_unitario),
+  toText(row.canal, "-"),
+  row.stock === undefined || row.stock === null || row.stock === ""
+    ? ""
+    : toNumber(row.stock),
+]);
 
   data.forEach((row) => worksheet.addRow(row));
 
