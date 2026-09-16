@@ -1843,14 +1843,14 @@ if (comparisonMetric === "margenEstimado") {
 }
 
 if (comparisonMetric === "stock") {
-  return `${leader.producto} tiene el mayor inventario disponible entre los productos comparados. Revisa este nivel junto con sus ventas y rotación antes de decidir si requiere reposición, mantener stock o aplicar una acción comercial.`;
+  return `${leader.producto} tiene el mayor inventario disponible entre los productos comparados. Revisa este nivel junto con sus ventas, unidades por día y días de cobertura antes de decidir si requiere reposición, mantener stock o aplicar una acción comercial.`;
 }
 
 if (comparisonMetric === "rotacion") {
   return `${leader.producto} registra el mayor promedio diario de unidades vendidas entre los productos comparados. Revisa este ritmo junto con el inventario disponible y los días de cobertura antes de ajustar el abastecimiento.`;
 }
 if (comparisonMetric === "diasCobertura") {
-  return `${leader.producto} presenta la mayor cantidad de días de cobertura entre los productos comparados. Contrasta este nivel con sus ventas y rotación para determinar si el inventario está alineado con la demanda.`;
+  return `${leader.producto} presenta la mayor cantidad de días de cobertura entre los productos comparados. Contrasta este nivel con sus ventas y unidades por día para determinar si el inventario está alineado con la demanda.`;
 }
 
 if (comparisonMetric === "rentabilidadPct") {
