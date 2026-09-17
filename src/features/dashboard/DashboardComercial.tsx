@@ -2656,19 +2656,10 @@ const jasoBot = useMemo(() => {
 const mainRecommendation = commercialRecommendations[0] ?? null;
 const secondaryRecommendations = commercialRecommendations.slice(1, 3);
 function normalizeWhatsappForShare(value?: string | null) {
-  const digits = String(value ?? "").replace(/\D/g, "");
-
-  if (!digits) return "";
-
-  if (digits.startsWith("593")) {
-    return digits;
-  }
-
-  if (digits.startsWith("0")) {
-    return `593${digits.slice(1)}`;
-  }
-
-  return digits;
+  return normalizeWhatsappNumber(
+    String(value ?? ""),
+    settings.locale
+  );
 }
 
 function shareJasoAlixByWhatsapp() {
