@@ -1050,7 +1050,7 @@ let mensajePrincipal =
 if (tipoPromo === "reposicion" && productosCriticos.length > 0) {
   mensajePrincipal = `Detectamos inventario crítico en ${productosCriticos[0].producto} en ${productosCriticos[0].sucursal}. La prioridad es revisar disponibilidad y planificar reposición antes de perder oportunidades de venta.`;
 } else if (tipoPromo === "impulso_sucursal") {
-  mensajePrincipal = `${nombreSucursalBaja} presenta una participación de ventas menor a la referencia esperada entre sucursales. Revisa surtido, disponibilidad, canal y ejecución comercial antes de definir una acción correctiva.`;
+  mensajePrincipal = `${nombreSucursalBaja} presenta una participación de ventas menor a la referencia proporcional según el número de sucursales. Revisa surtido, disponibilidad, canal y ejecución comercial antes de definir una acción correctiva.`;
 } else if (tipoPromo === "producto_estrella") {
   mensajePrincipal = `${nombreProductoTop} lidera actualmente las ventas. Úsalo como referencia para revisar dónde se concentra su mejor desempeño antes de definir la siguiente acción comercial.`;
 }
