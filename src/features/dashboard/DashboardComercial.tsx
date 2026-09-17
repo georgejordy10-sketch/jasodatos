@@ -827,9 +827,11 @@ function buildStockSummary(
 
   const snapshots = [...latestStock.values()];
 
-  const criticalCount = snapshots.filter(
-    (item) => item.stock <= criticalThreshold
-  ).length;
+const criticalCount = snapshots.filter(
+  (item) =>
+    item.stock < minimo &&
+    item.stock <= criticalThreshold
+).length;
 
   return {
     criticalCount,
