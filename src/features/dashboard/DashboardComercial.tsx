@@ -2690,10 +2690,14 @@ function shareJasoAlixByWhatsapp() {
       businessCrmAny?.owner_whatsapp
   );
 
-  if (!whatsappNumber) {
-    setSettingsOpen(true);
-    return;
-  }
+const whatsappIsValid =
+  whatsappNumber.length >= 8 &&
+  whatsappNumber.length <= 15;
+
+if (!whatsappIsValid) {
+  setSettingsOpen(true);
+  return;
+}
 
   const secondaryText =
     secondaryRecommendations.length > 0
