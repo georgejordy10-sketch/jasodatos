@@ -4070,17 +4070,25 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
 <button
   type="button"
   style={
-    currentPlan === "ultra"
+    canUseWhatsappActions
       ? styles.assistantControlButtonActive
       : styles.assistantControlButton
   }
   onClick={
-    currentPlan === "ultra"
+    canUseWhatsappActions
       ? shareJasoAlixByWhatsapp
-      : () => setPlansOpen(true)
+      : !canUseWhatsappByPlan
+      ? () => setPlansOpen(true)
+      : () => setSettingsOpen(true)
   }
 >
-  {currentPlan === "ultra" ? "Enviar por WhatsApp" : "Disponible en plan Control"}
+  {!canUseWhatsappByPlan
+    ? "Disponible en plan Control"
+    : !hasValidWhatsapp
+    ? "Configurar WhatsApp"
+    : activeChannels.length === 0
+    ? "Configurar canales"
+    : "Enviar por WhatsApp"}
 </button>
 
 <button
