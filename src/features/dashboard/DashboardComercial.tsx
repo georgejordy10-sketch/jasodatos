@@ -3943,9 +3943,11 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
                 ? "Inventario"
                 : jasoBot.tipoPromo === "impulso_sucursal"
                 ? "Sucursal"
-                : jasoBot.tipoPromo === "producto_estrella"
-                ? "Producto destacado"
-                : "Sugerencia"}
+: jasoBot.tipoPromo === "producto_estrella"
+? "Producto destacado"
+: jasoBot.tipoPromo === "reposicion"
+? "Reposición"
+: "Sugerencia"}
             </span>
           </>
         ) : null}
@@ -3992,9 +3994,6 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
     <div style={styles.priorityActionCard}>
       <div style={styles.priorityActionHeader}>
         <span style={styles.priorityNowBadge}>PRIORIDAD AHORA</span>
-        <span style={styles.priorityActionType}>
-          {mainRecommendation.type}
-        </span>
       </div>
 
       <h3 style={styles.priorityActionTitle}>
@@ -4056,23 +4055,17 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
 
 {!isExportingPdf ? (
   <div style={styles.assistantFooter}>
-    <div style={styles.assistantFooterActions}>
-      <button
-        type="button"
-        style={styles.assistantPdfButton}
-        onClick={() => setPlansOpen(true)}
-      >
-        PDF en Plan Crecimiento
-      </button>
-
-      <button
-        type="button"
-        style={styles.assistantWhatsappButton}
-        onClick={() => setPlansOpen(true)}
-      >
-        WhatsApp en plan Control
-      </button>
-    </div>
+<div style={styles.assistantFooterActions}>
+  {!canUseWhatsappByPlan ? (
+    <button
+      type="button"
+      style={styles.assistantWhatsappButton}
+      onClick={() => setPlansOpen(true)}
+    >
+      WhatsApp en plan Control
+    </button>
+  ) : null}
+</div>
 
     <div style={styles.assistantFooterActions}>
 <button
