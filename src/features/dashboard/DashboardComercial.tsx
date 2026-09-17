@@ -3891,7 +3891,11 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
         <BenchmarkingSucursales rows={benchmarkRows} />
       </div>
     </>
-  ) : (
+) : (
+  <div
+    id="benchmarking-sucursales"
+    style={{ scrollMarginTop: 120 }}
+  >
     <LockedFeatureCard
       title="Comparativo por local"
       description="Detectamos varios locales en tu archivo. Puedes ver el análisis general; para comparar ventas, productos e inventario por local, activa un plan con desempeño entre sucursales."
@@ -3899,6 +3903,7 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
       onOpenPlans={() => setPlansOpen(true)}
       onContactSales={openSalesWhatsapp}
     />
+  </div>
   )
 ) : null}
   {isGeneralView &&
