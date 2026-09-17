@@ -1371,7 +1371,8 @@ const {
 
 const isLocalDemoUltra =
   typeof window !== "undefined" &&
-  window.location.hostname === "localhost";
+  window.location.hostname === "localhost" &&
+  !currentBusinessSlug;
 
 const businessPlanAny = businessPlan as
   | {
