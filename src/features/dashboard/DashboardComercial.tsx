@@ -855,7 +855,9 @@ const fecha = formatDateInput(parsedDate);
 const venta =
   toNumber(row.cantidad) * toNumber(row.precio_unitario);
 
-    channels.add(channelName);
+if (venta === 0) continue;
+
+channels.add(channelName);
 
     const current = byDateAndChannel.get(fecha) ?? { fecha };
     current[channelName] = toNumber(current[channelName]) + venta;
