@@ -2734,9 +2734,7 @@ function shareJasoAlixByWhatsapp() {
 }
 function usarAccion(texto: string) {
   navigator.clipboard.writeText(texto);
-  setActionNotice(
-    `Campaña copiada. Puedes pegarla en WhatsApp, redes sociales o una lista de clientes: ${texto}`
-  );
+  setActionNotice("Acción copiada al portapapeles.");
 }
 
 function normalizeWhatsappNumber(value: string, locale: string): string {
