@@ -2846,6 +2846,7 @@ return (
 {isGeneralView ? (
 <HeroHeader
   businessName={businessDisplayName}
+  isExportingPdf={isExportingPdf}
   filteredCount={filteredRows.length}
   fileName={processedData.fileName}
   planLabel={planLabel}
@@ -2872,26 +2873,46 @@ return (
     onOpenPlans={() => setPlansOpen(true)}
   />
 ) : null}
-{isGeneralView && businessContextMessage ? (
+{isGeneralView && businessContextMessage && !isExportingPdf ? (
   <div style={styles.businessContextWarning}>
     {businessContextMessage}
   </div>
 ) : null}
 {isGeneralView ? (
-<FilterBar
-  selectedSucursal={selectedSucursal}
-  selectedProducto={selectedProducto}
-  sucursalOptions={sucursalOptions}
-  productoOptions={productoOptions}
-  fromDate={fromDate}
-  toDate={toDate}
-  fileDateRangeLabel={fileDateRangeLabel}
-  onChangeSucursal={setSelectedSucursal}
-  onChangeProducto={setSelectedProducto}
-  onChangeFromDate={setFromDate}
-  onChangeToDate={setToDate}
-  onClearFilters={clearFilters}
-/>
+  isExportingPdf ? (
+    <div style={styles.pdfFilterSummary}>
+      <strong style={styles.pdfFilterSummaryTitle}>
+        Contexto del análisis
+      </strong>
+
+      <span>
+        {fileDateRangeLabel || "Período completo"}
+      </span>
+
+      <span>
+        Sucursal: {selectedSucursal}
+      </span>
+
+      <span>
+        Producto: {selectedProducto}
+      </span>
+    </div>
+  ) : (
+    <FilterBar
+      selectedSucursal={selectedSucursal}
+      selectedProducto={selectedProducto}
+      sucursalOptions={sucursalOptions}
+      productoOptions={productoOptions}
+      fromDate={fromDate}
+      toDate={toDate}
+      fileDateRangeLabel={fileDateRangeLabel}
+      onChangeSucursal={setSelectedSucursal}
+      onChangeProducto={setSelectedProducto}
+      onChangeFromDate={setFromDate}
+      onChangeToDate={setToDate}
+      onClearFilters={clearFilters}
+    />
+  )
 ) : null}
 <ProfileSettingsPanel
   open={settingsOpen}
@@ -3024,7 +3045,7 @@ style={{
         </p>
       </div>
 
-      {dashboardUploadHistory.length > 2 ? (
+      {dashboardUploadHistory.length > 2 && !isExportingPdf ? (
         <button
           type="button"
           onClick={() => setShowFullUploadHistory(true)}
@@ -3505,7 +3526,8 @@ color: "#FFFFFF",
     />
   </div>
 ) : null}
-{shouldShowSection("productos") ? (
+{shouldShowSection("productos") &&
+(!isExportingPdf || selectedComparisonProducts.length > 0) ? (
 <section
   id="productos"
   ref={productComparisonRef}
@@ -3528,71 +3550,80 @@ Compara productos por ventas, unidades, participación, precios, margen,
 inventario, unidades por día, cobertura, rentabilidad y tendencia.
       </p>
     </div>
+{!isExportingPdf ? (
+  <div style={styles.comparisonHeaderActions}>
+    <label style={styles.metricSelectorLabel}>
+      Variable en barras
+      <select
+        style={styles.metricSelector}
+        value={comparisonMetric}
+        onChange={(event) =>
+          setComparisonMetric(event.target.value as ComparisonMetric)
+        }
+      >
+        {COMPARISON_METRIC_OPTIONS.map((option) => (
+          <option key={option.key} value={option.key}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
 
-    <div style={styles.comparisonHeaderActions}>
-      <label style={styles.metricSelectorLabel}>
-        Variable en barras
-        <select
-          style={styles.metricSelector}
-          value={comparisonMetric}
-          onChange={(event) =>
-            setComparisonMetric(event.target.value as ComparisonMetric)
-          }
-        >
-          {COMPARISON_METRIC_OPTIONS.map((option) => (
-            <option key={option.key} value={option.key}>
-              {option.label}
+    <label style={styles.metricSelectorLabel}>
+      Agregar producto
+      <select
+        style={styles.metricSelector}
+        value=""
+        onChange={(event) => {
+          const producto = event.target.value;
+
+          if (!producto) return;
+
+          setSelectedComparisonProducts((current) => {
+            if (current.includes(producto)) return current;
+
+            return [...current, producto].slice(0, 8);
+          });
+        }}
+      >
+        <option value="">Seleccionar...</option>
+
+        {topProductos
+          .filter(
+            (item) =>
+              !selectedComparisonProducts.includes(item.producto)
+          )
+          .map((item) => (
+            <option key={item.producto} value={item.producto}>
+              {item.producto}
             </option>
           ))}
-        </select>
-      </label>
-      <label style={styles.metricSelectorLabel}>
-  Agregar producto
-  <select
-    style={styles.metricSelector}
-    value=""
-    onChange={(event) => {
-      const producto = event.target.value;
+      </select>
+    </label>
 
-      if (!producto) return;
-
-      setSelectedComparisonProducts((current) => {
-        if (current.includes(producto)) return current;
-
-        return [...current, producto].slice(0, 8);
-      });
-    }}
-  >
-    <option value="">Seleccionar...</option>
-    {topProductos
-      .filter((item) => !selectedComparisonProducts.includes(item.producto))
-      .map((item) => (
-        <option key={item.producto} value={item.producto}>
-          {item.producto}
-        </option>
-      ))}
-  </select>
-</label>
-      {selectedComparisonProducts.length > 0 ? (
-        <button
-          type="button"
-          style={styles.clearComparisonButton}
-          onClick={clearProductComparison}
-        >
-          Limpiar selección
-        </button>
-      ) : null}
-    </div>
+    {selectedComparisonProducts.length > 0 ? (
+      <button
+        type="button"
+        style={styles.clearComparisonButton}
+        onClick={clearProductComparison}
+      >
+        Limpiar selección
+      </button>
+    ) : null}
   </div>
-
+) : null}
+  </div>
 {selectedComparisonProducts.length === 0 ? (
   <div style={styles.productComparisonEmpty}>
     <div>
-      <h4 style={styles.emptyTitle}>Selecciona productos para comparar</h4>
+      <h4 style={styles.emptyTitle}>
+        Selecciona productos para comparar
+      </h4>
+
       <p style={styles.emptyText}>
-        Usa este módulo para revisar qué productos venden más, cuáles tienen mejor
-        margen, cuáles venden más unidades por día y cuáles necesitan impulso comercial. Este bloque
-        se exportará en el PDF.
+        Usa este módulo para revisar qué productos venden más, cuáles tienen
+        mejor margen, cuáles venden más unidades por día y cuáles necesitan
+        impulso comercial. Este bloque se exportará en el PDF.
       </p>
     </div>
 
@@ -3600,32 +3631,41 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
       type="button"
       style={styles.emptyActionButton}
       onClick={() => {
-  startProductComparison();
-  focusProductComparison();
-}}
+        startProductComparison();
+        focusProductComparison();
+      }}
     >
       Comparar productos líderes
     </button>
   </div>
 ) : null}
+
 {selectedComparisonProducts.length > 0 ? (
   <div style={styles.productChipsRow}>
     {selectedComparisonProducts.map((producto, index) => (
       <div
         key={producto}
-        role="button"
-        tabIndex={0}
+        role={isExportingPdf ? undefined : "button"}
+        tabIndex={isExportingPdf ? undefined : 0}
         style={{
           ...styles.productChip,
           borderColor: COLORS[index % COLORS.length],
         }}
-        onClick={() => removeComparisonProduct(producto)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            removeComparisonProduct(producto);
-          }
-        }}
+        onClick={
+          isExportingPdf
+            ? undefined
+            : () => removeComparisonProduct(producto)
+        }
+        onKeyDown={
+          isExportingPdf
+            ? undefined
+            : (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  removeComparisonProduct(producto);
+                }
+              }
+        }
       >
         <span
           style={{
@@ -3633,13 +3673,17 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
             background: COLORS[index % COLORS.length],
           }}
         />
+
         {producto}
-        <span style={styles.productChipClose}>×</span>
+
+        {!isExportingPdf ? (
+          <span style={styles.productChipClose}>×</span>
+        ) : null}
       </div>
     ))}
   </div>
 ) : null}
-  {productComparisonRows.length > 0 ? (
+{productComparisonRows.length > 0 ? (
     <div style={styles.productComparisonGrid}>
       <div style={styles.productComparisonChartBox}>
         <div>
@@ -3847,6 +3891,7 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
   <div id="inventario" style={{ scrollMarginTop: 96 }}>
 <SecondaryChartsSection
   defaultStockMin={settings.defaultStockMin}
+  isExportingPdf={isExportingPdf}
   stockRiskRows={stockRiskRows}
   stockSucursalOptions={stockSucursalOptions}
   selectedStockSucursal={selectedStockSucursal}
@@ -4479,6 +4524,25 @@ const styles: Record<string, CSSProperties> = {
     padding: 16,
     background: "linear-gradient(180deg, #EEF2FF 0%, #E8EDFF 100%)",
   },
+pdfFilterSummary: {
+  display: "flex",
+  alignItems: "center",
+  gap: 18,
+  flexWrap: "wrap",
+  padding: "12px 16px",
+  borderRadius: 14,
+  background: "rgba(255,255,255,0.72)",
+  border: "1px solid rgba(109,126,219,0.22)",
+  color: "#1E3A8A",
+  fontSize: 13,
+  fontWeight: 600,
+},
+
+pdfFilterSummaryTitle: {
+  fontSize: 14,
+  fontWeight: 850,
+  color: "#1E3A8A",
+},
 assistantCard: {
   background: "var(--jd-gradient-container)",
   color: "var(--jd-text-main)",

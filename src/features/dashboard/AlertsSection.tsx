@@ -22,7 +22,10 @@ export default function AlertsSection({
         <span style={styles.modulePlanText}>Alertas base del negocio</span>
       </div>
 
-      <AlertPanel alerts={alerts} />
+      <AlertPanel
+  alerts={alerts}
+  isExportingPdf={isExportingPdf}
+/>
     </section>
   );
 }

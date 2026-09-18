@@ -7,6 +7,7 @@ type Props = {
   filteredCount: number;
   fileName: string;
   planLabel: string;
+  isExportingPdf?: boolean;
   onAdjustMapping?: () => void;
   onSelectAnotherFile?: () => void;
   onExportExcel: () => void;
@@ -26,6 +27,7 @@ export default function HeroHeader({
   onClearFile,
   onOpenPlans,
   onOpenSettings,
+  isExportingPdf = false,
 }: Props) {
   const safeBusinessName = businessName || "JasoDatos";
 
@@ -83,71 +85,77 @@ return (
       </div>
     </div>
 
-    <div style={styles.bottomRow}>
-      <div style={styles.metaGrid}>
-        <div style={styles.planMetaCard}>
-          <span style={styles.metaLabel}>Plan actual</span>
-          <strong style={styles.planMetaValue}>{planLabel}</strong>
-        </div>
-      </div>
-
-<div style={styles.actionsPanel}>
-  {onAdjustMapping ? (
-    <button
-      type="button"
-      onClick={onAdjustMapping}
-      style={styles.secondaryButton}
-    >
-      Volver al mapeo
-    </button>
-  ) : null}
-
-  <button
-    type="button"
-    style={styles.primaryButton}
-    onClick={() => onSelectAnotherFile?.()}
-  >
-    Seleccionar archivo
-  </button>
-
-  <button
-    type="button"
-    style={styles.secondaryButton}
-    onClick={onExportExcel}
-  >
-    Exportar Excel
-  </button>
-
-        <button
-          type="button"
-          style={styles.secondaryButton}
-          onClick={() => onClearFile?.()}
-        >
-          Limpiar archivo
-        </button>
-
-        <button type="button" style={styles.planButton} onClick={onOpenPlans}>
-          Ver planes
-        </button>
-
-        <button
-          type="button"
-          style={styles.secondaryButton}
-          onClick={onOpenSettings}
-        >
-          Configuración
-        </button>
+{!isExportingPdf ? (
+  <div style={styles.bottomRow}>
+    <div style={styles.metaGrid}>
+      <div style={styles.planMetaCard}>
+        <span style={styles.metaLabel}>Plan actual</span>
+        <strong style={styles.planMetaValue}>{planLabel}</strong>
       </div>
     </div>
+
+    <div style={styles.actionsPanel}>
+      {onAdjustMapping ? (
+        <button
+          type="button"
+          onClick={onAdjustMapping}
+          style={styles.secondaryButton}
+        >
+          Volver al mapeo
+        </button>
+      ) : null}
+
+      <button
+        type="button"
+        style={styles.primaryButton}
+        onClick={() => onSelectAnotherFile?.()}
+      >
+        Seleccionar archivo
+      </button>
+
+      <button
+        type="button"
+        style={styles.secondaryButton}
+        onClick={onExportExcel}
+      >
+        Exportar Excel
+      </button>
+
+      <button
+        type="button"
+        style={styles.secondaryButton}
+        onClick={() => onClearFile?.()}
+      >
+        Limpiar archivo
+      </button>
+
+      <button
+        type="button"
+        style={styles.planButton}
+        onClick={onOpenPlans}
+      >
+        Ver planes
+      </button>
+      <button
+        type="button"
+        style={styles.secondaryButton}
+        onClick={onOpenSettings}
+      >
+        Configuración
+      </button>
+    </div>
+  </div>
+) : null}
+
   </section>
 );
 }
 
 const styles: Record<string, CSSProperties> = {
-hero: {
-  borderRadius: 18,
-  padding: "18px",
-  background: "var(--jd-gradient-container)",
+  hero: {
+    borderRadius: 18,
+    padding: "18px",
+    background: "var(--jd-gradient-container)",
   border: "1px solid var(--jd-border-accent)",
   boxShadow: "var(--jd-shadow-card)",
   display: "grid",

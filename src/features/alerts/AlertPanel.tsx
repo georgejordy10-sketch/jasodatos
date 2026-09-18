@@ -5,6 +5,7 @@ import type { AlertSeverity, BusinessAlert } from "./types";
 
 type AlertPanelProps = {
   alerts: BusinessAlert[];
+  isExportingPdf?: boolean;
 };
 
 function severityLabel(severity: AlertSeverity): string {
@@ -71,7 +72,10 @@ function goToAnchor(anchorId?: string) {
   }, 1800);
 }
 
-export default function AlertPanel({ alerts }: AlertPanelProps) {
+export default function AlertPanel({
+  alerts,
+  isExportingPdf = false,
+}: AlertPanelProps) {
   const total = alerts.length;
   const high = alerts.filter((alert) => alert.severity === "alta").length;
   const medium = alerts.filter((alert) => alert.severity === "media").length;
@@ -142,28 +146,29 @@ export default function AlertPanel({ alerts }: AlertPanelProps) {
           {alert.message}
         </p>
       </div>
-
-      <div style={styles.actionsRow}>
-        {alert.actionLabel && alert.anchorId ? (
-          <a
-            href={`#${alert.anchorId}`}
-            style={{
-              ...styles.actionButton,
-              color: alertTone.color,
-              border: alertTone.border,
-            }}
-            onClick={() => {
-              window.setTimeout(() => goToAnchor(alert.anchorId), 80);
-            }}
-          >
-            {alert.actionLabel}
-          </a>
-        ) : (
-          <span style={{ ...styles.noAction, color: alertTone.color }}>
-            Sin acción directa
-          </span>
-        )}
-      </div>
+      {!isExportingPdf ? (
+  <div style={styles.actionsRow}>
+    {alert.actionLabel && alert.anchorId ? (
+      <a
+        href={`#${alert.anchorId}`}
+        style={{
+          ...styles.actionButton,
+          color: alertTone.color,
+          border: alertTone.border,
+        }}
+        onClick={() => {
+          window.setTimeout(() => goToAnchor(alert.anchorId), 80);
+        }}
+      >
+        {alert.actionLabel}
+      </a>
+    ) : (
+      <span style={{ ...styles.noAction, color: alertTone.color }}>
+        Sin acción directa
+      </span>
+    )}
+  </div>
+) : null}
     </article>
   );
 })}

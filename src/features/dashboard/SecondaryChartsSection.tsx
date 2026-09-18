@@ -20,6 +20,7 @@ type StockRiskRow = {
 type ChannelRow = Record<string, number | string>;
 
 type Props = {
+  isExportingPdf?: boolean;
   defaultStockMin: number;
   stockRiskRows: StockRiskRow[];
   stockSucursalOptions: string[];
@@ -139,6 +140,7 @@ export default function SecondaryChartsSection({
   formatMoney,
   onOpenStockDetails,
   onOpenChannelDetails,
+  isExportingPdf = false,
 }: Props) {
   return (
     <section style={styles.secondaryCharts}>
@@ -147,24 +149,39 @@ export default function SecondaryChartsSection({
           title="Stock en riesgo"
           subtitle={`Productos bajo seguimiento · mínimo configurado: ${defaultStockMin}`}
 action={
-  <div style={styles.stockActions}>
-    <button type="button" style={styles.viewAllButton} onClick={onOpenStockDetails}>
-      Ver stock
-    </button>
+  !isExportingPdf ? (
+    <div style={styles.stockActions}>
+      <button
+        type="button"
+        style={styles.viewAllButton}
+        onClick={onOpenStockDetails}
+      >
+        Ver stock
+      </button>
 
-    <select
-      value={selectedStockSucursal}
-      onChange={(event) => onChangeStockSucursal(event.target.value)}
-      style={styles.stockBranchSelect}
-      aria-label="Filtrar stock por sucursal"
-    >
-      {stockSucursalOptions.map((sucursal) => (
-        <option key={sucursal} value={sucursal}>
-          {sucursal === "Todas" ? "Todas las sucursales" : sucursal}
-        </option>
-      ))}
-    </select>
-  </div>
+      <select
+        value={selectedStockSucursal}
+        onChange={(event) => onChangeStockSucursal(event.target.value)}
+        style={styles.stockBranchSelect}
+        aria-label="Filtrar stock por sucursal"
+      >
+        {stockSucursalOptions.map((sucursal) => (
+          <option key={sucursal} value={sucursal}>
+            {sucursal === "Todas"
+              ? "Todas las sucursales"
+              : sucursal}
+          </option>
+        ))}
+      </select>
+    </div>
+  ) : (
+    <span style={styles.channelBadgeText}>
+      Sucursal:{" "}
+      {selectedStockSucursal === "Todas"
+        ? "Todas las sucursales"
+        : selectedStockSucursal}
+    </span>
+  )
 }
           fullHeight
         >
@@ -223,11 +240,17 @@ action={
   <Card
     title="Ventas por canal"
     subtitle="Identifica dónde se está generando la venta."
-    action={
-      <button type="button" style={styles.viewAllButton} onClick={onOpenChannelDetails}>
-        Ver canales
-      </button>
-    }
+action={
+  !isExportingPdf ? (
+    <button
+      type="button"
+      style={styles.viewAllButton}
+      onClick={onOpenChannelDetails}
+    >
+      Ver canales
+    </button>
+  ) : null
+}
     fullHeight
   >
         <div style={styles.channelBadgeRow}>

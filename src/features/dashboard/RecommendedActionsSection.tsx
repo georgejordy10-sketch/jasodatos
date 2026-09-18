@@ -126,18 +126,21 @@ export default function RecommendedActionsSection({
               <span style={{ ...styles.priorityBadge, ...getPriorityStyle(item.priority) }}>
                 Prioridad {getPriorityLabel(item.priority)}
               </span>
-
-              {item.anchorId && !isExportingPdf ? (
-                <button
-                  type="button"
-                  style={styles.typeButton}
-                  onClick={() => irAlAnalisis(item.anchorId ?? undefined)}
-                >
-                  {item.actionLabel}
-                </button>
-              ) : (
-                <span style={styles.typeBadge}>{item.actionLabel}</span>
-              )}
+              {!isExportingPdf ? (
+  item.anchorId ? (
+    <button
+      type="button"
+      style={styles.typeButton}
+      onClick={() => irAlAnalisis(item.anchorId ?? undefined)}
+    >
+      {item.actionLabel}
+    </button>
+  ) : (
+    <span style={styles.typeBadge}>
+      {item.actionLabel}
+    </span>
+  )
+) : null}
             </div>
 
             <h4 style={styles.cardTitle}>{item.title}</h4>
