@@ -5374,7 +5374,7 @@ pdfSectionLabel: {
   margin: "8px 0",
 },
 pdfSpacerBeforeAssistant: {
-  height: 160,
+  height: 320,
 },
 insightBadge: {
   width: "fit-content",
