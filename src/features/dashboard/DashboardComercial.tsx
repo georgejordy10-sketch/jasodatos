@@ -921,9 +921,22 @@ function buildJasoBotInsights(
     const canal = toText(row.canal, "Sin canal");
     const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
 
-    ventasPorProducto.set(producto, (ventasPorProducto.get(producto) ?? 0) + venta);
-    ventasPorSucursal.set(sucursal, (ventasPorSucursal.get(sucursal) ?? 0) + venta);
-    ventasPorCanal.set(canal, (ventasPorCanal.get(canal) ?? 0) + venta);
+if (venta !== 0) {
+  ventasPorProducto.set(
+    producto,
+    (ventasPorProducto.get(producto) ?? 0) + venta
+  );
+
+  ventasPorSucursal.set(
+    sucursal,
+    (ventasPorSucursal.get(sucursal) ?? 0) + venta
+  );
+
+  ventasPorCanal.set(
+    canal,
+    (ventasPorCanal.get(canal) ?? 0) + venta
+  );
+}
 
 if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
   const parsedDate = parseDateLike(row.fecha);
