@@ -47,11 +47,24 @@ function getAnalysisSessionKey(): string {
   }
 
   const params = new URLSearchParams(window.location.search);
-  const businessSlug = params.get("business")?.trim();
+
+  const businessSlugFromUrl =
+    params.get("business")?.trim() ?? "";
+
+  const businessSlugFromStorage =
+    window.localStorage
+      .getItem("jasodatos.currentBusinessSlug")
+      ?.trim() ?? "";
+
+  const businessSlug =
+    businessSlugFromUrl || businessSlugFromStorage;
 
   return businessSlug
     ? `business:${businessSlug}`
     : "local-demo";
+}
+function getUploadHistoryStorageKey(): string {
+  return `${UPLOAD_HISTORY_STORAGE_KEY}:${getAnalysisSessionKey()}`;
 }
   const [file, setFile] = useState<File | null>(null);
   const [hasDataConsent, setHasDataConsent] = useState(false);
@@ -98,7 +111,22 @@ const [uploadHistory, setUploadHistory] = useState<UploadHistoryItem[]>([]);
 const [historyLoaded, setHistoryLoaded] = useState(false);
 useEffect(() => {
   try {
-    const saved = window.localStorage.getItem(UPLOAD_HISTORY_STORAGE_KEY);
+    const scopedKey = getUploadHistoryStorageKey();
+
+    let saved = window.localStorage.getItem(scopedKey);
+
+    if (!saved && getAnalysisSessionKey() === "local-demo") {
+      const legacySaved = window.localStorage.getItem(
+        UPLOAD_HISTORY_STORAGE_KEY
+      );
+
+      if (legacySaved) {
+        saved = legacySaved;
+        window.localStorage.setItem(scopedKey, legacySaved);
+        window.localStorage.removeItem(UPLOAD_HISTORY_STORAGE_KEY);
+      }
+    }
+
     setUploadHistory(saved ? JSON.parse(saved) : []);
   } catch {
     setUploadHistory([]);
@@ -478,7 +506,7 @@ function saveUploadHistory(item: UploadHistoryItem) {
 
     if (typeof window !== "undefined") {
       window.localStorage.setItem(
-        UPLOAD_HISTORY_STORAGE_KEY,
+        getUploadHistoryStorageKey(),
         JSON.stringify(next)
       );
     }
@@ -488,7 +516,7 @@ function saveUploadHistory(item: UploadHistoryItem) {
 }
 function clearUploadHistory() {
   try {
-    window.localStorage.removeItem(UPLOAD_HISTORY_STORAGE_KEY);
+    window.localStorage.removeItem(getUploadHistoryStorageKey());
   } catch {
   }
 
