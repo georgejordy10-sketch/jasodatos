@@ -14,7 +14,7 @@ export type PersistedAnalysisSession = {
   savedAt: string;
   initialData: ReadDatasetInitialResult;
   confirmedMappings: ConfirmedMapping[];
-  processedData: ProcessDatasetResult;
+  processedData: ProcessDatasetResult | null;
   qualityReport: DataQualityReport | null;
 };
 

@@ -576,6 +576,23 @@ function returnToMapping() {
   setProcessedData(null);
   setActiveUploadView("general");
 
+  if (initialData) {
+    void savePersistedAnalysisSession(
+      getAnalysisSessionKey(),
+      {
+        initialData,
+        confirmedMappings,
+        processedData: null,
+        qualityReport,
+      }
+    ).catch((persistError) => {
+      console.warn(
+        "No se pudo guardar el estado de mapeo.",
+        persistError
+      );
+    });
+  }
+
   if (typeof window !== "undefined") {
     window.history.replaceState(
       null,
