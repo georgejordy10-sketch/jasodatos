@@ -459,6 +459,10 @@ function buildProductComparisonRows(
   const selectedSet = new Set(selectedProducts);
 
 const validDates = rows
+  .filter(
+    (row) =>
+      toNumber(row.cantidad) * toNumber(row.precio_unitario) !== 0
+  )
   .map((row) => parseDateLike(row.fecha))
   .filter((date): date is Date => date !== null)
   .sort((a, b) => a.getTime() - b.getTime());
@@ -692,12 +696,14 @@ function buildSalesTrend(rows: Record<string, unknown>[]): SalesPoint[] {
     const parsedDate = parseDateLike(row.fecha);
 
     if (!parsedDate) continue;
+const venta =
+  toNumber(row.cantidad) * toNumber(row.precio_unitario);
 
-    const fecha = formatDateInput(parsedDate);
-    const venta =
-      toNumber(row.cantidad) * toNumber(row.precio_unitario);
+if (venta === 0) continue;
 
-    map.set(fecha, (map.get(fecha) ?? 0) + venta);
+const fecha = formatDateInput(parsedDate);
+
+map.set(fecha, (map.get(fecha) ?? 0) + venta);
   }
 
   return [...map.entries()]
