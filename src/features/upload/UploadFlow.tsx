@@ -26,6 +26,11 @@ import {
   calculateDataQualityReport,
   type DataQualityReport,
 } from "@/features/upload/dataQuality";
+import {
+  clearPersistedAnalysisSession,
+  loadPersistedAnalysisSession,
+  savePersistedAnalysisSession,
+} from "./persistedAnalysis";
 
 export default function UploadFlow() {
 
@@ -36,6 +41,18 @@ function toUploadNumber(value: unknown) {
 
   const profiles = useMemo(() => listProfiles(), []);
 const profileId: ProfileId = "comercial";
+function getAnalysisSessionKey(): string {
+  if (typeof window === "undefined") {
+    return "local-demo";
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const businessSlug = params.get("business")?.trim();
+
+  return businessSlug
+    ? `business:${businessSlug}`
+    : "local-demo";
+}
   const [file, setFile] = useState<File | null>(null);
   const [hasDataConsent, setHasDataConsent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,6 +61,38 @@ const profileId: ProfileId = "comercial";
   const [initialData, setInitialData] = useState<ReadDatasetInitialResult | null>(null);
   const [confirmedMappings, setConfirmedMappings] = useState<ConfirmedMapping[]>([]);
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
+  useEffect(() => {
+  let cancelled = false;
+
+  async function restoreAnalysis() {
+    try {
+      const saved = await loadPersistedAnalysisSession(
+        getAnalysisSessionKey()
+      );
+
+      if (!saved || cancelled) {
+        return;
+      }
+
+      setInitialData(saved.initialData);
+      setConfirmedMappings(saved.confirmedMappings);
+      setProcessedData(saved.processedData);
+      setQualityReport(saved.qualityReport);
+      setHasDataConsent(true);
+    } catch (restoreError) {
+      console.warn(
+        "No se pudo restaurar el análisis local.",
+        restoreError
+      );
+    }
+  }
+
+  void restoreAnalysis();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
   const [activeUploadView, setActiveUploadView] = useState("general");
 const [uploadHistory, setUploadHistory] = useState<UploadHistoryItem[]>([]);
 const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -499,7 +548,20 @@ if (typeof window !== "undefined") {
     `${window.location.pathname}${window.location.search}`
   );
 }
-
+void savePersistedAnalysisSession(
+  getAnalysisSessionKey(),
+  {
+    initialData,
+    confirmedMappings,
+    processedData: result,
+    qualityReport: currentQualityReport,
+  }
+).catch((persistError) => {
+  console.warn(
+    "No se pudo guardar el análisis local.",
+    persistError
+  );
+});
 setProcessedData(result);
   }
 
@@ -523,6 +585,10 @@ function returnToMapping() {
   }
 }
 function resetFlow() {
+  void clearPersistedAnalysisSession(
+  getAnalysisSessionKey()
+).catch(() => {});
+
   setFile(null);
   setLoading(false);
   setError("");
