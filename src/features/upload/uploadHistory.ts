@@ -48,7 +48,8 @@ export function buildUploadHistoryItem(
   const products = new Set<string>();
   const locals = new Set<string>();
   const channels = new Set<string>();
-    for (const row of processedData.validRows) {
+
+  for (const row of processedData.validRows) {
     if (!isCommercialSaleRow(row)) {
       continue;
     }

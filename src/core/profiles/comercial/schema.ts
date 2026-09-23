@@ -67,7 +67,7 @@ function analyzeComercial(rows: Record<string, unknown>[]): ProfileAnalyticsResu
     const venta = cantidad * precio;
     const mes = monthKeyFromValue(row.fecha);
 
-      if (isCommercialSaleRow(row)) {
+    if (isCommercialSaleRow(row)) {
       ventasTotales += venta;
       unidadesTotales += cantidad;
 

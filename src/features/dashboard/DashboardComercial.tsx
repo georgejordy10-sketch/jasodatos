@@ -563,7 +563,7 @@ const isSecondPeriod =
         });
       }
 
-            latestStockByProductBranch.set(producto, branchStocks);
+      latestStockByProductBranch.set(producto, branchStocks);
     }
 
     if (!isCommercialSaleRow(row)) {
@@ -1648,8 +1648,8 @@ const secondaryActiveChannelsLabel = secondaryActiveChannels.length
   : "";
 const variationPct = useMemo(() => {
   const rowsWithDate = processedData.validRows.filter(
-  (row) => isCommercialSaleRow(row) && parseDateLike(row.fecha)
-);
+    (row) => isCommercialSaleRow(row) && parseDateLike(row.fecha)
+  );
 
 if (rowsWithDate.length === 0) {
   return null;
@@ -1719,16 +1719,20 @@ if (rowsWithDate.length === 0) {
 
 const ventasTotales = useMemo(() => {
   return filteredSalesRows.reduce(
-      (acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario),
-      0
-    );
-  }, [filteredSalesRows]);
+    (acc, row) =>
+      acc + toNumber(row.cantidad) * toNumber(row.precio_unitario),
+    0
+  );
+}, [filteredSalesRows]);
 
-  const unidadesTotales = useMemo(() => {
-    return filteredSalesRows.reduce((acc, row) => acc + toNumber(row.cantidad), 0);
-  }, [filteredSalesRows]);
+const unidadesTotales = useMemo(() => {
+  return filteredSalesRows.reduce(
+    (acc, row) => acc + toNumber(row.cantidad),
+    0
+  );
+}, [filteredSalesRows]);
 
-  const topProductos = useMemo(
+const topProductos = useMemo(
   () => buildTopProducts(filteredSalesRows),
   [filteredSalesRows]
 );
