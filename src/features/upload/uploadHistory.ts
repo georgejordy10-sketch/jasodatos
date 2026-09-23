@@ -1,3 +1,4 @@
+import { isCommercialSaleRow } from "@/core/commercial/isCommercialSaleRow";
 export type ComparisonMode = "previous" | "day" | "week" | "month" | "year";
 
 export type UploadHistoryItem = {
@@ -47,8 +48,11 @@ export function buildUploadHistoryItem(
   const products = new Set<string>();
   const locals = new Set<string>();
   const channels = new Set<string>();
+    for (const row of processedData.validRows) {
+    if (!isCommercialSaleRow(row)) {
+      continue;
+    }
 
-  for (const row of processedData.validRows) {
     const cantidad = toHistoryNumber(row.cantidad);
     const precio = toHistoryNumber(row.precio_unitario);
 

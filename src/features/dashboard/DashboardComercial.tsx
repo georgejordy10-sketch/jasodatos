@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { isCommercialSaleRow } from "@/core/commercial/isCommercialSaleRow";
 import type { ProcessDatasetResult } from "@/core/ingestion/readDataset";
 import BenchmarkingSucursales from "@/features/dashboard/BenchmarkingSucursales";
 import jsPDF from "jspdf";
@@ -461,6 +462,7 @@ function buildProductComparisonRows(
 const validDates = rows
   .filter(
     (row) =>
+      isCommercialSaleRow(row) &&
       toNumber(row.cantidad) * toNumber(row.precio_unitario) !== 0
   )
   .map((row) => parseDateLike(row.fecha))
@@ -561,7 +563,11 @@ const isSecondPeriod =
         });
       }
 
-      latestStockByProductBranch.set(producto, branchStocks);
+            latestStockByProductBranch.set(producto, branchStocks);
+    }
+
+    if (!isCommercialSaleRow(row)) {
+      continue;
     }
     const current = map.get(producto) ?? {
       ventas: 0,
@@ -927,7 +933,7 @@ function buildJasoBotInsights(
     const canal = toText(row.canal, "Sin canal");
     const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
 
-if (venta !== 0) {
+if (isCommercialSaleRow(row) && venta !== 0) {
   ventasPorProducto.set(
     producto,
     (ventasPorProducto.get(producto) ?? 0) + venta
@@ -1566,6 +1572,10 @@ const filteredRows = useMemo(() => {
   toDate,
   channelsEnabled,
 ]);
+const filteredSalesRows = useMemo(
+  () => filteredRows.filter(isCommercialSaleRow),
+  [filteredRows]
+);
 const localCount = useMemo(() => {
   const locals = new Set(
     filteredRows
@@ -1579,6 +1589,8 @@ const localCount = useMemo(() => {
 const hasMultipleLocals = localCount > 1;
 const benchmarkRows = useMemo(() => {
   return processedData.validRows.filter((row) => {
+    if (!isCommercialSaleRow(row)) return false;
+
     const producto = toText(row.producto, "Sin producto");
     const matchProducto = selectedProducto === "Todos" || producto === selectedProducto;
     const matchDate = isWithinRange(row.fecha, fromDate, toDate);
@@ -1596,7 +1608,7 @@ const benchmarkRows = useMemo(() => {
 const topActiveChannel = useMemo(() => {
   const totals = new Map<string, number>();
 
-  for (const row of filteredRows) {
+  for (const row of filteredSalesRows) {
     const key = normalizeChannelKey(row.canal);
     if (!key) continue;
 
@@ -1606,7 +1618,7 @@ const topActiveChannel = useMemo(() => {
 
   const ordered = [...totals.entries()].sort((a, b) => b[1] - a[1]);
   return ordered.length ? ordered[0][0] : null;
-}, [filteredRows]);
+}, [filteredSalesRows]);
 const topActiveChannelLabel = topActiveChannel
   ? getChannelDisplayName(topActiveChannel as ChannelKey)
   : "Sin canales habilitados";
@@ -1635,7 +1647,9 @@ const secondaryActiveChannelsLabel = secondaryActiveChannels.length
   ? secondaryActiveChannels.map(getChannelDisplayName).join("  ")
   : "";
 const variationPct = useMemo(() => {
-  const rowsWithDate = processedData.validRows.filter((row) => parseDateLike(row.fecha));
+  const rowsWithDate = processedData.validRows.filter(
+  (row) => isCommercialSaleRow(row) && parseDateLike(row.fecha)
+);
 
 if (rowsWithDate.length === 0) {
   return null;
@@ -1663,6 +1677,7 @@ if (rowsWithDate.length === 0) {
       const key = formatDateInput(d);
       return key >= formatDateInput(effectiveFrom) && key <= formatDateInput(effectiveTo);
     })
+    .filter(isCommercialSaleRow)
     .filter((row) => {
       const sucursal = toText(row.sucursal, "Sin sucursal");
       const producto = toText(row.producto, "Sin producto");
@@ -1674,6 +1689,7 @@ if (rowsWithDate.length === 0) {
     .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
 
   const previousSales = processedData.validRows
+    .filter(isCommercialSaleRow)
     .filter((row) => {
       const d = parseDateLike(row.fecha);
       if (!d) return false;
@@ -1701,18 +1717,21 @@ if (rowsWithDate.length === 0) {
   channelsEnabled,
 ]);
 
-  const ventasTotales = useMemo(() => {
-    return filteredRows.reduce(
+const ventasTotales = useMemo(() => {
+  return filteredSalesRows.reduce(
       (acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario),
       0
     );
-  }, [filteredRows]);
+  }, [filteredSalesRows]);
 
   const unidadesTotales = useMemo(() => {
-    return filteredRows.reduce((acc, row) => acc + toNumber(row.cantidad), 0);
-  }, [filteredRows]);
+    return filteredSalesRows.reduce((acc, row) => acc + toNumber(row.cantidad), 0);
+  }, [filteredSalesRows]);
 
-  const topProductos = useMemo(() => buildTopProducts(filteredRows), [filteredRows]);
+  const topProductos = useMemo(
+  () => buildTopProducts(filteredSalesRows),
+  [filteredSalesRows]
+);
 const productComparisonRows = useMemo(() => {
   return buildProductComparisonRows(
     filteredRows,
@@ -1974,9 +1993,15 @@ function removeComparisonProduct(producto: string) {
 function clearProductComparison() {
   setSelectedComparisonProducts([]);
 }
-  const tendenciaVentas = useMemo(() => buildSalesTrend(filteredRows), [filteredRows]);
+  const tendenciaVentas = useMemo(
+  () => buildSalesTrend(filteredSalesRows),
+  [filteredSalesRows]
+);
 
-  const channelResult = useMemo(() => buildChannelData(filteredRows), [filteredRows]);
+  const channelResult = useMemo(
+  () => buildChannelData(filteredSalesRows),
+  [filteredSalesRows]
+);
 
 const stockRiskRows = useMemo(() => {
   return buildStockRisk(

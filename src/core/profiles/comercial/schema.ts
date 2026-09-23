@@ -1,4 +1,5 @@
 import { parseFlexibleNumber } from "@/core/numbers/parseFlexibleNumber";
+import { isCommercialSaleRow } from "@/core/commercial/isCommercialSaleRow";
 import type {
   BusinessProfile,
   CanonicalFieldDefinition,
@@ -16,6 +17,12 @@ const comercialFields: CanonicalFieldDefinition[] = [
   { key: "costo_unitario", label: "Costo unitario", type: "number", required: false },
   { key: "stock", label: "Stock disponible", type: "number", required: false },
   { key: "canal", label: "Canal de venta", type: "string", required: false },
+  {
+    key: "tipo_movimiento",
+    label: "Tipo de movimiento",
+    type: "string",
+    required: false,
+  },
   { key: "proveedor", label: "Proveedor", type: "string", required: false },
   { key: "ciudad", label: "Ciudad", type: "string", required: false },
   { key: "provincia", label: "Provincia", type: "string", required: false },
@@ -60,19 +67,33 @@ function analyzeComercial(rows: Record<string, unknown>[]): ProfileAnalyticsResu
     const venta = cantidad * precio;
     const mes = monthKeyFromValue(row.fecha);
 
-    ventasTotales += venta;
-    unidadesTotales += cantidad;
+      if (isCommercialSaleRow(row)) {
+      ventasTotales += venta;
+      unidadesTotales += cantidad;
+
+      ventasPorSucursal.set(
+        sucursal,
+        (ventasPorSucursal.get(sucursal) ?? 0) + venta
+      );
+
+      ventasPorProducto.set(
+        producto,
+        (ventasPorProducto.get(producto) ?? 0) + venta
+      );
+
+      ventasPorMes.set(
+        mes,
+        (ventasPorMes.get(mes) ?? 0) + venta
+      );
+    }
 
     if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
       const stock = toNumber(row.stock);
+
       if (stock > 0 && stock <= 20) {
         stockCritico += 1;
       }
     }
-
-    ventasPorSucursal.set(sucursal, (ventasPorSucursal.get(sucursal) ?? 0) + venta);
-    ventasPorProducto.set(producto, (ventasPorProducto.get(producto) ?? 0) + venta);
-    ventasPorMes.set(mes, (ventasPorMes.get(mes) ?? 0) + venta);
   }
 
   const topProductos = [...ventasPorProducto.entries()]
@@ -207,6 +228,15 @@ canal: [
   "canal de venta",
   "medio de venta",
   "origen canal",
+],
+
+tipo_movimiento: [
+  "tipo_movimiento",
+  "tipo movimiento",
+  "tipo de movimiento",
+  "movimiento",
+  "movement type",
+  "transaction type",
 ],
 
 proveedor: [

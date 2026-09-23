@@ -1,4 +1,6 @@
 import { parseFlexibleNumber } from "@/core/numbers/parseFlexibleNumber";
+import { isCommercialSaleRow } from "@/core/commercial/isCommercialSaleRow";
+
 import type {
   BuildCommercialRecommendationsInput,
   CommercialRecommendation,
@@ -108,7 +110,7 @@ const stockMin = Number.isFinite(rawStockMin)
     const quantity = toNumber(row.cantidad);
     const unitPrice = toNumber(row.precio_unitario);
     const sale = quantity * unitPrice;
-if (sale !== 0) {
+if (isCommercialSaleRow(row) && sale !== 0) {
   salesByProduct.set(
     productName,
     (salesByProduct.get(productName) ?? 0) + sale
