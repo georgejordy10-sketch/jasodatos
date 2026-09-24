@@ -9,6 +9,7 @@ import type {
 const comercialFields: CanonicalFieldDefinition[] = [
   { key: "fecha", label: "Fecha", type: "date", required: true },
   { key: "sucursal", label: "Sucursal / Local", type: "string", required: false },
+  { key: "bodega", label: "Bodega", type: "string", required: false },
   { key: "producto", label: "Producto", type: "string", required: true },
   { key: "sku", label: "Código del producto", type: "string", required: false },
   { key: "categoria", label: "Categoría del producto", type: "string", required: false },
@@ -147,6 +148,14 @@ export const comercialProfile: BusinessProfile = {
   aliases: {
     fecha: ["fecha", "fecha venta", "fecha_venta", "date", "dia"],
     sucursal: ["sucursal", "tienda", "local", "agencia", "punto de venta", "pdv"],
+    bodega: [
+      "bodega",
+      "almacen",
+      "almacén",
+      "warehouse",
+      "deposito",
+      "depósito",
+    ],
     producto: ["producto", "articulo", "ítem", "item", "descripcion", "descripción", "nombre producto"],
     sku: [
   "sku",
