@@ -162,3 +162,31 @@ export function classifyCommercialMovement(
     inferred: true,
   };
 }
+
+export function getCommercialEffectiveQuantity(
+  row: Record<string, unknown>
+): number {
+  const classification = classifyCommercialMovement(row);
+
+  if (
+    classification.kind !== "sale" &&
+    classification.kind !== "return"
+  ) {
+    return 0;
+  }
+
+  return classification.effectiveQuantity;
+}
+
+export function getCommercialNetSales(
+  row: Record<string, unknown>
+): number {
+  const effectiveQuantity =
+    getCommercialEffectiveQuantity(row);
+
+  const unitPrice = parseFlexibleNumber(
+    row.precio_unitario
+  );
+
+  return effectiveQuantity * unitPrice;
+}
