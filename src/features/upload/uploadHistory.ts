@@ -1,3 +1,7 @@
+import {
+  getCommercialEffectiveQuantity,
+  getCommercialNetSales,
+} from "@/core/commercial/classifyCommercialMovement";
 import { isCommercialSaleRow } from "@/core/commercial/isCommercialSaleRow";
 export type ComparisonMode = "previous" | "day" | "week" | "month" | "year";
 
@@ -14,23 +18,6 @@ export type UploadHistoryItem = {
 };
 
 export const UPLOAD_HISTORY_STORAGE_KEY = "jasodatos_upload_history_v1";
-
-function toHistoryNumber(value: unknown) {
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-
-  if (typeof value === "string") {
-    const normalized = value
-      .replace(/\$/g, "")
-      .replace(/\s/g, "")
-      .replace(/\./g, "")
-      .replace(",", ".");
-
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  return 0;
-}
 
 function getCleanText(value: unknown) {
   return String(value ?? "").trim();
@@ -54,11 +41,12 @@ export function buildUploadHistoryItem(
       continue;
     }
 
-    const cantidad = toHistoryNumber(row.cantidad);
-    const precio = toHistoryNumber(row.precio_unitario);
+    const effectiveQuantity =
+      getCommercialEffectiveQuantity(row);
+    const netSales = getCommercialNetSales(row);
 
-    totalUnits += cantidad;
-    totalSales += cantidad * precio;
+    totalUnits += effectiveQuantity;
+    totalSales += netSales;
 
     const producto = getCleanText(row.producto);
     const sucursal = getCleanText(row.sucursal || "Local principal");
