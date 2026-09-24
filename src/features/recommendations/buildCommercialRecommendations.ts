@@ -1,4 +1,5 @@
 import { parseFlexibleNumber } from "@/core/numbers/parseFlexibleNumber";
+import { getCommercialNetSales } from "@/core/commercial/classifyCommercialMovement";
 import { isCommercialSaleRow } from "@/core/commercial/isCommercialSaleRow";
 
 import type {
@@ -107,9 +108,7 @@ const stockMin = Number.isFinite(rawStockMin)
     const branchName = toText(row.sucursal, "Sin sucursal");
     const channelName = toText(row.canal, "Sin canal");
 
-    const quantity = toNumber(row.cantidad);
-    const unitPrice = toNumber(row.precio_unitario);
-    const sale = quantity * unitPrice;
+    const sale = getCommercialNetSales(row);
 
     if (isCommercialSaleRow(row) && sale !== 0) {
       salesByProduct.set(
@@ -173,9 +172,31 @@ const stockMin = Number.isFinite(rawStockMin)
     (a, b) => b[1] - a[1]
   );
 
-  const totalSales = orderedProducts.reduce(
+  const totalProductSales = orderedProducts.reduce(
     (acc, [, value]) => acc + value,
     0
+  );
+
+  const totalBranchSales = orderedBranches.reduce(
+    (acc, [, value]) => acc + value,
+    0
+  );
+
+  const totalChannelSales = orderedChannels.reduce(
+    (acc, [, value]) => acc + value,
+    0
+  );
+
+  const hasNonPositiveProductSales = orderedProducts.some(
+    ([, sales]) => sales <= 0
+  );
+
+  const hasNonPositiveBranchSales = orderedBranches.some(
+    ([, sales]) => sales <= 0
+  );
+
+  const hasNonPositiveChannelSales = orderedChannels.some(
+    ([, sales]) => sales <= 0
   );
 
   const topProduct = orderedProducts[0];
@@ -237,12 +258,14 @@ const stockMin = Number.isFinite(rawStockMin)
 
   if (
     topProduct &&
-    totalSales > 0 &&
+    !hasNonPositiveProductSales &&
+    totalProductSales > 0 &&
     productCount >= 2
   ) {
     const [productName, productSales] = topProduct;
 
-    const share = (productSales / totalSales) * 100;
+    const share =
+      (productSales / totalProductSales) * 100;
     const uniformShare = 100 / productCount;
 
     const concentrationThreshold = Math.max(
@@ -285,10 +308,11 @@ const stockMin = Number.isFinite(rawStockMin)
   if (
     branchCount >= 2 &&
     lowBranch &&
-    totalSales > 0
+    !hasNonPositiveBranchSales &&
+    totalBranchSales > 0
   ) {
     const lowBranchShare =
-      (lowBranch[1] / totalSales) * 100;
+      (lowBranch[1] / totalBranchSales) * 100;
 
     const expectedShare =
       100 / branchCount;
@@ -335,10 +359,11 @@ const stockMin = Number.isFinite(rawStockMin)
     !hasMissingChannel &&
     channelCount >= 2 &&
     topChannel &&
-    totalSales > 0
+    !hasNonPositiveChannelSales &&
+    totalChannelSales > 0
   ) {
     const topChannelShare =
-      (topChannel[1] / totalSales) * 100;
+      (topChannel[1] / totalChannelSales) * 100;
 
     const uniformChannelShare =
       100 / channelCount;
