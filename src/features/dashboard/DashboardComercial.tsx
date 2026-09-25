@@ -1,6 +1,11 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  classifyCommercialMovement,
+  getCommercialEffectiveQuantity,
+  getCommercialNetSales,
+} from "@/core/commercial/classifyCommercialMovement";
 import { isCommercialSaleRow } from "@/core/commercial/isCommercialSaleRow";
 import type { ProcessDatasetResult } from "@/core/ingestion/readDataset";
 import BenchmarkingSucursales from "@/features/dashboard/BenchmarkingSucursales";
@@ -81,9 +86,14 @@ type ProductComparisonRow = {
   ventas: number;
   unidades: number;
   participacion: number;
+  participacionDisponible: boolean;
   precioPromedio: number;
   costoPromedio: number;
   costoIncompleto: boolean;
+  costoVentaIncompleto: boolean;
+  ventasBrutas: number;
+  unidadesVendidas: number;
+  costoVentasBrutas: number;
   margenEstimado: number;
   stock: number;
   rotacion: number;
@@ -443,12 +453,30 @@ function buildTopProducts(rows: Record<string, unknown>[]): PiePoint[] {
 
   for (const row of rows) {
     const producto = toText(row.producto, "Sin producto");
-    const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
-    map.set(producto, (map.get(producto) ?? 0) + venta);
+    const venta = getCommercialNetSales(row);
+
+    map.set(
+      producto,
+      (map.get(producto) ?? 0) + venta
+    );
   }
 
-  return [...map.entries()]
-    .map(([producto, ventas]) => ({ producto, ventas }))
+  const products = [...map.entries()].map(
+    ([producto, ventas]) => ({
+      producto,
+      ventas,
+    })
+  );
+
+  const hasNonPositiveProductSales = products.some(
+    ({ ventas }) => ventas <= 0
+  );
+
+  if (hasNonPositiveProductSales) {
+    return [];
+  }
+
+  return products
     .sort((a, b) => b.ventas - a.ventas)
     .slice(0, 8);
 }
@@ -458,12 +486,36 @@ function buildProductComparisonRows(
   ventasTotales: number
 ): ProductComparisonRow[] {
   const selectedSet = new Set(selectedProducts);
+  const productSalesTotals = new Map<string, number>();
+
+for (const row of rows) {
+  if (!isCommercialSaleRow(row)) continue;
+
+  const producto = toText(
+    row.producto,
+    "Sin producto"
+  );
+
+  productSalesTotals.set(
+    producto,
+    (productSalesTotals.get(producto) ?? 0) +
+      getCommercialNetSales(row)
+  );
+}
+
+const hasNegativeProductSales = [
+  ...productSalesTotals.values(),
+].some((ventas) => ventas < 0);
+
+const participacionDisponible =
+  ventasTotales > 0 &&
+  !hasNegativeProductSales;
 
 const validDates = rows
   .filter(
     (row) =>
       isCommercialSaleRow(row) &&
-      toNumber(row.cantidad) * toNumber(row.precio_unitario) !== 0
+      getCommercialNetSales(row) !== 0
   )
   .map((row) => parseDateLike(row.fecha))
   .filter((date): date is Date => date !== null)
@@ -497,6 +549,10 @@ const secondPeriodDays = Math.floor(daysInPeriod / 2);
       unidades: number;
       costoTotal: number;
       costoIncompleto: boolean;
+      costoVentaIncompleto: boolean;
+      ventasBrutas: number;
+      unidadesVendidas: number;
+      costoVentasBrutas: number;
       ventasPrimerPeriodo: number;
       ventasSegundoPeriodo: number;
     }
@@ -507,8 +563,11 @@ const secondPeriodDays = Math.floor(daysInPeriod / 2);
 
     if (!selectedSet.has(producto)) continue;
 
-    const cantidad = toNumber(row.cantidad);
-    const precioUnitario = toNumber(row.precio_unitario);
+    const movimiento =
+      classifyCommercialMovement(row);
+
+    const cantidad =
+      getCommercialEffectiveQuantity(row);
 
     const costoDisponible =
       row.costo_unitario !== undefined &&
@@ -520,8 +579,23 @@ const secondPeriodDays = Math.floor(daysInPeriod / 2);
       ? toNumber(row.costo_unitario)
       : 0;
 
-    const venta = cantidad * precioUnitario;
+    const venta = getCommercialNetSales(row);
     const costoTotal = cantidad * costoUnitario;
+
+    const esVenta = movimiento.kind === "sale";
+
+    const unidadesVendidas = esVenta
+      ? movimiento.effectiveQuantity
+      : 0;
+
+    const ventasBrutas = esVenta
+      ? venta
+      : 0;
+
+    const costoVentasBrutas = esVenta
+      ? unidadesVendidas * costoUnitario
+      : 0;
+
     const rowDate = parseDateLike(row.fecha);
 
 const isFirstPeriod =
@@ -574,6 +648,10 @@ const isSecondPeriod =
       unidades: 0,
       costoTotal: 0,
       costoIncompleto: false,
+      costoVentaIncompleto: false,
+      ventasBrutas: 0,
+      unidadesVendidas: 0,
+      costoVentasBrutas: 0,
       ventasPrimerPeriodo: 0,
       ventasSegundoPeriodo: 0,
     };
@@ -582,7 +660,17 @@ const isSecondPeriod =
       ventas: current.ventas + venta,
       unidades: current.unidades + cantidad,
       costoTotal: current.costoTotal + costoTotal,
-      costoIncompleto: current.costoIncompleto || !costoDisponible,
+      costoIncompleto:
+        current.costoIncompleto || !costoDisponible,
+      costoVentaIncompleto:
+        current.costoVentaIncompleto ||
+        (esVenta && !costoDisponible),
+      ventasBrutas:
+        current.ventasBrutas + ventasBrutas,
+      unidadesVendidas:
+        current.unidadesVendidas + unidadesVendidas,
+      costoVentasBrutas:
+        current.costoVentasBrutas + costoVentasBrutas,
 ventasPrimerPeriodo:
   current.ventasPrimerPeriodo +
   (isFirstPeriod ? venta : 0),
@@ -599,6 +687,10 @@ ventasSegundoPeriodo:
         unidades: 0,
         costoTotal: 0,
         costoIncompleto: false,
+        costoVentaIncompleto: false,
+        ventasBrutas: 0,
+        unidadesVendidas: 0,
+        costoVentasBrutas: 0,
         ventasPrimerPeriodo: 0,
         ventasSegundoPeriodo: 0,
       };
@@ -613,11 +705,15 @@ ventasSegundoPeriodo:
         : 0;
 
       const precioPromedio =
-        value.unidades > 0 ? value.ventas / value.unidades : 0;
+        value.unidadesVendidas > 0
+          ? value.ventasBrutas / value.unidadesVendidas
+          : 0;
 
       const costoPromedio =
-        !value.costoIncompleto && value.unidades > 0
-          ? value.costoTotal / value.unidades
+        !value.costoVentaIncompleto &&
+        value.unidadesVendidas > 0
+          ? value.costoVentasBrutas /
+            value.unidadesVendidas
           : 0;
 
       const margenEstimado = value.costoIncompleto
@@ -631,7 +727,7 @@ ventasSegundoPeriodo:
 
 const unidadesPromedioDia =
   daysInPeriod > 0
-    ? value.unidades / daysInPeriod
+    ? value.unidadesVendidas / daysInPeriod
     : 0;
 
 const rotacion = unidadesPromedioDia;
@@ -667,14 +763,19 @@ const tendenciaPct =
       100
     : 0;
 
-      return {
-        producto, 
-        ventas: value.ventas,
-        unidades: value.unidades,
-        participacion:
-          ventasTotales > 0
-            ? (value.ventas / ventasTotales) * 100
-            : 0,
+return {
+  producto,
+  ventas: value.ventas,
+  unidades: value.unidades,
+  costoVentaIncompleto: value.costoVentaIncompleto,
+  ventasBrutas: value.ventasBrutas,
+  unidadesVendidas: value.unidadesVendidas,
+  costoVentasBrutas: value.costoVentasBrutas,
+participacionDisponible,
+participacion:
+  participacionDisponible
+    ? (value.ventas / ventasTotales) * 100
+    : 0,
         precioPromedio,
         costoPromedio,
         costoIncompleto: value.costoIncompleto,
@@ -690,8 +791,8 @@ const tendenciaPct =
     })
     .filter(
       (row) =>
-        row.ventas > 0 ||
-        row.unidades > 0 ||
+        row.ventas !== 0 ||
+        row.unidades !== 0 ||
         row.stock > 0
     );
 }
@@ -702,14 +803,17 @@ function buildSalesTrend(rows: Record<string, unknown>[]): SalesPoint[] {
     const parsedDate = parseDateLike(row.fecha);
 
     if (!parsedDate) continue;
-const venta =
-  toNumber(row.cantidad) * toNumber(row.precio_unitario);
 
-if (venta === 0) continue;
+    const venta = getCommercialNetSales(row);
 
-const fecha = formatDateInput(parsedDate);
+    if (venta === 0) continue;
 
-map.set(fecha, (map.get(fecha) ?? 0) + venta);
+    const fecha = formatDateInput(parsedDate);
+
+    map.set(
+      fecha,
+      (map.get(fecha) ?? 0) + venta
+    );
   }
 
   return [...map.entries()]
@@ -864,8 +968,7 @@ function buildChannelData(rows: Record<string, unknown>[]) {
 if (!parsedDate) continue;
 
 const fecha = formatDateInput(parsedDate);
-const venta =
-  toNumber(row.cantidad) * toNumber(row.precio_unitario);
+const venta = getCommercialNetSales(row);
 
 if (venta === 0) continue;
 
@@ -931,7 +1034,7 @@ function buildJasoBotInsights(
     const producto = toText(row.producto, "Sin producto");
     const sucursal = toText(row.sucursal, "Sin sucursal");
     const canal = toText(row.canal, "Sin canal");
-    const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
+    const venta = getCommercialNetSales(row);
 
 if (isCommercialSaleRow(row) && venta !== 0) {
   ventasPorProducto.set(
@@ -976,11 +1079,44 @@ if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
   latestStockByProductBranch.set(producto, branchStocks);
 }
 }
-  const topProducto = [...ventasPorProducto.entries()].sort((a, b) => b[1] - a[1])[0];
-  const topSucursal = [...ventasPorSucursal.entries()].sort((a, b) => b[1] - a[1])[0];
-  const sucursalesOrdenadas = [...ventasPorSucursal.entries()].sort(
-  (a, b) => a[1] - b[1]
-);
+  const productosOrdenadosPorVenta = [
+    ...ventasPorProducto.entries(),
+  ].sort((a, b) => b[1] - a[1]);
+
+  const sucursalesOrdenadas = [
+    ...ventasPorSucursal.entries(),
+  ].sort((a, b) => a[1] - b[1]);
+
+  const canalesOrdenadosPorVenta = [
+    ...ventasPorCanal.entries(),
+  ].sort((a, b) => b[1] - a[1]);
+
+  const hasNonPositiveProductSales =
+    productosOrdenadosPorVenta.some(
+      ([, ventas]) => ventas <= 0
+    );
+
+  const hasNonPositiveBranchSales =
+    sucursalesOrdenadas.some(
+      ([, ventas]) => ventas <= 0
+    );
+
+  const hasNonPositiveChannelSales =
+    canalesOrdenadosPorVenta.some(
+      ([, ventas]) => ventas <= 0
+    );
+
+  const topProducto =
+    !hasNonPositiveProductSales
+      ? productosOrdenadosPorVenta[0]
+      : undefined;
+
+  const topSucursal =
+    !hasNonPositiveBranchSales
+      ? [...sucursalesOrdenadas].sort(
+          (a, b) => b[1] - a[1]
+        )[0]
+      : undefined;
 
 const totalVentasSucursales = sucursalesOrdenadas.reduce(
   (total, [, ventas]) => total + ventas,
@@ -1000,6 +1136,7 @@ const weakSucursalThresholdPct = Math.min(
 );
 
 const lowSucursal =
+  !hasNonPositiveBranchSales &&
   sucursalesOrdenadas.length >= 2 &&
   lowestSucursalCandidate &&
   totalVentasSucursales > 0 &&
@@ -1007,7 +1144,10 @@ const lowSucursal =
     weakSucursalThresholdPct
     ? lowestSucursalCandidate
     : undefined;
-  const topCanal = [...ventasPorCanal.entries()].sort((a, b) => b[1] - a[1])[0];
+  const topCanal =
+  !hasNonPositiveChannelSales
+    ? canalesOrdenadosPorVenta[0]
+    : undefined;
 const stockMinimum = Math.max(0, stockMin);
 const criticalStockThreshold = Math.max(
   1,
@@ -1042,7 +1182,6 @@ const productosCriticos = [...latestStockByProductBranch.entries()]
   const recomendaciones: string[] = commercialRecommendations.map(
     (item) => `${item.title}. ${item.message}`
   );
-  const productosOrdenados = [...ventasPorProducto.entries()].sort((a, b) => b[1] - a[1]);
 let promoWhatsApp = "";
 let tipoPromo = "general";
 
@@ -1612,11 +1751,20 @@ const topActiveChannel = useMemo(() => {
     const key = normalizeChannelKey(row.canal);
     if (!key) continue;
 
-    const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
-    totals.set(key, (totals.get(key) ?? 0) + venta);
+    const venta = getCommercialNetSales(row);
+
+    if (venta === 0) continue;
+
+    totals.set(
+      key,
+      (totals.get(key) ?? 0) + venta
+    );
   }
 
-  const ordered = [...totals.entries()].sort((a, b) => b[1] - a[1]);
+  const ordered = [...totals.entries()]
+    .filter(([, ventas]) => ventas > 0)
+    .sort((a, b) => b[1] - a[1]);
+
   return ordered.length ? ordered[0][0] : null;
 }, [filteredSalesRows]);
 const topActiveChannelLabel = topActiveChannel
@@ -1686,7 +1834,10 @@ if (rowsWithDate.length === 0) {
       const matchChannel = isRowChannelEnabled(row, channelsEnabled);
       return matchSucursal && matchProducto && matchChannel;
     })
-    .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
+    .reduce(
+      (acc, row) => acc + getCommercialNetSales(row),
+      0
+    );
 
   const previousSales = processedData.validRows
     .filter(isCommercialSaleRow)
@@ -1704,7 +1855,10 @@ if (rowsWithDate.length === 0) {
       const matchChannel = isRowChannelEnabled(row, channelsEnabled);
       return matchSucursal && matchProducto && matchChannel;
     })
-    .reduce((acc, row) => acc + toNumber(row.cantidad) * toNumber(row.precio_unitario), 0);
+    .reduce(
+      (acc, row) => acc + getCommercialNetSales(row),
+      0
+    );
 
   const variationAbs = currentSales - previousSales;
   return previousSales > 0 ? (variationAbs / previousSales) * 100 : null;
@@ -1719,15 +1873,15 @@ if (rowsWithDate.length === 0) {
 
 const ventasTotales = useMemo(() => {
   return filteredSalesRows.reduce(
-    (acc, row) =>
-      acc + toNumber(row.cantidad) * toNumber(row.precio_unitario),
+    (acc, row) => acc + getCommercialNetSales(row),
     0
   );
 }, [filteredSalesRows]);
 
 const unidadesTotales = useMemo(() => {
   return filteredSalesRows.reduce(
-    (acc, row) => acc + toNumber(row.cantidad),
+    (acc, row) =>
+      acc + getCommercialEffectiveQuantity(row),
     0
   );
 }, [filteredSalesRows]);
@@ -1749,59 +1903,86 @@ const productComparisonRows = useMemo(() => {
 ]);
 
 const productComparisonTotal = useMemo(() => {
-const total = productComparisonRows.reduce(
-  (acc, row) => ({
-    ventas: acc.ventas + row.ventas,
-    unidades: acc.unidades + row.unidades,
-    costoTotal:
-      acc.costoTotal + row.costoPromedio * row.unidades,
-    margenEstimado: acc.margenEstimado + row.margenEstimado,
-    stock: acc.stock + row.stock,
-    costoIncompleto: acc.costoIncompleto || row.costoIncompleto,
-  }),
-  {
-    ventas: 0,
-    unidades: 0,
-    costoTotal: 0,
-    margenEstimado: 0,
-    stock: 0,
-    costoIncompleto: false,
-  }
-);
+  const total = productComparisonRows.reduce(
+    (acc, row) => ({
+      ventas: acc.ventas + row.ventas,
+      unidades: acc.unidades + row.unidades,
+      ventasBrutas:
+        acc.ventasBrutas + row.ventasBrutas,
+      unidadesVendidas:
+        acc.unidadesVendidas + row.unidadesVendidas,
+      costoVentasBrutas:
+        acc.costoVentasBrutas + row.costoVentasBrutas,
+      margenEstimado:
+        acc.margenEstimado + row.margenEstimado,
+      stock: acc.stock + row.stock,
+      costoIncompleto:
+        acc.costoIncompleto || row.costoIncompleto,
+      costoVentaIncompleto:
+        acc.costoVentaIncompleto ||
+        row.costoVentaIncompleto,
+    }),
+    {
+      ventas: 0,
+      unidades: 0,
+      ventasBrutas: 0,
+      unidadesVendidas: 0,
+      costoVentasBrutas: 0,
+      margenEstimado: 0,
+      stock: 0,
+      costoIncompleto: false,
+      costoVentaIncompleto: false,
+    }
+  );
 
   const precioPromedio =
-    total.unidades > 0 ? total.ventas / total.unidades : 0;
-const costoPromedio =
-  !total.costoIncompleto && total.unidades > 0
-    ? total.costoTotal / total.unidades
-    : 0;
+    total.unidadesVendidas > 0
+      ? total.ventasBrutas / total.unidadesVendidas
+      : 0;
 
-const margenEstimado =
-  total.costoIncompleto
-    ? 0
-    : total.margenEstimado;
+  const costoPromedio =
+    !total.costoVentaIncompleto &&
+    total.unidadesVendidas > 0
+      ? total.costoVentasBrutas /
+        total.unidadesVendidas
+      : 0;
+
+  const margenEstimado =
+    total.costoIncompleto
+      ? 0
+      : total.margenEstimado;
 
 const rentabilidadPct =
   !total.costoIncompleto && total.ventas > 0
     ? (margenEstimado / total.ventas) * 100
     : 0;
 
-  return {
-    ...total,
-    margenEstimado,
-    precioPromedio,
-    costoPromedio,
-    participacion:
-      ventasTotales > 0 ? (total.ventas / ventasTotales) * 100 : 0,
-    rentabilidadPct,
-  };
+const participacionDisponible =
+  productComparisonRows.length > 0 &&
+  productComparisonRows.every(
+    (row) => row.participacionDisponible
+  );
+
+return {
+  ...total,
+  margenEstimado,
+  precioPromedio,
+  costoPromedio,
+  participacionDisponible,
+  participacion:
+    participacionDisponible
+      ? (total.ventas / ventasTotales) * 100
+      : 0,
+  rentabilidadPct,
+};
 }, [productComparisonRows, ventasTotales]);
 
 function formatComparisonMetricValue(
   value: number,
   costoIncompleto = false,
   tendenciaDisponible = true,
-  diasCoberturaDisponible = true
+  diasCoberturaDisponible = true,
+  participacionDisponible = true
 ): string {
   const metricRequiresCost =
     comparisonMetric === "costoPromedio" ||
@@ -1824,7 +2005,12 @@ if (
 ) {
   return "Sin datos";
 }
-
+if (
+  comparisonMetric === "participacion" &&
+  !participacionDisponible
+) {
+  return "Sin datos";
+}
 if (
   comparisonMetric === "ventas" ||
   comparisonMetric === "precioPromedio" ||
@@ -2596,20 +2782,41 @@ const benchmarkSummary = useMemo(() => {
 
   for (const row of benchmarkRows) {
     const sucursal = toText(row.sucursal, "Sin sucursal");
-    const venta = toNumber(row.cantidad) * toNumber(row.precio_unitario);
-    totals.set(sucursal, (totals.get(sucursal) ?? 0) + venta);
+    const venta = getCommercialNetSales(row);
+
+    totals.set(
+      sucursal,
+      (totals.get(sucursal) ?? 0) + venta
+    );
   }
 
   const entries = [...totals.entries()]
-    .map(([sucursal, ventas]) => ({ sucursal, ventas }))
+    .map(([sucursal, ventas]) => ({
+      sucursal,
+      ventas,
+    }))
     .sort((a, b) => b.ventas - a.ventas);
 
-  const total = entries.reduce((acc, item) => acc + item.ventas, 0);
+  const hasNonPositiveBranchSales = entries.some(
+    (item) => item.ventas <= 0
+  );
+
+  if (hasNonPositiveBranchSales) {
+    return [];
+  }
+
+  const total = entries.reduce(
+    (acc, item) => acc + item.ventas,
+    0
+  );
 
   return entries.map((item) => ({
     sucursal: item.sucursal,
     ventas: item.ventas,
-    participacion: total > 0 ? (item.ventas / total) * 100 : 0,
+    participacion:
+      total > 0
+        ? (item.ventas / total) * 100
+        : 0,
   }));
 }, [benchmarkRows]);
 
@@ -3757,12 +3964,13 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
             return (
               <div key={row.producto} style={styles.comparisonBarItem}>
                 <span style={styles.comparisonBarValue}>
-                 {formatComparisonMetricValue(
-  metricValue,
-  row.costoIncompleto,
-  row.tendenciaDisponible,
-  row.diasCoberturaDisponible
-)}
+                              {formatComparisonMetricValue(
+                               metricValue,
+                               row.costoIncompleto,
+                               row.tendenciaDisponible,
+                               row.diasCoberturaDisponible,
+                               row.participacionDisponible
+                             )}
                 </span>
 
                 <div
@@ -3822,8 +4030,10 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
                     {formatInt(row.unidades)}
                   </td>
                   <td style={styles.productComparisonTd}>
-                    {row.participacion.toFixed(1)}%
-                  </td>
+  {row.participacionDisponible
+    ? `${row.participacion.toFixed(1)}%`
+    : "Sin datos"}
+</td>
                   <td style={styles.productComparisonTd}>
                     {formatMoney(
                       row.precioPromedio,
@@ -3883,7 +4093,9 @@ inventario, unidades por día, cobertura, rentabilidad y tendencia.
                   {formatInt(productComparisonTotal.unidades)}
                 </td>
 <td style={styles.productComparisonTotalTd}>
-  {productComparisonTotal.participacion.toFixed(1)}%
+  {productComparisonTotal.participacionDisponible
+    ? `${productComparisonTotal.participacion.toFixed(1)}%`
+    : "Sin datos"}
 </td>
                 <td style={styles.productComparisonTotalTd}>
                   {formatMoney(
