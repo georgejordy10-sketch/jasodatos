@@ -1,4 +1,9 @@
 import { parseFlexibleNumber } from "@/core/numbers/parseFlexibleNumber";
+import {
+  classifyCommercialMovement,
+  getCommercialEffectiveQuantity,
+  getCommercialNetSales,
+} from "@/core/commercial/classifyCommercialMovement";
 import { isCommercialSaleRow } from "@/core/commercial/isCommercialSaleRow";
 import type {
   BusinessProfile,
@@ -63,9 +68,8 @@ function analyzeComercial(rows: Record<string, unknown>[]): ProfileAnalyticsResu
   for (const row of rows) {
     const sucursal = String(row.sucursal ?? "Sin sucursal");
     const producto = String(row.producto ?? "Sin producto");
-    const cantidad = toNumber(row.cantidad);
-    const precio = toNumber(row.precio_unitario);
-    const venta = cantidad * precio;
+    const cantidad = getCommercialEffectiveQuantity(row);
+    const venta = getCommercialNetSales(row);
     const mes = monthKeyFromValue(row.fecha);
 
     if (isCommercialSaleRow(row)) {
@@ -288,13 +292,17 @@ pais: [
 }
     if (!row.producto) errors.push("Falta producto.");
 
-    const cantidad = toNumber(row.cantidad);
     if (!row.cantidad && row.cantidad !== 0) {
       errors.push("Falta cantidad.");
-    } else if (cantidad < 0) {
-      errors.push("La cantidad no puede ser negativa.");
-    }
+    } else {
+      const movement = classifyCommercialMovement(row);
 
+      if (movement.kind === "conflict") {
+        errors.push(
+          "El tipo de movimiento y la cantidad son inconsistentes."
+        );
+      }
+    }
     const precio = toNumber(row.precio_unitario);
     if (!row.precio_unitario && row.precio_unitario !== 0) {
       errors.push("Falta precio unitario.");
