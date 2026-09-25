@@ -1,3 +1,4 @@
+import { classifyCommercialMovement } from "@/core/commercial/classifyCommercialMovement";
 import { parseFlexibleNumber } from "@/core/numbers/parseFlexibleNumber";
 import type { ConfirmedMapping } from "@/core/mapping/types";
 
@@ -19,7 +20,7 @@ export interface DataQualityReport {
   unmappedColumns: string[];
   missingRequiredFields: string[];
   invalidDateRows: number;
-  negativeQuantityRows: number;
+  movementConflictRows: number;
   negativePriceRows: number;
   negativeStockRows: number;
   rowsWithMissingRequiredValues: number;
@@ -152,10 +153,13 @@ function isEmptyRow(row: Record<string, unknown>): boolean {
 }
 
 function buildDuplicateKey(row: Record<string, unknown>): string {
+  const movement = classifyCommercialMovement(row);
+
   return [
     normalizeText(row.fecha),
     normalizeText(row.sucursal),
     normalizeText(row.producto),
+    movement.kind,
     normalizeText(row.cantidad),
     normalizeText(row.precio_unitario),
   ].join("|");
@@ -183,7 +187,7 @@ export function calculateDataQualityReport(params: {
 
   let emptyRows = 0;
   let invalidDateRows = 0;
-  let negativeQuantityRows = 0;
+  let movementConflictRows = 0;
   let negativePriceRows = 0;
   let negativeStockRows = 0;
   let rowsWithMissingRequiredValues = 0;
@@ -211,9 +215,12 @@ export function calculateDataQualityReport(params: {
       invalidDateRows += 1;
     }
 
-    const cantidad = toNumber(row.cantidad);
-    if (cantidad !== null && cantidad < 0) {
-      negativeQuantityRows += 1;
+    if (!isEmptyValue(row.cantidad)) {
+      const movement = classifyCommercialMovement(row);
+
+      if (movement.kind === "conflict") {
+        movementConflictRows += 1;
+      }
     }
 
     const precio = toNumber(row.precio_unitario);
@@ -244,8 +251,8 @@ export function calculateDataQualityReport(params: {
   const missingValuesPenalty =
     (rowsWithMissingRequiredValues / effectiveRows) * 30;
   const invalidDatesPenalty = (invalidDateRows / effectiveRows) * 18;
-  const negativeValuesPenalty =
-    ((negativeQuantityRows + negativePriceRows + negativeStockRows) /
+  const invalidCommercialValuesPenalty =
+    ((movementConflictRows + negativePriceRows + negativeStockRows) /
       effectiveRows) *
     18;
   const duplicatePenalty = (duplicateRows / effectiveRows) * 12;
@@ -258,7 +265,7 @@ export function calculateDataQualityReport(params: {
       missingRequiredPenalty -
       missingValuesPenalty -
       invalidDatesPenalty -
-      negativeValuesPenalty -
+      invalidCommercialValuesPenalty -
       duplicatePenalty -
       unmappedPenalty -
       emptyRowsPenalty
@@ -296,10 +303,10 @@ export function calculateDataQualityReport(params: {
     });
   }
 
-  if (negativeQuantityRows > 0) {
+  if (movementConflictRows > 0) {
     issues.push({
       type: "warning",
-      message: `${negativeQuantityRows} filas tienen cantidades negativas.`,
+      message: `${movementConflictRows} filas tienen inconsistencias entre el tipo de movimiento y la cantidad.`,
     });
   }
 
@@ -320,7 +327,7 @@ export function calculateDataQualityReport(params: {
   if (duplicateRows > 0) {
     issues.push({
       type: "warning",
-      message: `${duplicateRows} filas parecen duplicadas según fecha, sucursal, producto, cantidad y precio.`,
+      message: `${duplicateRows} filas parecen duplicadas según fecha, sucursal, producto, tipo de movimiento, cantidad y precio.`,
     });
   }
 
@@ -400,7 +407,7 @@ return {
   unmappedColumns,
   missingRequiredFields,
   invalidDateRows,
-  negativeQuantityRows,
+  movementConflictRows,
   negativePriceRows,
   negativeStockRows,
   rowsWithMissingRequiredValues,
