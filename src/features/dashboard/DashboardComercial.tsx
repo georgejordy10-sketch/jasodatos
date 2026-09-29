@@ -133,6 +133,42 @@ function getComparisonMetricValue(
 ): number {
   return row[metric];
 }
+function getComparisonMetricDecimals(metric: ComparisonMetric): number {
+  if (
+    metric === "ventas" ||
+    metric === "precioPromedio" ||
+    metric === "costoPromedio" ||
+    metric === "margenEstimado" ||
+    metric === "rotacion"
+  ) {
+    return 2;
+  }
+
+  if (
+    metric === "participacion" ||
+    metric === "rentabilidadPct" ||
+    metric === "tendenciaPct" ||
+    metric === "diasCobertura"
+  ) {
+    return 1;
+  }
+
+  return 0;
+}
+
+function areComparisonValuesTied(
+  firstValue: number,
+  secondValue: number,
+  metric: ComparisonMetric
+): boolean {
+  const decimals = getComparisonMetricDecimals(metric);
+  const factor = 10 ** decimals;
+
+  return (
+    Math.round(firstValue * factor) ===
+    Math.round(secondValue * factor)
+  );
+}
 const COLORS = [
   "#5B6CFF",
   "#8B5CF6",
@@ -2097,6 +2133,35 @@ if (
   leaderValue <= 0
 ) {
   return "La variable seleccionada no tiene valores suficientes para comparar estos productos.";
+}
+
+if (
+  areComparisonValuesTied(
+    leaderValue,
+    secondValue,
+    comparisonMetric
+  )
+) {
+  const tiedProducts = ordered
+    .filter((row) =>
+      areComparisonValuesTied(
+        getComparisonMetricValue(row, comparisonMetric),
+        leaderValue,
+        comparisonMetric
+      )
+    )
+    .map((row) => row.producto);
+
+  const tiedProductsLabel =
+    tiedProducts.length === 2
+      ? `${tiedProducts[0]} y ${tiedProducts[1]}`
+      : `${tiedProducts.slice(0, -1).join(", ")} y ${
+          tiedProducts[tiedProducts.length - 1]
+        }`;
+
+  return `${tiedProductsLabel} presentan el mismo valor en ${getComparisonMetricLabel(
+    comparisonMetric
+  ).toLowerCase()} dentro de los productos comparados. No hay un líder claro en esta variable; revisa otras métricas antes de definir una acción comercial.`;
 }
 
 if (comparisonMetric === "ventas") {
