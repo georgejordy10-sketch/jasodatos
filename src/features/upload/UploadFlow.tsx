@@ -305,7 +305,7 @@ if (report.status === "warning") {
     badge: "Observaciones menores",
     title: "Archivo apto para análisis",
     message:
-      "El archivo puede procesarse. Hay algunos campos opcionales que no serán usados en esta versión del panel.",
+      "El archivo puede procesarse, pero contiene observaciones que conviene revisar antes de generar el panel comercial.",
     recommendationTitle: "Recomendación",
     background: "linear-gradient(135deg, #f8faff 0%, #f5f3ff 55%, #eef2ff 100%)",
     border: "#c4b5fd",
@@ -1368,18 +1368,26 @@ title={
 {qualityReport && !processedData ? (
   <div style={analysisResultCompactStyle}>
     <div>
-      <strong style={analysisResultTitleStyle}>Archivo validado</strong>
+      <strong style={analysisResultTitleStyle}>Archivo revisado</strong>
       <p style={analysisResultTextStyle}>
-        JasoDatos revisó la estructura del archivo y preparó los datos para generar el dashboard.
+        JasoDatos revisó la estructura y calidad del archivo antes de generar el dashboard.
       </p>
     </div>
 
     <div style={analysisResultBadgesStyle}>
       <span style={analysisResultBadgeStyle}>
-        {qualityReport.totalRows} filas válidas
+        {qualityReport.totalRows} filas leídas
       </span>
 
-      <span style={analysisResultBadgeStyle}>0 errores</span>
+      <span style={analysisResultBadgeStyle}>
+        {qualityReport.issues.length === 0
+          ? "Sin observaciones"
+          : `${qualityReport.issues.length} ${
+              qualityReport.issues.length === 1
+                ? "observación"
+                : "observaciones"
+            }`}
+      </span>
 
       <span style={analysisResultBadgeStyle}>
         {qualityReport.unmappedColumns.length > 0
@@ -1443,7 +1451,9 @@ title={
   <div style={dashboardLayerStyle}>
     {processedData.rowIssues.length > 0 ? (
       <div style={analysisWarningStyle}>
-        Se detectaron errores en {processedData.rowIssues.length} filas. Puedes revisar el archivo o continuar solo con las filas válidas.
+        {processedData.rowIssues.length === 1
+          ? "Se detectó un error en 1 fila. Puedes revisar el archivo o continuar solo con las filas válidas."
+          : `Se detectaron errores en ${processedData.rowIssues.length} filas. Puedes revisar el archivo o continuar solo con las filas válidas.`}
       </div>
     ) : null}
 
