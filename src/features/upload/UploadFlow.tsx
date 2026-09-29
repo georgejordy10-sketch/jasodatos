@@ -1153,7 +1153,7 @@ style={inventoryHelpButtonStyle}
   { label: "Registros repetidos", value: qualityReport.duplicateRows },
   { label: "Datos reconocidos por JasoDatos", value: qualityReport.mappedColumns },
   {
-    label: "Datos por revisar",
+    label: "Columnas sin mapear",
     value: qualityReport.unmappedColumns.length,
   },
 ].map((item) => (

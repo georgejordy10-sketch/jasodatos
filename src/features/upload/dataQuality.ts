@@ -166,7 +166,7 @@ function buildDuplicateKey(row: Record<string, unknown>): string {
 }
 
 function clampScore(value: number): number {
-  return Math.max(0, Math.min(100, Math.round(value)));
+  return Math.max(0, Math.min(100, Math.floor(value)));
 }
 
 export function calculateDataQualityReport(params: {
@@ -306,10 +306,12 @@ export function calculateDataQualityReport(params: {
   if (movementConflictRows > 0) {
     issues.push({
       type: "warning",
-      message: `${movementConflictRows} filas tienen inconsistencias entre el tipo de movimiento y la cantidad.`,
+      message:
+        movementConflictRows === 1
+          ? "1 fila tiene inconsistencias entre el tipo de movimiento y la cantidad."
+          : `${movementConflictRows} filas tienen inconsistencias entre el tipo de movimiento y la cantidad.`,
     });
   }
-
   if (negativePriceRows > 0) {
     issues.push({
       type: "warning",
