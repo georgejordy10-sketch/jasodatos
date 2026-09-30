@@ -201,7 +201,19 @@ const stockMin = Number.isFinite(rawStockMin)
 
   const topProduct = orderedProducts[0];
   const topBranch = orderedBranches[0];
-  const lowBranch = orderedBranches[orderedBranches.length - 1];
+  const lowBranch =
+    orderedBranches[orderedBranches.length - 1];
+  const secondLowBranch =
+    orderedBranches.length >= 2
+      ? orderedBranches[orderedBranches.length - 2]
+      : undefined;
+
+  const hasLowBranchTie =
+    lowBranch !== undefined &&
+    secondLowBranch !== undefined &&
+    Math.round(lowBranch[1] * 100) ===
+      Math.round(secondLowBranch[1] * 100);
+
   const topChannel = orderedChannels[0];
 
   const productCount = orderedProducts.length;
@@ -308,6 +320,7 @@ const stockMin = Number.isFinite(rawStockMin)
   if (
     branchCount >= 2 &&
     lowBranch &&
+    !hasLowBranchTie &&
     !hasNonPositiveBranchSales &&
     totalBranchSales > 0
   ) {

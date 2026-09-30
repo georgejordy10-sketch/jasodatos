@@ -1147,39 +1147,71 @@ if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
       ? productosOrdenadosPorVenta[0]
       : undefined;
 
+  const sucursalesOrdenadasDesc = [
+    ...sucursalesOrdenadas,
+  ].sort((a, b) => b[1] - a[1]);
+
+  const topSucursalCandidate =
+    sucursalesOrdenadasDesc[0];
+
+  const secondTopSucursalCandidate =
+    sucursalesOrdenadasDesc[1];
+
+  const hasTopSucursalTie =
+    !hasNonPositiveBranchSales &&
+    topSucursalCandidate &&
+    secondTopSucursalCandidate &&
+    Math.round(topSucursalCandidate[1] * 100) ===
+      Math.round(secondTopSucursalCandidate[1] * 100);
+
   const topSucursal =
-    !hasNonPositiveBranchSales
-      ? [...sucursalesOrdenadas].sort(
-          (a, b) => b[1] - a[1]
-        )[0]
+    !hasNonPositiveBranchSales &&
+    !hasTopSucursalTie
+      ? topSucursalCandidate
       : undefined;
 
-const totalVentasSucursales = sucursalesOrdenadas.reduce(
-  (total, [, ventas]) => total + ventas,
-  0
-);
+  const totalVentasSucursales =
+    sucursalesOrdenadas.reduce(
+      (total, [, ventas]) => total + ventas,
+      0
+    );
 
-const lowestSucursalCandidate = sucursalesOrdenadas[0];
+  const lowestSucursalCandidate =
+    sucursalesOrdenadas[0];
 
-const expectedSucursalSharePct =
-  sucursalesOrdenadas.length >= 2
-    ? 100 / sucursalesOrdenadas.length
-    : 0;
+  const secondLowestSucursalCandidate =
+    sucursalesOrdenadas[1];
 
-const weakSucursalThresholdPct = Math.min(
-  18,
-  expectedSucursalSharePct * 0.75
-);
+  const hasLowestSucursalTie =
+    !hasNonPositiveBranchSales &&
+    lowestSucursalCandidate &&
+    secondLowestSucursalCandidate &&
+    Math.round(lowestSucursalCandidate[1] * 100) ===
+      Math.round(secondLowestSucursalCandidate[1] * 100);
 
-const lowSucursal =
-  !hasNonPositiveBranchSales &&
-  sucursalesOrdenadas.length >= 2 &&
-  lowestSucursalCandidate &&
-  totalVentasSucursales > 0 &&
-  (lowestSucursalCandidate[1] / totalVentasSucursales) * 100 <=
-    weakSucursalThresholdPct
-    ? lowestSucursalCandidate
-    : undefined;
+  const expectedSucursalSharePct =
+    sucursalesOrdenadas.length >= 2
+      ? 100 / sucursalesOrdenadas.length
+      : 0;
+
+  const weakSucursalThresholdPct = Math.min(
+    18,
+    expectedSucursalSharePct * 0.75
+  );
+
+  const lowSucursal =
+    !hasNonPositiveBranchSales &&
+    !hasLowestSucursalTie &&
+    sucursalesOrdenadas.length >= 2 &&
+    lowestSucursalCandidate &&
+    totalVentasSucursales > 0 &&
+    (lowestSucursalCandidate[1] /
+      totalVentasSucursales) *
+      100 <=
+      weakSucursalThresholdPct
+      ? lowestSucursalCandidate
+      : undefined;
+
   const topCanal =
   !hasNonPositiveChannelSales
     ? canalesOrdenadosPorVenta[0]
@@ -2885,9 +2917,32 @@ const benchmarkSummary = useMemo(() => {
   }));
 }, [benchmarkRows]);
 
-const weakestBranch = benchmarkSummary.length
-  ? benchmarkSummary[benchmarkSummary.length - 1]
-  : null;
+const weakestBranchCandidate =
+  benchmarkSummary.length
+    ? benchmarkSummary[
+        benchmarkSummary.length - 1
+      ]
+    : null;
+
+const secondWeakestBranchCandidate =
+  benchmarkSummary.length >= 2
+    ? benchmarkSummary[
+        benchmarkSummary.length - 2
+      ]
+    : null;
+
+const hasWeakestBranchTie =
+  weakestBranchCandidate !== null &&
+  secondWeakestBranchCandidate !== null &&
+  Math.round(weakestBranchCandidate.ventas * 100) ===
+    Math.round(
+      secondWeakestBranchCandidate.ventas * 100
+    );
+
+const weakestBranch =
+  !hasWeakestBranchTie
+    ? weakestBranchCandidate
+    : null;
 const productCount = useMemo(() => {
   return new Set(
     filteredRows.map((row) =>

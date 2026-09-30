@@ -161,16 +161,52 @@ export default function BenchmarkingSucursales({ rows }: Props) {
       (row) => row.ventas > 0
     );
 
+  const topSales =
+    benchmarkRows[0]?.ventas ?? null;
+
+  const secondSales =
+    benchmarkRows[1]?.ventas ?? null;
+
+  const bottomSales =
+    benchmarkRows[
+      benchmarkRows.length - 1
+    ]?.ventas ?? null;
+
+  const secondBottomSales =
+    benchmarkRows[
+      benchmarkRows.length - 2
+    ]?.ventas ?? null;
+
+  const hasTopTie =
+    rankingDisponible &&
+    benchmarkRows.length >= 2 &&
+    topSales !== null &&
+    secondSales !== null &&
+    Math.round(topSales * 100) ===
+      Math.round(secondSales * 100);
+
+  const hasBottomTie =
+    rankingDisponible &&
+    benchmarkRows.length >= 2 &&
+    bottomSales !== null &&
+    secondBottomSales !== null &&
+    Math.round(bottomSales * 100) ===
+      Math.round(secondBottomSales * 100);
+
   const mejorSucursal =
     rankingDisponible
-      ? benchmarkRows[0]?.sucursal ?? "-"
+      ? hasTopTie
+        ? "Sin líder claro"
+        : benchmarkRows[0]?.sucursal ?? "-"
       : "Sin datos";
 
   const sucursalRezagada =
     rankingDisponible
-      ? benchmarkRows[
-          benchmarkRows.length - 1
-        ]?.sucursal ?? "-"
+      ? hasBottomTie
+        ? "Sin rezago claro"
+        : benchmarkRows[
+            benchmarkRows.length - 1
+          ]?.sucursal ?? "-"
       : "Sin datos";
 
   return (
@@ -232,19 +268,32 @@ export default function BenchmarkingSucursales({ rows }: Props) {
 
             <tbody>
               {benchmarkRows.map(
-                (row, index) => (
+                (row) => {
+                  const roundedSales =
+                    Math.round(row.ventas * 100);
+
+                  const rank = rankingDisponible
+                    ? benchmarkRows.findIndex(
+                        (candidate) =>
+                          Math.round(
+                            candidate.ventas * 100
+                          ) === roundedSales
+                      ) + 1
+                    : null;
+
+                  return (
                   <tr key={row.sucursal}>
                     <td style={styles.td}>
                       <span
                         style={
                           rankingDisponible &&
-                          index === 0
+                          rank === 1
                             ? styles.rankFirst
                             : styles.rank
                         }
                       >
                         {rankingDisponible
-                          ? index + 1
+                          ? rank
                           : "-"}
                       </span>
                     </td>
@@ -309,7 +358,8 @@ export default function BenchmarkingSucursales({ rows }: Props) {
                       {row.productoTop}
                     </td>
                   </tr>
-                )
+                  );
+                }
               )}
             </tbody>
           </table>
