@@ -22,6 +22,7 @@ export interface DataQualityReport {
   invalidDateRows: number;
   movementConflictRows: number;
   negativePriceRows: number;
+  negativeCostRows: number;
   negativeStockRows: number;
   rowsWithMissingRequiredValues: number;
   issues: DataQualityIssue[];
@@ -189,6 +190,7 @@ export function calculateDataQualityReport(params: {
   let invalidDateRows = 0;
   let movementConflictRows = 0;
   let negativePriceRows = 0;
+  let negativeCostRows = 0;
   let negativeStockRows = 0;
   let rowsWithMissingRequiredValues = 0;
   let duplicateRows = 0;
@@ -228,6 +230,11 @@ export function calculateDataQualityReport(params: {
       negativePriceRows += 1;
     }
 
+    const costo = toNumber(row.costo_unitario);
+    if (costo !== null && costo < 0) {
+      negativeCostRows += 1;
+    }
+
     const stock = toNumber(row.stock);
     if (stock !== null && stock < 0) {
       negativeStockRows += 1;
@@ -252,7 +259,10 @@ export function calculateDataQualityReport(params: {
     (rowsWithMissingRequiredValues / effectiveRows) * 30;
   const invalidDatesPenalty = (invalidDateRows / effectiveRows) * 18;
   const invalidCommercialValuesPenalty =
-    ((movementConflictRows + negativePriceRows + negativeStockRows) /
+    ((movementConflictRows +
+      negativePriceRows +
+      negativeCostRows +
+      negativeStockRows) /
       effectiveRows) *
     18;
   const duplicatePenalty = (duplicateRows / effectiveRows) * 12;
@@ -316,6 +326,16 @@ export function calculateDataQualityReport(params: {
     issues.push({
       type: "warning",
       message: `${negativePriceRows} filas tienen precios negativos.`,
+    });
+  }
+
+  if (negativeCostRows > 0) {
+    issues.push({
+      type: "warning",
+      message:
+        negativeCostRows === 1
+          ? "1 fila tiene costo unitario negativo."
+          : `${negativeCostRows} filas tienen costos unitarios negativos.`,
     });
   }
 
@@ -411,6 +431,7 @@ return {
   invalidDateRows,
   movementConflictRows,
   negativePriceRows,
+  negativeCostRows,
   negativeStockRows,
   rowsWithMissingRequiredValues,
   issues,
