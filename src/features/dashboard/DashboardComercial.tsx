@@ -1226,10 +1226,24 @@ if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
       ? lowestSucursalCandidate
       : undefined;
 
+  const topCanalCandidate =
+    canalesOrdenadosPorVenta[0];
+
+  const secondTopCanalCandidate =
+    canalesOrdenadosPorVenta[1];
+
+  const hasTopCanalTie =
+    !hasNonPositiveChannelSales &&
+    topCanalCandidate &&
+    secondTopCanalCandidate &&
+    Math.round(topCanalCandidate[1] * 100) ===
+      Math.round(secondTopCanalCandidate[1] * 100);
+
   const topCanal =
-  !hasNonPositiveChannelSales
-    ? canalesOrdenadosPorVenta[0]
-    : undefined;
+    !hasNonPositiveChannelSales &&
+    !hasTopCanalTie
+      ? topCanalCandidate
+      : undefined;
 const stockMinimum = Math.max(0, stockMin);
 const criticalStockThreshold = Math.max(
   1,
@@ -1334,6 +1348,8 @@ if (lowSucursal) {
 
 if (topCanal) {
   insights.push(`Canal con mayor aporte: ${topCanal[0]}`);
+} else if (hasTopCanalTie) {
+  insights.push("Canales con mayor aporte: empate sin líder único");
 }
 
   return {

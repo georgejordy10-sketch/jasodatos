@@ -224,6 +224,14 @@ const stockMin = Number.isFinite(rawStockMin)
       Math.round(secondLowBranch[1] * 100);
 
   const topChannel = orderedChannels[0];
+  const secondTopChannel =
+    orderedChannels[1];
+
+  const hasTopChannelTie =
+    topChannel !== undefined &&
+    secondTopChannel !== undefined &&
+    Math.round(topChannel[1] * 100) ===
+      Math.round(secondTopChannel[1] * 100);
 
   const productCount = orderedProducts.length;
   const branchCount = orderedBranches.length;
@@ -382,6 +390,7 @@ const stockMin = Number.isFinite(rawStockMin)
     !hasMissingChannel &&
     channelCount >= 2 &&
     topChannel &&
+    !hasTopChannelTie &&
     !hasNonPositiveChannelSales &&
     totalChannelSales > 0
   ) {
