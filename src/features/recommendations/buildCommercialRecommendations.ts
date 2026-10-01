@@ -200,6 +200,15 @@ const stockMin = Number.isFinite(rawStockMin)
   );
 
   const topProduct = orderedProducts[0];
+  const secondTopProduct =
+    orderedProducts[1];
+
+  const hasTopProductTie =
+    topProduct !== undefined &&
+    secondTopProduct !== undefined &&
+    Math.round(topProduct[1] * 100) ===
+      Math.round(secondTopProduct[1] * 100);
+
   const topBranch = orderedBranches[0];
   const lowBranch =
     orderedBranches[orderedBranches.length - 1];
@@ -270,6 +279,7 @@ const stockMin = Number.isFinite(rawStockMin)
 
   if (
     topProduct &&
+    !hasTopProductTie &&
     !hasNonPositiveProductSales &&
     totalProductSales > 0 &&
     productCount >= 2

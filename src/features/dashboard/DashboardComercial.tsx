@@ -1142,9 +1142,23 @@ if (row.stock !== undefined && row.stock !== null && row.stock !== "") {
       ([, ventas]) => ventas <= 0
     );
 
+  const topProductoCandidate =
+    productosOrdenadosPorVenta[0];
+
+  const secondTopProductoCandidate =
+    productosOrdenadosPorVenta[1];
+
+  const hasTopProductoTie =
+    !hasNonPositiveProductSales &&
+    topProductoCandidate &&
+    secondTopProductoCandidate &&
+    Math.round(topProductoCandidate[1] * 100) ===
+      Math.round(secondTopProductoCandidate[1] * 100);
+
   const topProducto =
-    !hasNonPositiveProductSales
-      ? productosOrdenadosPorVenta[0]
+    !hasNonPositiveProductSales &&
+    !hasTopProductoTie
+      ? topProductoCandidate
       : undefined;
 
   const sucursalesOrdenadasDesc = [
@@ -1287,6 +1301,9 @@ if (tipoPromo === "reposicion" && productosCriticos.length > 0) {
   mensajePrincipal = `${nombreSucursalBaja} presenta una participación de ventas menor a la referencia proporcional según el número de sucursales. Revisa surtido, disponibilidad, canal y ejecución comercial antes de definir una acción correctiva.`;
 } else if (tipoPromo === "producto_estrella") {
   mensajePrincipal = `${nombreProductoTop} lidera actualmente las ventas. Úsalo como referencia para revisar dónde se concentra su mejor desempeño antes de definir la siguiente acción comercial.`;
+} else if (hasTopProductoTie) {
+  mensajePrincipal =
+    "Hay un empate entre los productos con mayor venta. No existe un líder único en el período analizado; compara margen, unidades, inventario y tendencia antes de priorizar una acción comercial.";
 }
 const insights: string[] = [];
 
@@ -1303,6 +1320,8 @@ if (productosCriticos.length > 0) {
 
 if (topProducto) {
   insights.push(`Producto con mayor venta: ${topProducto[0]}`);
+} else if (hasTopProductoTie) {
+  insights.push("Productos con mayor venta: empate sin líder único");
 }
 
 if (topSucursal) {
@@ -2870,9 +2889,35 @@ async function exportarPDF() {
     }
   }
 }
-const productoTop = topProductos[0];
+const productoTopCandidate =
+  topProductos[0];
+
+const secondProductoTopCandidate =
+  topProductos[1];
+
+const hasProductoTopTie =
+  productoTopCandidate !== undefined &&
+  secondProductoTopCandidate !== undefined &&
+  Math.round(
+    toNumber(productoTopCandidate.ventas) * 100
+  ) ===
+    Math.round(
+      toNumber(secondProductoTopCandidate.ventas) * 100
+    );
+
+const productoTop =
+  !hasProductoTopTie
+    ? productoTopCandidate
+    : undefined;
+
 const porcentajeTop =
-  ventasTotales > 0 ? ((toNumber(productoTop?.ventas) / ventasTotales) * 100).toFixed(1) : "0.0";
+  ventasTotales > 0 && productoTop
+    ? (
+        (toNumber(productoTop.ventas) /
+          ventasTotales) *
+        100
+      ).toFixed(1)
+    : "0.0";
 
 const benchmarkSummary = useMemo(() => {
   const totals = new Map<string, number>();
@@ -3001,8 +3046,14 @@ subtitle: "Unidades vendidas",
   },
   {
     title: "Producto más vendido",
-    value: productoTop?.producto ?? "Sin datos",
-    badge: productoTop ? `${porcentajeTop}%` : "Sin datos",
+    value: hasProductoTopTie
+      ? "Empate"
+      : productoTop?.producto ?? "Sin datos",
+    badge: hasProductoTopTie
+      ? "Sin líder único"
+      : productoTop
+        ? `${porcentajeTop}%`
+        : "Sin datos",
     subtitle: "del total de ventas",
     helpText:
       "Aquí ves el producto que más aportó a tus ventas dentro de la información cargada.",

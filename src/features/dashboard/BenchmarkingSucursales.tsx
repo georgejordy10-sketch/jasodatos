@@ -129,11 +129,25 @@ export default function BenchmarkingSucursales({ rows }: Props) {
               ventasProducto < 0
           );
 
+        const topProductEntry =
+          productEntries[0];
+
+        const secondTopProductEntry =
+          productEntries[1];
+
+        const hasTopProductTie =
+          topProductEntry !== undefined &&
+          secondTopProductEntry !== undefined &&
+          Math.round(topProductEntry[1] * 100) ===
+            Math.round(secondTopProductEntry[1] * 100);
+
         const productoTop =
           !hasNegativeProductSales &&
-          productEntries.length > 0 &&
-          productEntries[0][1] > 0
-            ? productEntries[0][0]
+          topProductEntry !== undefined &&
+          topProductEntry[1] > 0
+            ? hasTopProductTie
+              ? "Empate"
+              : topProductEntry[0]
             : "Sin datos";
 
         const participacion =
