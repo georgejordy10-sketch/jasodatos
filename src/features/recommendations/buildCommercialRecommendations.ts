@@ -210,6 +210,15 @@ const stockMin = Number.isFinite(rawStockMin)
       Math.round(secondTopProduct[1] * 100);
 
   const topBranch = orderedBranches[0];
+  const secondTopBranch =
+    orderedBranches[1];
+
+  const hasTopBranchTie =
+    topBranch !== undefined &&
+    secondTopBranch !== undefined &&
+    Math.round(topBranch[1] * 100) ===
+      Math.round(secondTopBranch[1] * 100);
+
   const lowBranch =
     orderedBranches[orderedBranches.length - 1];
   const secondLowBranch =
@@ -377,7 +386,9 @@ const stockMin = Number.isFinite(rawStockMin)
             expectedShare
           )}%`,
           topBranch
-            ? `Sucursal con mayor venta: ${topBranch[0]}`
+            ? hasTopBranchTie
+              ? "Sucursales con mayor venta: empate sin líder único."
+              : `Sucursal con mayor venta: ${topBranch[0]}`
             : "Sin referencia superior disponible.",
         ],
         metric: lowBranchShare,
