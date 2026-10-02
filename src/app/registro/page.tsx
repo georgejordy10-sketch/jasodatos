@@ -18,14 +18,7 @@ type RecoverForm = {
   commercial_email: string;
   commercial_whatsapp: string;
 };
-type RecoveredBusiness = {
-  slug: string;
-  business_name: string;
-  owner_name?: string | null;
-  status?: string | null;
-  trial_ends_at?: string | null;
-  redirectTo: string;
-};
+
 const countryByLocale: Record<string, string> = {
   "es-EC": "Ecuador",
   "es-CO": "Colombia",
@@ -57,9 +50,13 @@ export default function RegistroPage() {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [recoveringBusiness, setRecoveringBusiness] = useState(false);
+  const [verifyingBusinessAccess, setVerifyingBusinessAccess] =
+    useState(false);
+  const [recoverVerificationPending, setRecoverVerificationPending] =
+    useState(false);
+  const [recoverVerificationCode, setRecoverVerificationCode] =
+    useState("");
   const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
-  const [recoveredBusiness, setRecoveredBusiness] =
-  useState<RecoveredBusiness | null>(null);
   const [notice, setNotice] = useState("");
   const [slug, setSlug] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
@@ -72,15 +69,16 @@ export default function RegistroPage() {
 function switchMode(mode: "signup" | "recover") {
   setAccessMode(mode);
   setNotice("");
-  setRecoveredBusiness(null);
+  setRecoverVerificationPending(false);
+  setRecoverVerificationCode("");
+  setDebugCode("");
 
-    if (mode === "recover") {
-      setSlug("");
-      setVerificationCode("");
-      setRedirectTo("");
-      setDebugCode("");
-    }
+  if (mode === "recover") {
+    setSlug("");
+    setVerificationCode("");
+    setRedirectTo("");
   }
+}
 
 async function submitTrial() {
   if (!acceptedLegalTerms) {
@@ -203,7 +201,9 @@ async function recoverBusinessAccess() {
   try {
     setRecoveringBusiness(true);
     setNotice("");
-    setRecoveredBusiness(null);
+    setRecoverVerificationPending(false);
+    setRecoverVerificationCode("");
+    setDebugCode("");
 
     const hasSearchValue =
       recoverForm.business_name.trim() ||
@@ -228,33 +228,102 @@ async function recoverBusinessAccess() {
 
     if (!response.ok) {
       throw new Error(
-        result?.error || "No se pudo recuperar el acceso al negocio."
+        result?.error || "No se pudo solicitar el código de acceso."
       );
     }
 
-    if (!result.redirectTo || !result.business?.slug) {
-      throw new Error("No se encontró una ruta válida para este negocio.");
+    if (!result.verification_required) {
+      throw new Error(
+        "No se pudo iniciar la verificación de acceso."
+      );
     }
 
-    setRecoveredBusiness({
-      slug: result.business.slug,
-      business_name: result.business.business_name,
-      owner_name: result.business.owner_name ?? null,
-      status: result.business.status ?? null,
-      trial_ends_at: result.business.trial_ends_at ?? null,
-      redirectTo: result.redirectTo,
-    });
+    setRecoverVerificationPending(true);
 
-    setNotice("");
+    setNotice(
+      result?.message ||
+        "Si los datos coinciden, enviaremos un código al correo registrado."
+    );
+
+    if (result.debug_verification_code) {
+      setDebugCode(result.debug_verification_code);
+    }
   } catch (error) {
     const message =
       error instanceof Error
         ? error.message
-        : "No se pudo recuperar el acceso al negocio.";
+        : "No se pudo solicitar el código de acceso.";
 
     setNotice(message);
   } finally {
     setRecoveringBusiness(false);
+  }
+}
+async function verifyRecoveredBusinessAccess() {
+  try {
+    setVerifyingBusinessAccess(true);
+    setNotice("");
+
+    const code = recoverVerificationCode.trim();
+
+    if (!/^\d{6}$/.test(code)) {
+      throw new Error(
+        "Ingresa el código de 6 dígitos recibido por correo."
+      );
+    }
+
+    const response = await fetch(
+      "/api/public/verify-business-access",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error || "No se pudo verificar el código de acceso."
+      );
+    }
+
+    if (!result.redirectTo) {
+      throw new Error(
+        "No se recibió una ruta válida para acceder al negocio."
+      );
+    }
+
+    const redirectUrl = new URL(
+      result.redirectTo,
+      window.location.origin
+    );
+
+    const businessSlug =
+      redirectUrl.searchParams.get("business");
+
+    if (businessSlug) {
+      window.localStorage.setItem(
+        "jasodatos.currentBusinessSlug",
+        businessSlug
+      );
+    }
+
+    window.location.href = result.redirectTo;
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo verificar el código de acceso.";
+
+    setNotice(message);
+  } finally {
+    setVerifyingBusinessAccess(false);
   }
 }
   return (
@@ -535,10 +604,10 @@ onClick={() => {
               </button>
             ) : null}
 
-            <p style={styles.footerText}>
-              La prueba se activa únicamente después de validar el correo. Así
-              protegemos la matriz de clientes y evitamos registros ficticios.
-            </p>
+              <p style={styles.footerText}>
+                La prueba se activa únicamente después de validar el correo. Así
+                protegemos la matriz de clientes y evitamos registros ficticios.
+              </p>
           </>
         ) : null}
 
@@ -606,71 +675,66 @@ onClick={() => {
               onClick={recoverBusinessAccess}
               disabled={recoveringBusiness}
             >
-              {recoveringBusiness ? "Buscando negocio..." : "Buscar acceso"}
+              {recoveringBusiness
+                ? "Enviando código..."
+                : "Enviar código de acceso"}
             </button>
-            {recoveredBusiness ? (
-  <div style={styles.recoveredBusinessBox}>
-    <div>
-      <p style={styles.recoveredEyebrow}>Negocio encontrado</p>
 
-      <h3 style={styles.recoveredTitle}>
-        {recoveredBusiness.business_name}
-      </h3>
+            {recoverVerificationPending ? (
+              <div style={styles.verificationBox}>
+                <h2 style={styles.verificationTitle}>
+                  Verifica tu acceso
+                </h2>
 
-      <p style={styles.recoveredText}>
-        {recoveredBusiness.owner_name
-          ? `Responsable: ${recoveredBusiness.owner_name}`
-          : "Confirma que este es tu negocio antes de continuar."}
-      </p>
+                <p style={styles.verificationText}>
+                  Ingresa el código de 6 dígitos enviado al correo
+                  registrado del negocio.
+                </p>
 
-      <span style={styles.recoveredStatus}>
-        {recoveredBusiness.status === "active"
-          ? "Plan activo"
-          : recoveredBusiness.status === "trial"
-          ? "Prueba activa"
-          : recoveredBusiness.status === "expired"
-          ? "Acceso vencido"
-          : "Acceso registrado"}
-      </span>
-    </div>
+                {debugCode ? (
+                  <div style={styles.debugCode}>
+                    Código local de prueba:{" "}
+                    <strong>{debugCode}</strong>
+                  </div>
+                ) : null}
 
-    <div style={styles.recoveredActions}>
-      <div style={styles.recoveredActions}>
-  <button
-    type="button"
-    style={styles.confirmAccessButton}
-onClick={() => {
-  window.localStorage.setItem(
-    "jasodatos.currentBusinessSlug",
-    recoveredBusiness.slug
-  );
+                <label style={styles.label}>
+                  <span>Código de acceso</span>
 
-  window.location.href = recoveredBusiness.redirectTo;
-}}
-  >
-    Sí, acceder a este negocio
-  </button>
+                  <input
+                    style={styles.input}
+                    value={recoverVerificationCode}
+                    onChange={(event) =>
+                      setRecoverVerificationCode(
+                        event.target.value
+                      )
+                    }
+                    placeholder="Ej. 123456"
+                    inputMode="numeric"
+                    maxLength={6}
+                  />
+                </label>
 
-  <button
-    type="button"
-    style={styles.changeSearchButton}
-    onClick={() => {
-      setRecoveredBusiness(null);
-      setNotice("");
-    }}
-  >
-    No es mi negocio, buscar otro
-  </button>
-</div>
-    </div>
-  </div>
-) : null}
+                <button
+                  type="button"
+                  style={styles.button}
+                  onClick={verifyRecoveredBusinessAccess}
+                  disabled={verifyingBusinessAccess}
+                >
+                  {verifyingBusinessAccess
+                    ? "Verificando..."
+                    : "Verificar código y acceder"}
+                </button>
+              </div>
+            ) : null}
+
             <p style={styles.footerText}>
-              Este acceso aplica para negocios en prueba o negocios con plan
-              activo. No necesitas recordar enlaces técnicos.
+              Por seguridad, el acceso se habilita únicamente después de
+              verificar el código enviado al correo registrado del negocio.
             </p>
           </div>
         ) : null}
+
 
         {notice ? <div style={styles.notice}>{notice}</div> : null}
       </section>
