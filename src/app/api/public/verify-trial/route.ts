@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { setBusinessAccessSession } from "@/lib/businessAccessSession";
 
 type VerifyTrialBody = {
   slug?: string;
@@ -62,10 +63,14 @@ export async function POST(request: Request) {
     }
 
     if (business.email_verified_at) {
-      return NextResponse.json({
-        ok: true,
-        redirectTo: `/cargas?business=${business.slug}`,
-      });
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Este correo ya fue verificado. Usa la opción Acceder a mi negocio.",
+        },
+        { status: 409 }
+      );
     }
 
     const expiresAt = business.email_verification_expires_at
@@ -162,6 +167,12 @@ export async function POST(request: Request) {
       }
     }
 
+    await setBusinessAccessSession({
+      businessId: business.id,
+      slug: business.slug,
+      expiresInSeconds: 3 * 24 * 60 * 60,
+    });
+
     return NextResponse.json({
       ok: true,
       redirectTo: `/cargas?business=${business.slug}`,
@@ -172,6 +183,12 @@ export async function POST(request: Request) {
         ? error.message
         : "No se pudo verificar el correo.";
 
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: message,
+      },
+      { status: 500 }
+    );
   }
 }
