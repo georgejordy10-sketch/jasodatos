@@ -5,6 +5,7 @@ export const BUSINESS_ACCESS_CHALLENGE_COOKIE_NAME =
   "jasodatos_business_access_challenge";
 
 const CHALLENGE_TTL_SECONDS = 10 * 60;
+const MAX_FAILED_ATTEMPTS = 5;
 
 type BusinessAccessChallenge = {
   version: 1;
@@ -12,6 +13,7 @@ type BusinessAccessChallenge = {
   slug: string;
   email: string;
   codeHash: string;
+  failedAttempts: number;
   issuedAt: number;
   expiresAt: number;
 };
@@ -88,6 +90,14 @@ function signaturesMatch(
     expectedBuffer
   );
 }
+function serializeChallenge(
+  payload: BusinessAccessChallenge
+): string {
+  const encodedPayload = encodePayload(payload);
+  const signature = signPayload(encodedPayload);
+
+  return `${encodedPayload}.${signature}`;
+}
 
 function createChallengeToken(
   input: CreateChallengeInput
@@ -100,14 +110,12 @@ function createChallengeToken(
     slug: input.slug.trim(),
     email: input.email.trim().toLowerCase(),
     codeHash: hashAccessCode(input.code),
+    failedAttempts: 0,
     issuedAt: now,
     expiresAt: now + CHALLENGE_TTL_SECONDS,
   };
 
-  const encodedPayload = encodePayload(payload);
-  const signature = signPayload(encodedPayload);
-
-  return `${encodedPayload}.${signature}`;
+  return serializeChallenge(payload);
 }
 
 function verifyChallengeToken(
@@ -161,6 +169,10 @@ function verifyChallengeToken(
       !payload.email.trim() ||
       typeof payload.codeHash !== "string" ||
       !payload.codeHash.trim() ||
+      typeof payload.failedAttempts !== "number" ||
+      !Number.isInteger(payload.failedAttempts) ||
+      payload.failedAttempts < 0 ||
+      payload.failedAttempts >= MAX_FAILED_ATTEMPTS ||
       typeof payload.issuedAt !== "number" ||
       typeof payload.expiresAt !== "number" ||
       payload.expiresAt <= now
@@ -174,6 +186,7 @@ function verifyChallengeToken(
       slug: payload.slug,
       email: payload.email,
       codeHash: payload.codeHash,
+      failedAttempts: payload.failedAttempts,
       issuedAt: payload.issuedAt,
       expiresAt: payload.expiresAt,
     };
@@ -244,6 +257,50 @@ export async function validateBusinessAccessCode(
       expectedBuffer
     )
   ) {
+    const failedAttempts =
+      challenge.failedAttempts + 1;
+
+    if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+      cookieStore.set(
+        BUSINESS_ACCESS_CHALLENGE_COOKIE_NAME,
+        "",
+        {
+          httpOnly: true,
+          secure:
+            process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 0,
+        }
+      );
+
+      return null;
+    }
+
+    const updatedChallenge: BusinessAccessChallenge = {
+      ...challenge,
+      failedAttempts,
+    };
+
+    const remainingSeconds = Math.max(
+      1,
+      challenge.expiresAt -
+        Math.floor(Date.now() / 1000)
+    );
+
+    cookieStore.set(
+      BUSINESS_ACCESS_CHALLENGE_COOKIE_NAME,
+      serializeChallenge(updatedChallenge),
+      {
+        httpOnly: true,
+        secure:
+          process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: remainingSeconds,
+      }
+    );
+
     return null;
   }
 
