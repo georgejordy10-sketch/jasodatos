@@ -17,19 +17,39 @@ type BusinessRecord = {
   slug: string;
   business_name: string;
   commercial_email: string | null;
+  commercial_whatsapp: string | null;
   owner_email: string | null;
+  owner_whatsapp: string | null;
   status: string | null;
   trial_ends_at: string | null;
 };
 
-function cleanText(value: unknown) {
-  if (typeof value !== "string") return "";
+const BUSINESS_SELECT =
+  "id, slug, business_name, commercial_email, commercial_whatsapp, owner_email, owner_whatsapp, status, trial_ends_at";
+
+function cleanText(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
 
   return value.trim();
 }
 
-function normalizePhone(value: string) {
+function normalizePhone(value: string): string {
   return value.replace(/\D/g, "");
+}
+
+function normalizeEmail(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function normalizeBusinessName(
+  value: string
+): string {
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
 }
 
 function hasValidAccessStatus(
@@ -61,13 +81,64 @@ function hasValidAccessStatus(
 function getAccessEmail(
   business: BusinessRecord
 ): string {
-  return (
+  return normalizeEmail(
     business.commercial_email ??
-    business.owner_email ??
-    ""
-  )
-    .trim()
-    .toLowerCase();
+      business.owner_email ??
+      ""
+  );
+}
+
+function findExactEmailMatches(
+  businesses: BusinessRecord[],
+  email: string,
+  field:
+    | "commercial_email"
+    | "owner_email"
+): BusinessRecord[] {
+  const expectedEmail =
+    normalizeEmail(email);
+
+  return businesses.filter(
+    (business) =>
+      normalizeEmail(
+        business[field] ?? ""
+      ) === expectedEmail
+  );
+}
+
+function findExactPhoneMatches(
+  businesses: BusinessRecord[],
+  phone: string,
+  field:
+    | "commercial_whatsapp"
+    | "owner_whatsapp"
+): BusinessRecord[] {
+  const expectedPhone =
+    normalizePhone(phone);
+
+  return businesses.filter(
+    (business) =>
+      normalizePhone(
+        business[field] ?? ""
+      ) === expectedPhone
+  );
+}
+
+function findExactBusinessNameMatches(
+  businesses: BusinessRecord[],
+  businessName: string
+): BusinessRecord[] {
+  const expectedName =
+    normalizeBusinessName(
+      businessName
+    );
+
+  return businesses.filter(
+    (business) =>
+      normalizeBusinessName(
+        business.business_name
+      ) === expectedName
+  );
 }
 
 async function sendBusinessAccessEmail({
@@ -79,16 +150,18 @@ async function sendBusinessAccessEmail({
   businessName: string;
   code: string;
 }) {
-  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendApiKey =
+    process.env.RESEND_API_KEY?.trim();
 
   const fromEmail =
-    process.env.RESEND_FROM_EMAIL ||
-    "JasoDatos <onboarding@resend.dev>";
+    process.env.RESEND_FROM_EMAIL?.trim();
 
-  if (!resendApiKey) {
-    if (process.env.NODE_ENV === "production") {
+  if (!resendApiKey || !fromEmail) {
+    if (
+      process.env.NODE_ENV === "production"
+    ) {
       throw new Error(
-        "Falta configurar RESEND_API_KEY para enviar correos."
+        "El servicio de correo no está configurado."
       );
     }
 
@@ -106,14 +179,18 @@ async function sendBusinessAccessEmail({
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-        "User-Agent": "JasoDatos/1.0",
+        Authorization:
+          `Bearer ${resendApiKey}`,
+        "Content-Type":
+          "application/json",
+        "User-Agent":
+          "JasoDatos/1.0",
       },
       body: JSON.stringify({
         from: fromEmail,
         to,
-        subject: "Código de acceso a JasoDatos",
+        subject:
+          "Código de acceso a JasoDatos",
         text:
           `Solicitaste acceso al negocio ${businessName} en JasoDatos.\n\n` +
           `Tu código de acceso es: ${code}\n\n` +
@@ -124,10 +201,20 @@ async function sendBusinessAccessEmail({
   );
 
   if (!response.ok) {
-    const raw = await response.text();
+    const raw =
+      await response.text();
+
+    console.error(
+      "[recover-business] Resend rechazó el correo:",
+      {
+        status: response.status,
+        response:
+          raw.slice(0, 500),
+      }
+    );
 
     throw new Error(
-      raw || "No se pudo enviar el código de acceso."
+      "No se pudo enviar el código de acceso."
     );
   }
 
@@ -136,31 +223,60 @@ async function sendBusinessAccessEmail({
   };
 }
 
-function genericRecoveryResponse() {
+function genericRecoveryResponse(
+  debugVerificationCode?: string
+) {
   return NextResponse.json({
     ok: true,
     verification_required: true,
     message:
       "Si los datos coinciden con un negocio con acceso vigente, enviaremos un código de 6 dígitos al correo registrado.",
+    ...(debugVerificationCode
+      ? {
+          debug_verification_code:
+            debugVerificationCode,
+        }
+      : {}),
   });
 }
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request
+) {
   try {
-    const body =
-      (await request.json()) as RecoverBusinessBody;
+    let body: RecoverBusinessBody;
+
+    try {
+      body =
+        (await request.json()) as RecoverBusinessBody;
+    } catch {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "La solicitud contiene datos inválidos.",
+        },
+        { status: 400 }
+      );
+    }
 
     const businessName = cleanText(
       body.business_name
     );
 
-    const commercialEmail = cleanText(
-      body.commercial_email
-    ).toLowerCase();
+    const commercialEmail =
+      normalizeEmail(
+        cleanText(
+          body.commercial_email
+        )
+      );
 
-    const commercialWhatsapp = normalizePhone(
-      cleanText(body.commercial_whatsapp)
-    );
+    const commercialWhatsapp =
+      normalizePhone(
+        cleanText(
+          body.commercial_whatsapp
+        )
+      );
 
     if (
       !businessName &&
@@ -177,25 +293,48 @@ export async function POST(request: Request) {
       );
     }
 
+    if (
+      businessName.length > 160 ||
+      commercialEmail.length > 254 ||
+      commercialWhatsapp.length > 20
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Los datos ingresados no tienen un formato válido.",
+        },
+        { status: 400 }
+      );
+    }
+
     await clearBusinessAccessChallenge();
 
-    const supabase = createAdminSupabaseClient();
+    const supabase =
+      createAdminSupabaseClient();
 
-    let businesses: BusinessRecord[] = [];
+    let businesses:
+      BusinessRecord[] = [];
 
     if (commercialEmail) {
-      const { data, error } = await supabase
+      const {
+        data,
+        error,
+      } = await supabase
         .from("businesses")
-        .select(
-          "id, slug, business_name, commercial_email, owner_email, status, trial_ends_at"
-        )
+        .select(BUSINESS_SELECT)
         .ilike(
           "commercial_email",
           commercialEmail
         )
-        .limit(5);
+        .limit(10);
 
       if (error) {
+        console.error(
+          "[recover-business] Error consultando correo comercial:",
+          error
+        );
+
         return NextResponse.json(
           {
             ok: false,
@@ -207,24 +346,35 @@ export async function POST(request: Request) {
       }
 
       businesses =
-        (data as BusinessRecord[] | null) ?? [];
+        findExactEmailMatches(
+          (data as
+            | BusinessRecord[]
+            | null) ?? [],
+          commercialEmail,
+          "commercial_email"
+        );
 
       if (businesses.length === 0) {
         const {
-          data: ownerEmailBusinesses,
-          error: ownerEmailError,
+          data:
+            ownerEmailBusinesses,
+          error:
+            ownerEmailError,
         } = await supabase
           .from("businesses")
-          .select(
-            "id, slug, business_name, commercial_email, owner_email, status, trial_ends_at"
-          )
+          .select(BUSINESS_SELECT)
           .ilike(
             "owner_email",
             commercialEmail
           )
-          .limit(5);
+          .limit(10);
 
         if (ownerEmailError) {
+          console.error(
+            "[recover-business] Error consultando correo del propietario:",
+            ownerEmailError
+          );
+
           return NextResponse.json(
             {
               ok: false,
@@ -236,23 +386,35 @@ export async function POST(request: Request) {
         }
 
         businesses =
-          (ownerEmailBusinesses as
-            | BusinessRecord[]
-            | null) ?? [];
+          findExactEmailMatches(
+            (ownerEmailBusinesses as
+              | BusinessRecord[]
+              | null) ?? [],
+            commercialEmail,
+            "owner_email"
+          );
       }
-    } else if (commercialWhatsapp) {
-      const { data, error } = await supabase
+    } else if (
+      commercialWhatsapp
+    ) {
+      const {
+        data,
+        error,
+      } = await supabase
         .from("businesses")
-        .select(
-          "id, slug, business_name, commercial_email, owner_email, status, trial_ends_at"
-        )
+        .select(BUSINESS_SELECT)
         .ilike(
           "commercial_whatsapp",
           `%${commercialWhatsapp}%`
         )
-        .limit(5);
+        .limit(10);
 
       if (error) {
+        console.error(
+          "[recover-business] Error consultando WhatsApp comercial:",
+          error
+        );
+
         return NextResponse.json(
           {
             ok: false,
@@ -264,24 +426,35 @@ export async function POST(request: Request) {
       }
 
       businesses =
-        (data as BusinessRecord[] | null) ?? [];
+        findExactPhoneMatches(
+          (data as
+            | BusinessRecord[]
+            | null) ?? [],
+          commercialWhatsapp,
+          "commercial_whatsapp"
+        );
 
       if (businesses.length === 0) {
         const {
-          data: ownerWhatsappBusinesses,
-          error: ownerWhatsappError,
+          data:
+            ownerWhatsappBusinesses,
+          error:
+            ownerWhatsappError,
         } = await supabase
           .from("businesses")
-          .select(
-            "id, slug, business_name, commercial_email, owner_email, status, trial_ends_at"
-          )
+          .select(BUSINESS_SELECT)
           .ilike(
             "owner_whatsapp",
             `%${commercialWhatsapp}%`
           )
-          .limit(5);
+          .limit(10);
 
         if (ownerWhatsappError) {
+          console.error(
+            "[recover-business] Error consultando WhatsApp del propietario:",
+            ownerWhatsappError
+          );
+
           return NextResponse.json(
             {
               ok: false,
@@ -293,23 +466,33 @@ export async function POST(request: Request) {
         }
 
         businesses =
-          (ownerWhatsappBusinesses as
-            | BusinessRecord[]
-            | null) ?? [];
+          findExactPhoneMatches(
+            (ownerWhatsappBusinesses as
+              | BusinessRecord[]
+              | null) ?? [],
+            commercialWhatsapp,
+            "owner_whatsapp"
+          );
       }
     } else {
-      const { data, error } = await supabase
+      const {
+        data,
+        error,
+      } = await supabase
         .from("businesses")
-        .select(
-          "id, slug, business_name, commercial_email, owner_email, status, trial_ends_at"
-        )
+        .select(BUSINESS_SELECT)
         .ilike(
           "business_name",
           businessName
         )
-        .limit(5);
+        .limit(10);
 
       if (error) {
+        console.error(
+          "[recover-business] Error consultando nombre del negocio:",
+          error
+        );
+
         return NextResponse.json(
           {
             ok: false,
@@ -321,7 +504,12 @@ export async function POST(request: Request) {
       }
 
       businesses =
-        (data as BusinessRecord[] | null) ?? [];
+        findExactBusinessNameMatches(
+          (data as
+            | BusinessRecord[]
+            | null) ?? [],
+          businessName
+        );
     }
 
     const business =
@@ -342,7 +530,9 @@ export async function POST(request: Request) {
     }
 
     const accessEmail =
-      getAccessEmail(business);
+      getAccessEmail(
+        business
+      );
 
     if (!accessEmail) {
       return genericRecoveryResponse();
@@ -352,52 +542,63 @@ export async function POST(request: Request) {
       generateBusinessAccessCode();
 
     await setBusinessAccessChallenge({
-      businessId: business.id,
-      slug: business.slug,
-      email: accessEmail,
-      code: accessCode,
+      businessId:
+        business.id,
+      slug:
+        business.slug,
+      email:
+        accessEmail,
+      code:
+        accessCode,
     });
 
     try {
       const emailResult =
         await sendBusinessAccessEmail({
-          to: accessEmail,
+          to:
+            accessEmail,
           businessName:
             business.business_name,
-          code: accessCode,
+          code:
+            accessCode,
         });
 
-      return NextResponse.json({
-        ok: true,
-        verification_required: true,
-        message:
-          "Si los datos coinciden con un negocio con acceso vigente, enviaremos un código de 6 dígitos al correo registrado.",
-        debug_verification_code:
-          !emailResult.sent &&
-          process.env.NODE_ENV !== "production"
-            ? accessCode
-            : undefined,
-      });
+      const debugVerificationCode =
+        !emailResult.sent &&
+        process.env.NODE_ENV !==
+          "production"
+          ? accessCode
+          : undefined;
+
+      return genericRecoveryResponse(
+        debugVerificationCode
+      );
     } catch (error) {
+      console.error(
+        "[recover-business] No se pudo entregar el código:",
+        error
+      );
+
       await clearBusinessAccessChallenge();
 
-      throw error;
+      /*
+       * La respuesta debe ser igual a la de un negocio
+       * inexistente para no revelar si una cuenta existe
+       * mediante el resultado del envío del correo.
+       */
+      return genericRecoveryResponse();
     }
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No se pudo procesar la solicitud de acceso.";
-
     console.error(
-      "[recover-business] Error:",
+      "[recover-business] Error inesperado:",
       error
     );
 
     return NextResponse.json(
       {
         ok: false,
-        error: message,
+        error:
+          "No se pudo procesar la solicitud de acceso.",
       },
       { status: 500 }
     );
