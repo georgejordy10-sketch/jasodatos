@@ -63,12 +63,28 @@ function getSessionDurationSeconds(
   );
 }
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request
+) {
   try {
-    const body =
-      (await request.json()) as VerifyBusinessAccessBody;
+    let body: VerifyBusinessAccessBody;
 
-    const code = cleanText(body.code);
+    try {
+      body =
+        (await request.json()) as VerifyBusinessAccessBody;
+    } catch {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "La solicitud contiene datos inválidos.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const code =
+      cleanText(body.code);
 
     if (!/^\d{6}$/.test(code)) {
       return NextResponse.json(
@@ -82,7 +98,9 @@ export async function POST(request: Request) {
     }
 
     const challenge =
-      await validateBusinessAccessCode(code);
+      await validateBusinessAccessCode(
+        code
+      );
 
     if (!challenge) {
       return NextResponse.json(
@@ -95,25 +113,33 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const supabase =
+      createAdminSupabaseClient();
 
-    const { data: business, error } =
-      await supabase
-        .from("businesses")
-        .select(
-          "id, slug, status, trial_ends_at"
-        )
-        .eq(
-          "id",
-          challenge.businessId
-        )
-        .eq(
-          "slug",
-          challenge.slug
-        )
-        .maybeSingle();
+    const {
+      data: business,
+      error,
+    } = await supabase
+      .from("businesses")
+      .select(
+        "id, slug, status, trial_ends_at"
+      )
+      .eq(
+        "id",
+        challenge.businessId
+      )
+      .eq(
+        "slug",
+        challenge.slug
+      )
+      .maybeSingle();
 
     if (error) {
+      console.error(
+        "[verify-business-access] Error consultando negocio:",
+        error
+      );
+
       return NextResponse.json(
         {
           ok: false,
@@ -167,23 +193,21 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       redirectTo:
-        `/cargas?business=${business.slug}`,
+        `/cargas?business=${encodeURIComponent(
+          business.slug
+        )}`,
     });
   } catch (error) {
     console.error(
-      "[verify-business-access] Error:",
+      "[verify-business-access] Error inesperado:",
       error
     );
-
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No se pudo verificar el código de acceso.";
 
     return NextResponse.json(
       {
         ok: false,
-        error: message,
+        error:
+          "No se pudo verificar el código de acceso.",
       },
       { status: 500 }
     );
