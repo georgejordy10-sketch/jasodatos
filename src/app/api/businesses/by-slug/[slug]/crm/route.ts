@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { authorizeBusinessAccess } from "@/lib/authorizeBusinessAccess";
 
 type Params = {
   params: Promise<{
@@ -7,39 +8,93 @@ type Params = {
   }>;
 };
 
-function cleanText(value: unknown) {
-  if (typeof value !== "string") return null;
+type UpdateBusinessCrmBody = {
+  business_name?: unknown;
+  owner_name?: unknown;
+  commercial_email?: unknown;
+  commercial_whatsapp?: unknown;
+  ciudad?: unknown;
+  provincia?: unknown;
+  pais?: unknown;
+};
+
+function cleanText(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
 
   const text = value.trim();
 
   return text.length > 0 ? text : null;
 }
 
-export async function GET(_request: Request, context: Params) {
+export async function GET(
+  _request: Request,
+  context: Params
+) {
   try {
     const { slug } = await context.params;
+
     const businessSlug = slug?.trim();
 
     if (!businessSlug) {
       return NextResponse.json(
-        { ok: false, error: "Slug del negocio requerido." },
+        {
+          ok: false,
+          error: "Slug del negocio requerido.",
+        },
         { status: 400 }
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const access =
+      await authorizeBusinessAccess(
+        businessSlug
+      );
 
-    const { data: business, error } = await supabase
+    if (!access) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "No autorizado",
+        },
+        { status: 401 }
+      );
+    }
+
+    const supabase =
+      createAdminSupabaseClient();
+
+    const {
+      data: business,
+      error,
+    } = await supabase
       .from("businesses")
       .select(
-        "id, slug, business_name, owner_name, commercial_email, commercial_whatsapp, ciudad, provincia, pais, commercial_notes, last_contact_at"
+        "id, slug, business_name, owner_name, commercial_email, commercial_whatsapp, ciudad, provincia, pais"
       )
-      .eq("slug", businessSlug)
+      .eq(
+        "id",
+        access.businessId
+      )
+      .eq(
+        "slug",
+        access.slug
+      )
       .maybeSingle();
 
     if (error) {
+      console.error(
+        "[business-crm] Error consultando negocio:",
+        error
+      );
+
       return NextResponse.json(
-        { ok: false, error: error.message },
+        {
+          ok: false,
+          error:
+            "No se pudo cargar la información del negocio.",
+        },
         { status: 500 }
       );
     }
@@ -48,7 +103,8 @@ export async function GET(_request: Request, context: Params) {
       return NextResponse.json(
         {
           ok: false,
-          error: "No se encontró información CRM para este negocio.",
+          error:
+            "No se encontró información para este negocio.",
         },
         { status: 404 }
       );
@@ -56,81 +112,164 @@ export async function GET(_request: Request, context: Params) {
 
     return NextResponse.json({
       ok: true,
-      business,
+      business: {
+        id: business.id,
+        slug: business.slug,
+        business_name:
+          business.business_name,
+        owner_name:
+          business.owner_name,
+        commercial_email:
+          business.commercial_email,
+        commercial_whatsapp:
+          business.commercial_whatsapp,
+        ciudad: business.ciudad,
+        provincia: business.provincia,
+        pais: business.pais,
+
+        /*
+         * Estos campos existen en la interfaz actual,
+         * pero pertenecen al CRM interno de JasoDatos.
+         * El cliente no debe poder leerlos.
+         */
+        commercial_notes: null,
+        last_contact_at: null,
+      },
     });
   } catch (error) {
+    console.error(
+      "[business-crm] Error GET:",
+      error
+    );
+
     const message =
       error instanceof Error
         ? error.message
-        : "No se pudo cargar la información CRM.";
+        : "No se pudo cargar la información del negocio.";
 
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: message,
+      },
+      { status: 500 }
+    );
   }
 }
 
-export async function PATCH(request: Request, context: Params) {
+export async function PATCH(
+  request: Request,
+  context: Params
+) {
   try {
     const { slug } = await context.params;
-    const body = await request.json();
 
     const businessSlug = slug?.trim();
 
     if (!businessSlug) {
       return NextResponse.json(
-        { ok: false, error: "Slug del negocio requerido." },
-        { status: 400 }
-      );
-    }
-
-    const business_name = cleanText(body.business_name);
-
-    if (!business_name) {
-      return NextResponse.json(
         {
           ok: false,
-          error: "El nombre del negocio es obligatorio.",
+          error: "Slug del negocio requerido.",
         },
         { status: 400 }
       );
     }
 
-    const owner_name = cleanText(body.owner_name);
-    const commercial_email = cleanText(body.commercial_email);
-    const commercial_whatsapp = cleanText(body.commercial_whatsapp);
-    const ciudad = cleanText(body.ciudad);
-    const provincia = cleanText(body.provincia);
-    const pais = cleanText(body.pais);
-    const commercial_notes = cleanText(body.commercial_notes);
+    const access =
+      await authorizeBusinessAccess(
+        businessSlug
+      );
 
-    const last_contact_at =
-      typeof body.last_contact_at === "string" && body.last_contact_at.trim()
-        ? body.last_contact_at
-        : null;
+    if (!access) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "No autorizado",
+        },
+        { status: 401 }
+      );
+    }
 
-    const supabase = createAdminSupabaseClient();
+    const body =
+      (await request.json()) as UpdateBusinessCrmBody;
 
-    const { data: business, error } = await supabase
+    const businessName =
+      cleanText(body.business_name);
+
+    if (!businessName) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "El nombre del negocio es obligatorio.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const ownerName =
+      cleanText(body.owner_name);
+
+    const commercialEmail =
+      cleanText(body.commercial_email);
+
+    const commercialWhatsapp =
+      cleanText(body.commercial_whatsapp);
+
+    const ciudad =
+      cleanText(body.ciudad);
+
+    const provincia =
+      cleanText(body.provincia);
+
+    const pais =
+      cleanText(body.pais);
+
+    const supabase =
+      createAdminSupabaseClient();
+
+    const {
+      data: business,
+      error,
+    } = await supabase
       .from("businesses")
       .update({
-        business_name,
-        owner_name,
-        commercial_email,
-        commercial_whatsapp,
+        business_name: businessName,
+        owner_name: ownerName,
+        commercial_email:
+          commercialEmail,
+        commercial_whatsapp:
+          commercialWhatsapp,
         ciudad,
         provincia,
         pais,
-        commercial_notes,
-        last_contact_at,
       })
-      .eq("slug", businessSlug)
+      .eq(
+        "id",
+        access.businessId
+      )
+      .eq(
+        "slug",
+        access.slug
+      )
       .select(
-        "id, slug, business_name, owner_name, commercial_email, commercial_whatsapp, ciudad, provincia, pais, commercial_notes, last_contact_at"
+        "id, slug, business_name, owner_name, commercial_email, commercial_whatsapp, ciudad, provincia, pais"
       )
       .maybeSingle();
 
     if (error) {
+      console.error(
+        "[business-crm] Error actualizando negocio:",
+        error
+      );
+
       return NextResponse.json(
-        { ok: false, error: error.message },
+        {
+          ok: false,
+          error:
+            "No se pudo actualizar la información del negocio.",
+        },
         { status: 500 }
       );
     }
@@ -139,7 +278,8 @@ export async function PATCH(request: Request, context: Params) {
       return NextResponse.json(
         {
           ok: false,
-          error: "No se encontró información CRM para este negocio.",
+          error:
+            "No se encontró información para este negocio.",
         },
         { status: 404 }
       );
@@ -147,14 +287,47 @@ export async function PATCH(request: Request, context: Params) {
 
     return NextResponse.json({
       ok: true,
-      business,
+      business: {
+        id: business.id,
+        slug: business.slug,
+        business_name:
+          business.business_name,
+        owner_name:
+          business.owner_name,
+        commercial_email:
+          business.commercial_email,
+        commercial_whatsapp:
+          business.commercial_whatsapp,
+        ciudad: business.ciudad,
+        provincia: business.provincia,
+        pais: business.pais,
+
+        /*
+         * Conservamos la forma esperada por el frontend,
+         * pero nunca exponemos ni modificamos los campos
+         * internos del CRM comercial.
+         */
+        commercial_notes: null,
+        last_contact_at: null,
+      },
     });
   } catch (error) {
+    console.error(
+      "[business-crm] Error PATCH:",
+      error
+    );
+
     const message =
       error instanceof Error
         ? error.message
-        : "No se pudo actualizar la información CRM.";
+        : "No se pudo actualizar la información del negocio.";
 
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: message,
+      },
+      { status: 500 }
+    );
   }
 }
