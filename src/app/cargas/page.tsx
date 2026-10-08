@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import UploadFlow from "@/features/upload/UploadFlow";
+import { BusinessLogoutButton } from "@/features/auth/BusinessLogoutButton";
 import { authorizeBusinessAccess } from "@/lib/authorizeBusinessAccess";
 
 type CargasPageProps = {
@@ -11,16 +12,13 @@ type CargasPageProps = {
 export default async function CargasPage({
   searchParams,
 }: CargasPageProps) {
-  const params =
-    await searchParams;
+  const params = await searchParams;
 
-  const businessParam =
-    Array.isArray(params.business)
-      ? params.business[0]
-      : params.business;
+  const businessParam = Array.isArray(params.business)
+    ? params.business[0]
+    : params.business;
 
-  const businessSlug =
-    businessParam?.trim() ?? "";
+  const businessSlug = businessParam?.trim() ?? "";
 
   /*
    * Conservamos el modo local de desarrollo sin negocio
@@ -30,23 +28,37 @@ export default async function CargasPage({
    * identificado y una sesión de acceso válida.
    */
   if (!businessSlug) {
-    if (
-      process.env.NODE_ENV === "development"
-    ) {
+    if (process.env.NODE_ENV === "development") {
       return <UploadFlow />;
     }
 
     redirect("/registro");
   }
 
-  const access =
-    await authorizeBusinessAccess(
-      businessSlug
-    );
+  const access = await authorizeBusinessAccess(businessSlug);
 
   if (!access) {
     redirect("/registro");
   }
 
-  return <UploadFlow />;
+  return (
+    <div
+      style={{
+        display: "grid",
+        gap: 12,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          padding: "12px 16px 0",
+        }}
+      >
+        <BusinessLogoutButton />
+      </div>
+
+      <UploadFlow />
+    </div>
+  );
 }
