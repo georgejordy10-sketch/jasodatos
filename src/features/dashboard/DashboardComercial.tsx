@@ -3309,11 +3309,15 @@ return (
   </div>
 ) : null}
 {isGeneralView && !isExportingPdf ? (
-  <UpgradeBanner
-    currentPlan={currentPlan}
-    planLabel={planLabel}
-    onOpenPlans={() => setPlansOpen(true)}
-  />
+<UpgradeBanner
+  currentPlan={currentPlan}
+  planLabel={planLabel}
+  status={businessPlan?.status ?? ""}
+  billingStatus={businessPlan?.billingStatus ?? ""}
+  trialEndsAt={businessPlan?.trialEndsAt ?? null}
+  currentPeriodEndsAt={businessPlan?.currentPeriodEndsAt ?? null}
+  onOpenPlans={() => setPlansOpen(true)}
+/>
 ) : null}
 {isGeneralView && businessContextMessage && !isExportingPdf ? (
   <div style={styles.businessContextWarning}>

@@ -15,7 +15,8 @@ export async function GET(
   try {
     const { slug } = await context.params;
 
-    const businessSlug = slug?.trim();
+    const businessSlug =
+      slug?.trim();
 
     if (!businessSlug) {
       return NextResponse.json(
@@ -23,7 +24,9 @@ export async function GET(
           error:
             "No se recibió el identificador del negocio.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -37,7 +40,9 @@ export async function GET(
         {
           error: "No autorizado",
         },
-        { status: 401 }
+        {
+          status: 401,
+        }
       );
     }
 
@@ -50,7 +55,18 @@ export async function GET(
     } = await supabase
       .from("businesses")
       .select(
-        "id, business_name, slug, plan, status, ciudad, provincia, pais"
+        `
+          id,
+          business_name,
+          slug,
+          plan,
+          status,
+          ciudad,
+          provincia,
+          pais,
+          trial_started_at,
+          trial_ends_at
+        `
       )
       .eq(
         "id",
@@ -68,7 +84,9 @@ export async function GET(
           error:
             "No se pudo consultar el negocio.",
         },
-        { status: 500 }
+        {
+          status: 500,
+        }
       );
     }
 
@@ -78,7 +96,9 @@ export async function GET(
           error:
             "No se encontró el negocio solicitado.",
         },
-        { status: 404 }
+        {
+          status: 404,
+        }
       );
     }
 
@@ -88,7 +108,14 @@ export async function GET(
     } = await supabase
       .from("subscriptions")
       .select(
-        "plan, billing_status"
+        `
+          plan,
+          billing_status,
+          trial_started_at,
+          trial_ends_at,
+          current_period_starts_at,
+          current_period_ends_at
+        `
       )
       .eq(
         "business_id",
@@ -102,7 +129,9 @@ export async function GET(
           error:
             "No se pudo consultar la suscripción del negocio.",
         },
-        { status: 500 }
+        {
+          status: 500,
+        }
       );
     }
 
@@ -113,20 +142,54 @@ export async function GET(
 
     const billingStatus =
       subscription?.billing_status ??
-      "trial";
+      (business.status === "trial"
+        ? "trial"
+        : "manual");
+
+    const trialStartedAt =
+      subscription?.trial_started_at ??
+      business.trial_started_at ??
+      null;
+
+    const trialEndsAt =
+      subscription?.trial_ends_at ??
+      business.trial_ends_at ??
+      null;
+
+    const currentPeriodStartsAt =
+      subscription?.current_period_starts_at ??
+      null;
+
+    const currentPeriodEndsAt =
+      subscription?.current_period_ends_at ??
+      null;
 
     return NextResponse.json({
       business: {
         business_name:
           business.business_name,
-        slug: business.slug,
-        plan: currentPlan,
-        status: business.status,
+        slug:
+          business.slug,
+        plan:
+          currentPlan,
+        status:
+          business.status,
         billing_status:
           billingStatus,
-        ciudad: business.ciudad,
-        provincia: business.provincia,
-        pais: business.pais,
+        trial_started_at:
+          trialStartedAt,
+        trial_ends_at:
+          trialEndsAt,
+        current_period_starts_at:
+          currentPeriodStartsAt,
+        current_period_ends_at:
+          currentPeriodEndsAt,
+        ciudad:
+          business.ciudad,
+        provincia:
+          business.provincia,
+        pais:
+          business.pais,
       },
     });
   } catch (error) {
@@ -144,7 +207,9 @@ export async function GET(
       {
         error: message,
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }

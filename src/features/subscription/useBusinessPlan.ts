@@ -1,7 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { SubscriptionPlan } from "./types";
+import {
+  useEffect,
+  useState,
+} from "react";
+import type {
+  SubscriptionPlan,
+} from "./types";
+
+type BusinessPlanApiResponse = {
+  business?: {
+    business_name?: string;
+    slug?: string;
+    plan?: SubscriptionPlan;
+    status?: string;
+    billing_status?: string;
+    trial_started_at?: string | null;
+    trial_ends_at?: string | null;
+    current_period_starts_at?: string | null;
+    current_period_ends_at?: string | null;
+    ciudad?: string | null;
+    provincia?: string | null;
+    pais?: string | null;
+  };
+  error?: string;
+};
 
 type BusinessPlanState = {
   businessName: string;
@@ -9,23 +32,58 @@ type BusinessPlanState = {
   currentPlan: SubscriptionPlan;
   status: string;
   billingStatus: string;
+  trialStartedAt: string | null;
+  trialEndsAt: string | null;
+  currentPeriodStartsAt: string | null;
+  currentPeriodEndsAt: string | null;
   ciudad: string | null;
   provincia: string | null;
   pais: string | null;
 };
 
-export function useBusinessPlan(slug: string | null) {
-  const [data, setData] = useState<BusinessPlanState | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
+function isSubscriptionPlan(
+  value: unknown
+): value is SubscriptionPlan {
+  return (
+    value === "basic" ||
+    value === "pro" ||
+    value === "ultra"
+  );
+}
+
+export function useBusinessPlan(
+  slug: string | null
+) {
+  const [
+    data,
+    setData,
+  ] =
+    useState<BusinessPlanState | null>(
+      null
+    );
+
+  const [
+    loading,
+    setLoading,
+  ] =
+    useState<boolean>(true);
+
+  const [
+    error,
+    setError,
+  ] =
+    useState<string>("");
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled =
+      false;
 
     async function run() {
       if (!slug) {
         setLoading(false);
-        setError("Falta slug del negocio");
+        setError(
+          "Falta slug del negocio"
+        );
         return;
       }
 
@@ -33,40 +91,105 @@ export function useBusinessPlan(slug: string | null) {
         setLoading(true);
         setError("");
 
-        const response = await fetch(`/api/businesses/by-slug/${slug}/plan`, {
-          method: "GET",
-          cache: "no-store",
-        });
-const raw = await response.text();
+        const response =
+          await fetch(
+            `/api/businesses/by-slug/${encodeURIComponent(
+              slug
+            )}/plan`,
+            {
+              method: "GET",
+              cache: "no-store",
+            }
+          );
 
-let result: any = {};
+        const raw =
+          await response.text();
 
-if (raw) {
-  try {
-    result = JSON.parse(raw);
-  } catch {
-    throw new Error("La API devolvió HTML o una respuesta inválida.");
-  }
-}
+        let result:
+          BusinessPlanApiResponse =
+          {};
 
-if (!response.ok) {
-  throw new Error(result?.error || "No se pudo cargar el plan del negocio");
-}
+        if (raw) {
+          try {
+            result =
+              JSON.parse(
+                raw
+              ) as BusinessPlanApiResponse;
+          } catch {
+            throw new Error(
+              "La API devolvió HTML o una respuesta inválida."
+            );
+          }
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            result.error ||
+              "No se pudo cargar el plan del negocio"
+          );
+        }
+
+        const business =
+          result.business;
+
+        if (!business) {
+          throw new Error(
+            "La respuesta del plan no contiene información del negocio."
+          );
+        }
+
+        const currentPlan =
+          isSubscriptionPlan(
+            business.plan
+          )
+            ? business.plan
+            : "basic";
+
         if (!cancelled) {
-setData({
-  businessName: result.business.business_name,
-  slug: result.business.slug,
-  currentPlan: result.business.plan,
-  status: result.business.status,
-  billingStatus: result.business.billing_status,
-  ciudad: result.business.ciudad ?? null,
-  provincia: result.business.provincia ?? null,
-  pais: result.business.pais ?? null,
-});
+          setData({
+            businessName:
+              business.business_name ??
+              "",
+            slug:
+              business.slug ??
+              slug,
+            currentPlan,
+            status:
+              business.status ??
+              "",
+            billingStatus:
+              business.billing_status ??
+              "",
+            trialStartedAt:
+              business.trial_started_at ??
+              null,
+            trialEndsAt:
+              business.trial_ends_at ??
+              null,
+            currentPeriodStartsAt:
+              business.current_period_starts_at ??
+              null,
+            currentPeriodEndsAt:
+              business.current_period_ends_at ??
+              null,
+            ciudad:
+              business.ciudad ??
+              null,
+            provincia:
+              business.provincia ??
+              null,
+            pais:
+              business.pais ??
+              null,
+          });
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Error al cargar plan");
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Error al cargar plan"
+          );
         }
       } finally {
         if (!cancelled) {
@@ -75,10 +198,11 @@ setData({
       }
     }
 
-    run();
+    void run();
 
     return () => {
-      cancelled = true;
+      cancelled =
+        true;
     };
   }, [slug]);
 
