@@ -20,9 +20,9 @@ type CrmDraft = {
 };
 
 function planLabel(plan: Plan) {
-  if (plan === "basic") return "Basic";
-  if (plan === "pro") return "Pro";
-  return "Ultra";
+  if (plan === "basic") return "Inicio";
+  if (plan === "pro") return "Crecimiento";
+  return "Control";
 }
 function clientStatusLabel(status: AdminBusinessOverview["status"]) {
   if (status === "active") return "Activo";
@@ -1596,9 +1596,9 @@ return (
           }))
         }
       >
-        <option value="basic">Basic</option>
-        <option value="pro">Pro</option>
-        <option value="ultra">Ultra</option>
+        <option value="basic">Inicio</option>
+        <option value="pro">Crecimiento</option>
+        <option value="ultra">Control</option>
       </select>
 
       <button
