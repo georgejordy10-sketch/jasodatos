@@ -576,7 +576,7 @@ export default function AdminClientsTable({ rows }: Props) {
 
   const colWidths = {
     negocio: { width: 135, maxWidth: 135 },
-    plan: { width: 70, maxWidth: 70 },
+    plan: { width: 110, maxWidth: 110 },
     estado: { width: 90, maxWidth: 90 },
     usuarios: { width: 68, maxWidth: 68, textAlign: "center" as const },
     responsable: { width: 145, maxWidth: 145 },
