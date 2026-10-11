@@ -2185,7 +2185,7 @@ headerText: {
 
 title: {
   margin: 0,
-  color: "#172554",
+  color: "#FFFFFF",
   fontSize: 24,
   lineHeight: 1,
   fontWeight: 950,
@@ -2193,7 +2193,7 @@ title: {
 
 subtitle: {
   margin: "4px 0 0",
-  color: "#334155",
+  color: "#E2E8F0",
   fontSize: 12,
   fontWeight: 700,
   lineHeight: 1.15,
