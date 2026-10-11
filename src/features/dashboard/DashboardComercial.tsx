@@ -1718,9 +1718,6 @@ const canUseAssistant = hasFeature("assistant");
 const canExportPdf = hasFeature("pdf_export");
 const canUseWhatsappByPlan = hasFeature("whatsapp_actions");
 
-function setCurrentPlan(_plan: SubscriptionPlan) {
-  setPlansOpen(true);
-}
 const channelsEnabled: Record<ChannelKey, boolean> =
   "channelsEnabled" in settings &&
   typeof settings.channelsEnabled === "object" &&
@@ -3274,13 +3271,29 @@ function clearFilters() {
   setFromDate("");
   setToDate("");
 }
-function openSalesWhatsapp() {
+function openSalesWhatsapp(
+  plan?: SubscriptionPlan,
+  isCurrentPlan = false
+) {
   const phone = "593997945350";
-  const message = encodeURIComponent(
-    "Hola, quiero mejorar mi plan de JasoDatos y conocer las opciones disponibles."
-  );
 
-  window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+  const planName = plan
+    ? PLAN_LABELS[plan]
+    : null;
+
+  const messageText = planName
+    ? isCurrentPlan
+      ? `Hola, actualmente tengo el plan ${planName} de JasoDatos y quiero realizar una consulta sobre mi plan.`
+      : `Hola, quiero solicitar el plan ${planName} de JasoDatos y conocer cómo puedo activarlo.`
+    : "Hola, quiero mejorar mi plan de JasoDatos y conocer las opciones disponibles.";
+
+  const message =
+    encodeURIComponent(messageText);
+
+  window.open(
+    `https://wa.me/${phone}?text=${message}`,
+    "_blank"
+  );
 }
 return (
   <div id="dashboard-export">
@@ -3403,7 +3416,7 @@ return (
   open={plansOpen}
   onClose={() => setPlansOpen(false)}
   currentPlan={currentPlan}
-  setCurrentPlan={setCurrentPlan}
+  onContactSales={openSalesWhatsapp}
 />
 
 {detailModal ? (
