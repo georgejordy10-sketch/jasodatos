@@ -1509,22 +1509,6 @@ return (
 
 <select
   style={styles.statusFilterSelect}
-  value={statusFilter}
-  onChange={(event) =>
-    setStatusFilter(
-      event.target.value as "all" | AdminBusinessOverview["status"]
-    )
-  }
->
-  <option value="all">Todos los estados</option>
-  <option value="trial">Pruebas</option>
-  <option value="active">Activos</option>
-  <option value="suspended">Suspendidos</option>
-  <option value="inactive">Archivados</option>
-</select>
-
-<select
-  style={styles.statusFilterSelect}
   value={nextActionFilter}
   onChange={(event) => setNextActionFilter(event.target.value)}
 >
