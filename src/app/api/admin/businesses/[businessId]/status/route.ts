@@ -17,6 +17,12 @@ type BillingStatus =
   | "past_due"
   | "canceled";
 
+type StatusRpcResult = {
+  ok: true;
+  status: BusinessStatus;
+  billing_status: BillingStatus;
+};
+
 function isValidStatus(
   value: unknown
 ): value is BusinessStatus {
@@ -28,22 +34,38 @@ function isValidStatus(
   );
 }
 
-function getBillingStatusForBusinessStatus(
-  status: BusinessStatus
-): BillingStatus {
-  if (status === "active") {
-    return "active";
+function isValidBillingStatus(
+  value: unknown
+): value is BillingStatus {
+  return (
+    value === "active" ||
+    value === "trial" ||
+    value === "past_due" ||
+    value === "canceled"
+  );
+}
+
+function isStatusRpcResult(
+  value: unknown
+): value is StatusRpcResult {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value)
+  ) {
+    return false;
   }
 
-  if (status === "trial") {
-    return "trial";
-  }
+  const result =
+    value as Partial<StatusRpcResult>;
 
-  if (status === "suspended") {
-    return "past_due";
-  }
-
-  return "canceled";
+  return (
+    result.ok === true &&
+    isValidStatus(result.status) &&
+    isValidBillingStatus(
+      result.billing_status
+    )
+  );
 }
 
 export async function PATCH(
@@ -76,7 +98,8 @@ export async function PATCH(
     if (!businessId) {
       return NextResponse.json(
         {
-          error: "Falta businessId",
+          error:
+            "Falta businessId",
         },
         {
           status: 400,
@@ -87,7 +110,8 @@ export async function PATCH(
     if (!isValidStatus(status)) {
       return NextResponse.json(
         {
-          error: "Estado inválido",
+          error:
+            "Estado inválido",
         },
         {
           status: 400,
@@ -99,22 +123,28 @@ export async function PATCH(
       createAdminSupabaseClient();
 
     const {
-      error: businessError,
-    } = await supabase
-      .from("businesses")
-      .update({
-        status,
-      })
-      .eq(
-        "id",
-        businessId
+      data,
+      error,
+    } = await supabase.rpc(
+      "admin_set_business_status_atomic",
+      {
+        p_business_id:
+          businessId,
+        p_status:
+          status,
+      }
+    );
+
+    if (error) {
+      console.error(
+        "[admin-business-status] Error RPC:",
+        error
       );
 
-    if (businessError) {
       return NextResponse.json(
         {
           error:
-            businessError.message,
+            error.message,
         },
         {
           status: 500,
@@ -122,29 +152,18 @@ export async function PATCH(
       );
     }
 
-    const nextBillingStatus =
-      getBillingStatusForBusinessStatus(
-        status
+    if (
+      !isStatusRpcResult(data)
+    ) {
+      console.error(
+        "[admin-business-status] Respuesta RPC inválida:",
+        data
       );
 
-    const {
-      error: subscriptionError,
-    } = await supabase
-      .from("subscriptions")
-      .update({
-        billing_status:
-          nextBillingStatus,
-      })
-      .eq(
-        "business_id",
-        businessId
-      );
-
-    if (subscriptionError) {
       return NextResponse.json(
         {
           error:
-            subscriptionError.message,
+            "La operación de estado no devolvió una respuesta válida.",
         },
         {
           status: 500,
@@ -153,12 +172,7 @@ export async function PATCH(
     }
 
     return NextResponse.json(
-      {
-        ok: true,
-        status,
-        billing_status:
-          nextBillingStatus,
-      },
+      data,
       {
         status: 200,
       }

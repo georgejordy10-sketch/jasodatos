@@ -14,21 +14,15 @@ type PlanAction =
   | "change_plan"
   | "renew";
 
-type ExistingSubscription = {
-  id: string;
-  billing_status:
-    | "manual"
-    | "trial"
-    | "active"
-    | "past_due"
-    | "canceled"
-    | null;
-  current_period_starts_at:
-    | string
-    | null;
-  current_period_ends_at:
-    | string
-    | null;
+type PlanRpcResult = {
+  ok: true;
+  action: PlanAction;
+  plan: Plan;
+  status?: "active";
+  billing_status?: "active";
+  current_period_starts_at?: string;
+  current_period_ends_at?: string;
+  extended_existing_period?: boolean;
 };
 
 function isValidPlan(
@@ -50,39 +44,50 @@ function isValidAction(
   );
 }
 
-function addDays(
-  date: Date,
-  days: number
-) {
-  const nextDate =
-    new Date(date);
-
-  nextDate.setDate(
-    nextDate.getDate() + days
-  );
-
-  return nextDate;
-}
-
-function parseValidDate(
-  value: string | null | undefined
-): Date | null {
-  if (!value) {
-    return null;
+function isPlanRpcResult(
+  value: unknown
+): value is PlanRpcResult {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value)
+  ) {
+    return false;
   }
 
-  const date =
-    new Date(value);
+  const result =
+    value as Partial<PlanRpcResult>;
 
   if (
-    !Number.isFinite(
-      date.getTime()
+    result.ok !== true ||
+    !isValidAction(
+      result.action
+    ) ||
+    !isValidPlan(
+      result.plan
     )
   ) {
-    return null;
+    return false;
   }
 
-  return date;
+  if (
+    result.action ===
+    "change_plan"
+  ) {
+    return true;
+  }
+
+  return (
+    result.status === "active" &&
+    result.billing_status ===
+      "active" &&
+    typeof result.current_period_starts_at ===
+      "string" &&
+    typeof result.current_period_ends_at ===
+      "string" &&
+    typeof result.extended_existing_period ===
+      "boolean"
+  );
 }
 
 export async function GET(
@@ -130,7 +135,9 @@ export async function PATCH(
       body?.plan;
 
     const action =
-      isValidAction(body?.action)
+      isValidAction(
+        body?.action
+      )
         ? body.action
         : "change_plan";
 
@@ -161,243 +168,31 @@ export async function PATCH(
     const supabase =
       createAdminSupabaseClient();
 
-    if (action === "renew") {
-      const now =
-        new Date();
-
-      const {
-        data:
-          existingSubscriptionData,
-        error:
-          subscriptionReadError,
-      } = await supabase
-        .from("subscriptions")
-        .select(
-          `
-            id,
-            billing_status,
-            current_period_starts_at,
-            current_period_ends_at
-          `
-        )
-        .eq(
-          "business_id",
-          businessId
-        )
-        .maybeSingle();
-
-      if (subscriptionReadError) {
-        return NextResponse.json(
-          {
-            error:
-              subscriptionReadError.message,
-          },
-          {
-            status: 500,
-          }
-        );
-      }
-
-      const existingSubscription =
-        existingSubscriptionData as
-          | ExistingSubscription
-          | null;
-
-      const existingPeriodEnd =
-        parseValidDate(
-          existingSubscription
-            ?.current_period_ends_at
-        );
-
-      const existingPeriodStart =
-        parseValidDate(
-          existingSubscription
-            ?.current_period_starts_at
-        );
-
-      const canExtendCurrentPeriod =
-        existingSubscription
-          ?.billing_status ===
-          "active" &&
-        existingPeriodEnd !==
-          null &&
-        existingPeriodEnd.getTime() >
-          now.getTime();
-
-      const renewalBaseDate =
-        canExtendCurrentPeriod
-          ? existingPeriodEnd
-          : now;
-
-      const periodEndsAt =
-        addDays(
-          renewalBaseDate,
-          30
-        );
-
-      const periodStartsAt =
-        canExtendCurrentPeriod &&
-        existingPeriodStart
-          ? existingPeriodStart
-          : now;
-
-      const {
-        error: businessError,
-      } = await supabase
-        .from("businesses")
-        .update({
+    const {
+      data,
+      error,
+    } = await supabase.rpc(
+      "admin_update_business_plan_atomic",
+      {
+        p_business_id:
+          businessId,
+        p_plan:
           plan,
-          status: "active",
-        })
-        .eq(
-          "id",
-          businessId
-        );
-
-      if (businessError) {
-        return NextResponse.json(
-          {
-            error:
-              businessError.message,
-          },
-          {
-            status: 500,
-          }
-        );
-      }
-
-      const subscriptionPayload = {
-        plan,
-        billing_status:
-          "active",
-        trial_ends_at:
-          null,
-        current_period_starts_at:
-          periodStartsAt.toISOString(),
-        current_period_ends_at:
-          periodEndsAt.toISOString(),
-      };
-
-      if (
-        existingSubscription?.id
-      ) {
-        const {
-          error:
-            subscriptionUpdateError,
-        } = await supabase
-          .from("subscriptions")
-          .update(
-            subscriptionPayload
-          )
-          .eq(
-            "business_id",
-            businessId
-          );
-
-        if (
-          subscriptionUpdateError
-        ) {
-          return NextResponse.json(
-            {
-              error:
-                subscriptionUpdateError.message,
-            },
-            {
-              status: 500,
-            }
-          );
-        }
-      } else {
-        const {
-          error:
-            subscriptionInsertError,
-        } = await supabase
-          .from("subscriptions")
-          .insert({
-            business_id:
-              businessId,
-            ...subscriptionPayload,
-          });
-
-        if (
-          subscriptionInsertError
-        ) {
-          return NextResponse.json(
-            {
-              error:
-                subscriptionInsertError.message,
-            },
-            {
-              status: 500,
-            }
-          );
-        }
-      }
-
-      return NextResponse.json(
-        {
-          ok: true,
+        p_action:
           action,
-          plan,
-          status: "active",
-          billing_status:
-            "active",
-          current_period_starts_at:
-            periodStartsAt.toISOString(),
-          current_period_ends_at:
-            periodEndsAt.toISOString(),
-          extended_existing_period:
-            canExtendCurrentPeriod,
-        },
-        {
-          status: 200,
-        }
-      );
-    }
+      }
+    );
 
-    const {
-      error: businessError,
-    } = await supabase
-      .from("businesses")
-      .update({
-        plan,
-      })
-      .eq(
-        "id",
-        businessId
+    if (error) {
+      console.error(
+        "[admin-business-plan] Error RPC:",
+        error
       );
 
-    if (businessError) {
       return NextResponse.json(
         {
           error:
-            businessError.message,
-        },
-        {
-          status: 500,
-        }
-      );
-    }
-
-    const {
-      data:
-        existingSubscription,
-      error:
-        subscriptionReadError,
-    } = await supabase
-      .from("subscriptions")
-      .select("id")
-      .eq(
-        "business_id",
-        businessId
-      )
-      .maybeSingle();
-
-    if (subscriptionReadError) {
-      return NextResponse.json(
-        {
-          error:
-            subscriptionReadError.message,
+            error.message,
         },
         {
           status: 500,
@@ -406,69 +201,26 @@ export async function PATCH(
     }
 
     if (
-      existingSubscription?.id
+      !isPlanRpcResult(data)
     ) {
-      const {
-        error:
-          subscriptionUpdateError,
-      } = await supabase
-        .from("subscriptions")
-        .update({
-          plan,
-        })
-        .eq(
-          "business_id",
-          businessId
-        );
+      console.error(
+        "[admin-business-plan] Respuesta RPC inválida:",
+        data
+      );
 
-      if (
-        subscriptionUpdateError
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              subscriptionUpdateError.message,
-          },
-          {
-            status: 500,
-          }
-        );
-      }
-    } else {
-      const {
-        error:
-          subscriptionInsertError,
-      } = await supabase
-        .from("subscriptions")
-        .insert({
-          business_id:
-            businessId,
-          plan,
-          billing_status:
-            "manual",
-        });
-
-      if (
-        subscriptionInsertError
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              subscriptionInsertError.message,
-          },
-          {
-            status: 500,
-          }
-        );
-      }
+      return NextResponse.json(
+        {
+          error:
+            "La operación de plan no devolvió una respuesta válida.",
+        },
+        {
+          status: 500,
+        }
+      );
     }
 
     return NextResponse.json(
-      {
-        ok: true,
-        action,
-        plan,
-      },
+      data,
       {
         status: 200,
       }
