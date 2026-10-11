@@ -43,63 +43,16 @@ export default function ResetPasswordPage() {
       try {
         setErrorMessage("");
 
-        const currentUrl = new URL(
-          window.location.href
-        );
-
-        const hashParams = new URLSearchParams(
-          window.location.hash.replace(/^#/, "")
-        );
-
-        const accessToken =
-          hashParams.get("access_token");
-
-        const refreshToken =
-          hashParams.get("refresh_token");
-
-        const recoveryType =
-          hashParams.get("type");
-
-        const code =
-          currentUrl.searchParams.get("code");
-
         /*
-         * Flujo implícito de Supabase:
-         * #access_token=...&refresh_token=...&type=recovery
+         * createBrowserClient de @supabase/ssr usa PKCE
+         * y procesa automáticamente los parámetros de
+         * recuperación presentes en la URL.
+         *
+         * No llamamos exchangeCodeForSession() aquí,
+         * porque el código PKCE solo puede canjearse una vez.
+         * getSession() espera a que finalice la inicialización
+         * automática del cliente.
          */
-        if (accessToken && refreshToken) {
-          const { error } =
-            await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-
-          if (error) {
-            throw error;
-          }
-
-          if (
-            recoveryType &&
-            recoveryType !== "recovery"
-          ) {
-            throw new Error(
-              "El enlace recibido no corresponde a recuperación de contraseña."
-            );
-          }
-        } else if (code) {
-          /*
-           * Flujo PKCE:
-           * /reset-password?code=...
-           */
-          const { error } =
-            await supabase.auth.exchangeCodeForSession(
-              code
-            );
-
-          if (error) {
-            throw error;
-          }
-        }
 
         /*
          * Confirmamos que Supabase tiene una sesión válida.
@@ -193,8 +146,23 @@ export default function ResetPasswordPage() {
       );
 
       setStatus("ready");
+
+      const normalizedErrorMessage =
+        error.message.toLowerCase();
+
+      if (
+        normalizedErrorMessage.includes(
+          "different from the old password"
+        )
+      ) {
+        setErrorMessage(
+          "La nueva contraseña debe ser diferente de la contraseña anterior."
+        );
+        return;
+      }
+
       setErrorMessage(
-        "No se pudo actualizar la contraseña. El enlace puede haber vencido. Solicita uno nuevo."
+        "No se pudo actualizar la contraseña. El enlace puede haber vencido o ya no ser válido. Solicita uno nuevo."
       );
       return;
     }
