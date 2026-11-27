@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/adminAuth";
 import type {
   JasoJevasaPlan,
   ProspectChannel,
@@ -129,8 +130,14 @@ function isValidDateOrNull(value: unknown) {
   return !Number.isNaN(date.getTime());
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const adminAuth = await requireAdmin(request);
+
+    if (!adminAuth.ok) {
+      return adminAuth.response;
+    }
+
     const body = await request.json();
 
     const businessName = requiredText(body.business_name);
