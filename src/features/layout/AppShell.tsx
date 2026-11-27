@@ -52,9 +52,17 @@ export function AppShell({
   }
 
   useEffect(() => {
-    if (!isMobile) {
-      setIsSidebarOpen(false);
+    if (isMobile) {
+      return;
     }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsSidebarOpen(false);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [isMobile]);
 
   return (
