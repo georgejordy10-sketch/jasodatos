@@ -26,7 +26,7 @@ declare
   v_plan text;
   v_slug_base text;
   v_slug text;
-  v_suffix integer := 1;
+  v_suffix integer := 0;
 
   v_email text;
   v_whatsapp_digits text;
