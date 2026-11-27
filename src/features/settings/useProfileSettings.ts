@@ -60,11 +60,21 @@ export function useProfileSettings() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const stored = safeParse(window.localStorage.getItem(STORAGE_KEY));
-    if (stored) {
-      setSettings(stored);
-    }
-    setHydrated(true);
+    const stored = safeParse(
+      window.localStorage.getItem(STORAGE_KEY)
+    );
+
+    const timeoutId = window.setTimeout(() => {
+      if (stored) {
+        setSettings(stored);
+      }
+
+      setHydrated(true);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, []);
 
   useEffect(() => {

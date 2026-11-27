@@ -2413,7 +2413,7 @@ async function exportarExcel() {
 
   if (!filas.length) return;
 
-  const ExcelJS = await import("exceljs");
+  const ExcelJS = (await import("exceljs-community/dist/exceljs.min.js")) as typeof import("exceljs-community");
 
   const workbook = new ExcelJS.Workbook();
 

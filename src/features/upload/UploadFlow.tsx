@@ -32,6 +32,9 @@ import {
   savePersistedAnalysisSession,
 } from "./persistedAnalysis";
 
+const MAX_UPLOAD_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+const MAX_DATASET_ROWS = 200_000;
+
 export default function UploadFlow() {
 
 function toUploadNumber(value: unknown) {
@@ -66,6 +69,67 @@ function getAnalysisSessionKey(): string {
 function getUploadHistoryStorageKey(): string {
   return `${UPLOAD_HISTORY_STORAGE_KEY}:${getAnalysisSessionKey()}`;
 }
+
+function getCurrentBusinessSlug(): string {
+  const sessionKey = getAnalysisSessionKey();
+
+  if (!sessionKey.startsWith("business:")) {
+    return "";
+  }
+
+  return sessionKey.slice("business:".length).trim();
+}
+
+async function persistUploadHistoryRemotely(
+  item: UploadHistoryItem
+): Promise<void> {
+  const businessSlug = getCurrentBusinessSlug();
+
+  if (!businessSlug) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `/api/businesses/by-slug/${encodeURIComponent(
+        businessSlug
+      )}/upload-history`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: item.fileName,
+          totalRows: item.totalRows,
+          totalSales: item.totalSales,
+          totalUnits: item.totalUnits,
+          productsCount: item.productsCount,
+          localsCount: item.localsCount,
+          channelsCount: item.channelsCount,
+          metadata: {
+            periodStart: item.periodStart ?? null,
+            periodEnd: item.periodEnd ?? null,
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => null);
+
+      console.warn(
+        "No se pudo sincronizar el historial de carga con el servidor.",
+        result?.error ?? response.status
+      );
+    }
+  } catch (persistError) {
+    console.warn(
+      "No se pudo sincronizar el historial de carga con el servidor.",
+      persistError
+    );
+  }
+}
   const [file, setFile] = useState<File | null>(null);
   const [hasDataConsent, setHasDataConsent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -74,6 +138,8 @@ function getUploadHistoryStorageKey(): string {
   const [initialData, setInitialData] = useState<ReadDatasetInitialResult | null>(null);
   const [confirmedMappings, setConfirmedMappings] = useState<ConfirmedMapping[]>([]);
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
+  const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
+
   useEffect(() => {
   let cancelled = false;
 
@@ -187,7 +253,6 @@ const selectedUploadComparison = useMemo<{
     previous,
   };
 }, [comparisonMode, lastUploadComparison, uploadHistory]);
-  const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
   const qualityTheme = qualityReport ? getQualitySummary(qualityReport) : null;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 const selectedProfile = profiles[0];
@@ -361,6 +426,13 @@ function isManualMapping(
       setError("Selecciona un archivo antes de continuar.");
       return;
     }
+
+    if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
+      setError(
+        "El archivo supera el límite seguro de 25 MB. Divide el archivo o reduce su tamaño antes de continuar."
+      );
+      return;
+    }
 if (!hasDataConsent) {
   setError(
     "Confirma que tienes autorización para procesar este archivo antes de continuar."
@@ -373,6 +445,13 @@ if (!hasDataConsent) {
 
     try {
 const result = await readDatasetInitial(file, profileId);
+
+if (result.rawRows.length > MAX_DATASET_ROWS) {
+  throw new Error(
+    "El archivo supera el límite seguro de 200.000 filas. Divide el período en archivos más pequeños."
+  );
+}
+
 const initialQualityReport = buildQualityReport(
   result.rawRows,
   result.columns,
@@ -566,6 +645,7 @@ if (previousUpload) {
 }
 
 saveUploadHistory(historyItem);
+void persistUploadHistoryRemotely(historyItem);
 
 setActiveUploadView("general");
 

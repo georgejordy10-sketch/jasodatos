@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/publicRateLimit";
 
 type TrialSignupBody = {
   business_name?: string;
@@ -69,6 +70,28 @@ function hashVerificationCode(code: string) {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function isMissingVerificationAttemptsColumnError(error: {
+  code?: string | null;
+  message?: string | null;
+}) {
+  if (error.code === "PGRST204" || error.code === "42703") {
+    return true;
+  }
+
+  return String(error.message ?? "")
+    .toLowerCase()
+    .includes("email_verification_failed_attempts");
+}
+
 async function buildUniqueSlug(baseSlug: string) {
   const supabase = createAdminSupabaseClient();
 
@@ -128,6 +151,8 @@ async function sendVerificationEmail({
     };
   }
 
+  const safeBusinessName = escapeHtml(businessName);
+
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -145,7 +170,7 @@ async function sendVerificationEmail({
 
           <p>
             Hola. Recibimos el registro del negocio
-            <strong>${businessName}</strong>.
+            <strong>${safeBusinessName}</strong>.
           </p>
 
           <p>Tu código de verificación es:</p>
@@ -298,6 +323,21 @@ export async function POST(request: Request) {
       );
     }
 
+    const signupRateLimit =
+      await checkPublicRateLimit({
+        request,
+        action: "trial-signup",
+        identifier: commercialEmail,
+        limit: 5,
+        windowSeconds: 60 * 60,
+      });
+
+    if (!signupRateLimit.allowed) {
+      return rateLimitResponse(
+        signupRateLimit.retryAfterSeconds
+      );
+    }
+
     stage = "generar_codigo_verificacion";
 
     const now = new Date();
@@ -337,7 +377,9 @@ console.log(
 
 const existingEmailResult = await supabase
   .from("businesses")
-  .select("id")
+  .select(
+    "id, slug, business_name, plan, status, email_verified_at, signup_source"
+  )
   .eq("commercial_email", commercialEmail)
   .limit(1);
 
@@ -352,20 +394,108 @@ if (existingEmailResult.error) {
   );
 }
 
-if (
-  existingEmailResult.data &&
-  existingEmailResult.data.length > 0
-) {
-  return NextResponse.json(
-    {
-      ok: false,
-      error:
-        "Ya existe un negocio registrado con este correo comercial.",
-    },
-    {
-      status: 409,
-    }
-  );
+const existingBusiness =
+  existingEmailResult.data?.[0] ?? null;
+
+if (existingBusiness) {
+  const canRefreshPendingSignup =
+    !existingBusiness.email_verified_at &&
+    existingBusiness.status === "suspended" &&
+    existingBusiness.signup_source === "landing_trial";
+
+  if (!canRefreshPendingSignup) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "Ya existe un negocio registrado con este correo comercial. Usa la opción Acceder a mi negocio.",
+      },
+      {
+        status: 409,
+      }
+    );
+  }
+
+  stage = "refresh_pending_verification";
+
+  const refreshPayload = {
+    business_name: businessName,
+    owner_name: ownerName,
+    owner_email: commercialEmail,
+    owner_whatsapp: commercialWhatsapp,
+    commercial_whatsapp: commercialWhatsapp,
+    ciudad,
+    provincia,
+    pais,
+    email_verification_code_hash:
+      verificationCodeHash,
+    email_verification_expires_at:
+      verificationExpiresAt.toISOString(),
+  };
+
+  let refreshResult = await supabase
+    .from("businesses")
+    .update({
+      ...refreshPayload,
+      email_verification_failed_attempts: 0,
+    })
+    .eq("id", existingBusiness.id)
+    .select(
+      "id, slug, business_name, plan, status, ciudad, provincia, pais, commercial_email"
+    )
+    .single();
+
+  if (
+    refreshResult.error &&
+    isMissingVerificationAttemptsColumnError(
+      refreshResult.error
+    )
+  ) {
+    refreshResult = await supabase
+      .from("businesses")
+      .update(refreshPayload)
+      .eq("id", existingBusiness.id)
+      .select(
+        "id, slug, business_name, plan, status, ciudad, provincia, pais, commercial_email"
+      )
+      .single();
+  }
+
+  const refreshedBusiness =
+    refreshResult.data;
+  const refreshError =
+    refreshResult.error;
+
+  if (refreshError || !refreshedBusiness) {
+    console.error(
+      "[trial-signup] Error renovando código:",
+      refreshError
+    );
+
+    throw new Error(
+      "No se pudo renovar el código de verificación."
+    );
+  }
+
+  const emailResult = await sendVerificationEmail({
+    to: commercialEmail,
+    businessName,
+    code: verificationCode,
+  });
+
+  return NextResponse.json({
+    ok: true,
+    verification_required: true,
+    business: refreshedBusiness,
+    slug: refreshedBusiness.slug,
+    message:
+      "Te enviamos un nuevo código de verificación al correo registrado.",
+    debug_verification_code:
+      !emailResult.sent &&
+      process.env.NODE_ENV !== "production"
+        ? verificationCode
+        : undefined,
+  });
 }
 
     stage = "insert_business";

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/publicRateLimit";
 import {
   clearBusinessAccessChallenge,
   validateBusinessAccessCode,
@@ -94,6 +95,20 @@ export async function POST(
             "Ingresa el código de 6 dígitos recibido por correo.",
         },
         { status: 400 }
+      );
+    }
+
+    const verificationRateLimit =
+      await checkPublicRateLimit({
+        request,
+        action: "verify-business-access",
+        limit: 15,
+        windowSeconds: 10 * 60,
+      });
+
+    if (!verificationRateLimit.allowed) {
+      return rateLimitResponse(
+        verificationRateLimit.retryAfterSeconds
       );
     }
 

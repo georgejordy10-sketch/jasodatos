@@ -32,11 +32,8 @@ export function AppSidebar({
     businessName?.trim() || "Negocio actual"
   );
 
-  useEffect(() => {
-    if (businessName?.trim()) {
-      setSidebarBusinessName(businessName.trim());
-    }
-  }, [businessName]);
+  const displayBusinessName =
+    businessName?.trim() || sidebarBusinessName;
 
   useEffect(() => {
     function updateActiveTarget() {
@@ -265,7 +262,7 @@ export function AppSidebar({
                 textOverflow: "ellipsis",
               }}
             >
-              {sidebarBusinessName}
+              {displayBusinessName}
             </div>
 
             <div

@@ -1,8 +1,74 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/adminAuth";
 import type { JasoJevasaPlan } from "@/features/jasojevasa/types";
 
 type Plan = JasoJevasaPlan;
+
+type AtomicConversionResult =
+  | {
+      ok: true;
+      business: {
+        id: string;
+        slug: string;
+        business_name: string;
+        plan: Plan;
+        status: "active" | "trial";
+      };
+      prospect: Record<string, unknown>;
+    }
+  | {
+      ok: false;
+      reason?: string;
+      error?: string;
+    };
+
+function isAtomicConversionResult(
+  value: unknown
+): value is AtomicConversionResult {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const result = value as Partial<AtomicConversionResult>;
+
+  return typeof result.ok === "boolean";
+}
+
+function isMissingAtomicRpcError(error: {
+  code?: string | null;
+  message?: string | null;
+}) {
+  if (error.code === "PGRST202") {
+    return true;
+  }
+
+  const message = String(error.message ?? "").toLowerCase();
+
+  return (
+    message.includes("admin_convert_prospect_atomic") &&
+    (
+      message.includes("schema cache") ||
+      message.includes("could not find") ||
+      message.includes("function")
+    )
+  );
+}
+
+function atomicFailureStatus(reason?: string) {
+  if (reason === "not_found") return 404;
+
+  if (
+    reason === "already_converted" ||
+    reason === "blocked_stage" ||
+    reason === "duplicate_email" ||
+    reason === "duplicate_whatsapp"
+  ) {
+    return 409;
+  }
+
+  return 400;
+}
 
 function cleanText(value: unknown) {
   if (typeof value !== "string") return "";
@@ -62,10 +128,16 @@ async function buildUniqueSlug(baseSlug: string) {
 }
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ prospectId: string }> }
 ) {
   try {
+    const adminAuth = await requireAdmin(request);
+
+    if (!adminAuth.ok) {
+      return adminAuth.response;
+    }
+
     const { prospectId } = await params;
 
     if (!prospectId) {
@@ -188,6 +260,82 @@ const requestedStatus =
     const plan = requestedPlan || prospect.recommended_plan || "basic";
     const slug = await buildUniqueSlug(slugify(businessName));
 
+    const {
+      data: atomicConversion,
+      error: atomicConversionError,
+    } = await supabase.rpc(
+      "admin_convert_prospect_atomic",
+      {
+        p_prospect_id: prospectId,
+        p_plan: plan,
+        p_status: requestedStatus,
+        p_slug_base: slugify(businessName) || "negocio",
+      }
+    );
+
+    if (!atomicConversionError) {
+      if (!isAtomicConversionResult(atomicConversion)) {
+        console.error(
+          "[admin-prospect-convert] Respuesta RPC inválida:",
+          atomicConversion
+        );
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "La conversión no devolvió una respuesta válida.",
+          },
+          { status: 500 }
+        );
+      }
+
+      if (!atomicConversion.ok) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              atomicConversion.error ||
+              "No se pudo convertir el prospecto.",
+          },
+          {
+            status: atomicFailureStatus(
+              atomicConversion.reason
+            ),
+          }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          ok: true,
+          business: atomicConversion.business,
+          prospect: atomicConversion.prospect,
+        },
+        { status: 201 }
+      );
+    }
+
+    if (!isMissingAtomicRpcError(atomicConversionError)) {
+      console.error(
+        "[admin-prospect-convert] Error RPC:",
+        atomicConversionError
+      );
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "No se pudo completar la conversión de forma segura.",
+        },
+        { status: 500 }
+      );
+    }
+
+    console.warn(
+      "[admin-prospect-convert] RPC atómico aún no disponible; se usa compatibilidad con rollback compensatorio."
+    );
+
     const { data: business, error: businessError } = await supabase
       .from("businesses")
       .insert({
@@ -237,8 +385,24 @@ const requestedStatus =
       });
 
     if (subscriptionError) {
+      const { error: cleanupBusinessError } = await supabase
+        .from("businesses")
+        .delete()
+        .eq("id", business.id);
+
+      if (cleanupBusinessError) {
+        console.error(
+          "[admin-prospect-convert] Falló rollback de business:",
+          cleanupBusinessError
+        );
+      }
+
       return NextResponse.json(
-        { ok: false, error: subscriptionError.message },
+        {
+          ok: false,
+          error:
+            "No se pudo crear la suscripción del cliente. La conversión fue revertida.",
+        },
         { status: 500 }
       );
     }
@@ -256,8 +420,36 @@ const requestedStatus =
         .single();
 
     if (updateProspectError) {
+      const { error: cleanupSubscriptionError } = await supabase
+        .from("subscriptions")
+        .delete()
+        .eq("business_id", business.id);
+
+      const { error: cleanupBusinessError } = await supabase
+        .from("businesses")
+        .delete()
+        .eq("id", business.id);
+
+      if (cleanupSubscriptionError) {
+        console.error(
+          "[admin-prospect-convert] Falló rollback de subscription:",
+          cleanupSubscriptionError
+        );
+      }
+
+      if (cleanupBusinessError) {
+        console.error(
+          "[admin-prospect-convert] Falló rollback de business:",
+          cleanupBusinessError
+        );
+      }
+
       return NextResponse.json(
-        { ok: false, error: updateProspectError.message },
+        {
+          ok: false,
+          error:
+            "No se pudo finalizar la conversión del prospecto. La creación del cliente fue revertida.",
+        },
         { status: 500 }
       );
     }
