@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/publicRateLimit";
 import { setBusinessAccessSession } from "@/lib/businessAccessSession";
 
 type VerifyTrialBody = {
@@ -35,6 +36,21 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { ok: false, error: "Ingresa el código de 6 dígitos." },
         { status: 400 }
+      );
+    }
+
+    const verificationRateLimit =
+      await checkPublicRateLimit({
+        request,
+        action: "verify-trial",
+        identifier: slug,
+        limit: 15,
+        windowSeconds: 10 * 60,
+      });
+
+    if (!verificationRateLimit.allowed) {
+      return rateLimitResponse(
+        verificationRateLimit.retryAfterSeconds
       );
     }
 
