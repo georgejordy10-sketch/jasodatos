@@ -45,7 +45,8 @@ export default function RecommendedActionsSection({
   function irAlAnalisis(sectionId?: string) {
     if (!sectionId) return;
 
-    window.location.hash = sectionId;
+    window.history.pushState(null, "", `#${sectionId}`);
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
 
     window.setTimeout(() => {
       const section = document.getElementById(sectionId);
