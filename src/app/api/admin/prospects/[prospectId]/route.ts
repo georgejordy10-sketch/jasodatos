@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/adminAuth";
 import type {
   JasoJevasaPlan,
   ProspectFit,
@@ -91,10 +92,16 @@ function isValidDateOrNull(value: unknown) {
 }
 
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ prospectId: string }> }
 ) {
   try {
+    const adminAuth = await requireAdmin(request);
+
+    if (!adminAuth.ok) {
+      return adminAuth.response;
+    }
+
     const { prospectId } = await params;
 
     if (!prospectId) {
