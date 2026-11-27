@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/publicRateLimit";
 import {
   clearBusinessAccessChallenge,
   generateBusinessAccessCode,
@@ -305,6 +306,24 @@ export async function POST(
             "Los datos ingresados no tienen un formato válido.",
         },
         { status: 400 }
+      );
+    }
+
+    const recoveryRateLimit =
+      await checkPublicRateLimit({
+        request,
+        action: "recover-business",
+        identifier:
+          commercialEmail ||
+          commercialWhatsapp ||
+          normalizeBusinessName(businessName),
+        limit: 5,
+        windowSeconds: 10 * 60,
+      });
+
+    if (!recoveryRateLimit.allowed) {
+      return rateLimitResponse(
+        recoveryRateLimit.retryAfterSeconds
       );
     }
 
