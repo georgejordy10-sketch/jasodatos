@@ -122,6 +122,7 @@ Orden recomendado:
 2. `business-access-challenge-hardening.sql`
 3. `public-api-rate-limit-hardening.sql`
 4. `jasojevasa-convert-prospect-atomic.sql`
+5. `supabase-security-advisor-hardening.sql`
 
 Después de aplicar las migraciones deben verificarse:
 
