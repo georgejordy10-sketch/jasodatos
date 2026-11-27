@@ -19,8 +19,7 @@
     "react-dom": "19.3.1",
     "recharts": "^3.4.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
-    "zod": "^3.24.1",
-    "exceljs-hardened": "5.1.1"
+    "exceljs-community": "5.2.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -33,5 +32,12 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "typescript": "^5"
+  },
+  "overrides": {
+    "dompurify": "3.5.0",
+    "fflate": "0.8.3",
+    "source-map-js": "1.2.4",
+    "tmp": "0.2.7",
+    "ws": "8.23.0"
   }
 }
