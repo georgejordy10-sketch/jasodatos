@@ -87,4 +87,5 @@ jobs:
           fi
 
           git commit -m "chore: generate branded PWA icons"
+          git pull --rebase origin audit/hardening-01
           git push origin HEAD:audit/hardening-01
