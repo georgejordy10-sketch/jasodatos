@@ -691,7 +691,7 @@ const filteredRows = useMemo(() => {
   });
 }, [tableRows, searchTerm, statusFilter, nextActionFilter, priorityFilter]);
 async function exportClients() {
-  const ExcelJS = await import("exceljs");
+  const ExcelJS = await import("exceljs-community");
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "JasoDatos";
