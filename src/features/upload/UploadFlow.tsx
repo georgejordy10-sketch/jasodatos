@@ -138,6 +138,8 @@ async function persistUploadHistoryRemotely(
   const [initialData, setInitialData] = useState<ReadDatasetInitialResult | null>(null);
   const [confirmedMappings, setConfirmedMappings] = useState<ConfirmedMapping[]>([]);
   const [processedData, setProcessedData] = useState<ProcessDatasetResult | null>(null);
+  const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
+
   useEffect(() => {
   let cancelled = false;
 
@@ -251,7 +253,6 @@ const selectedUploadComparison = useMemo<{
     previous,
   };
 }, [comparisonMode, lastUploadComparison, uploadHistory]);
-  const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
   const qualityTheme = qualityReport ? getQualitySummary(qualityReport) : null;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 const selectedProfile = profiles[0];
