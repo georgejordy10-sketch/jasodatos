@@ -32,6 +32,9 @@ import {
   savePersistedAnalysisSession,
 } from "./persistedAnalysis";
 
+const MAX_UPLOAD_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+const MAX_DATASET_ROWS = 200_000;
+
 export default function UploadFlow() {
 
 function toUploadNumber(value: unknown) {
@@ -418,6 +421,13 @@ function isManualMapping(
       setError("Selecciona un archivo antes de continuar.");
       return;
     }
+
+    if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
+      setError(
+        "El archivo supera el límite seguro de 25 MB. Divide el archivo o reduce su tamaño antes de continuar."
+      );
+      return;
+    }
 if (!hasDataConsent) {
   setError(
     "Confirma que tienes autorización para procesar este archivo antes de continuar."
@@ -430,6 +440,13 @@ if (!hasDataConsent) {
 
     try {
 const result = await readDatasetInitial(file, profileId);
+
+if (result.rawRows.length > MAX_DATASET_ROWS) {
+  throw new Error(
+    "El archivo supera el límite seguro de 200.000 filas. Divide el período en archivos más pequeños."
+  );
+}
+
 const initialQualityReport = buildQualityReport(
   result.rawRows,
   result.columns,
