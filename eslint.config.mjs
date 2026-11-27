@@ -10,6 +10,10 @@ export default defineConfig([
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/ban-ts-comment": "off",
+      // React Compiler no está habilitado en next.config.
+      // Estas reglas obligarían refactors de comportamiento sin beneficio runtime.
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/preserve-manual-memoization": "off",
     },
   },
   globalIgnores([
