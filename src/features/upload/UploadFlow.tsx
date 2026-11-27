@@ -107,6 +107,10 @@ async function persistUploadHistoryRemotely(
           productsCount: item.productsCount,
           localsCount: item.localsCount,
           channelsCount: item.channelsCount,
+          metadata: {
+            periodStart: item.periodStart ?? null,
+            periodEnd: item.periodEnd ?? null,
+          },
         }),
       }
     );
