@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/publicRateLimit";
 
 type TrialSignupBody = {
   business_name?: string;
@@ -295,6 +296,21 @@ export async function POST(request: Request) {
         {
           status: 400,
         }
+      );
+    }
+
+    const signupRateLimit =
+      await checkPublicRateLimit({
+        request,
+        action: "trial-signup",
+        identifier: commercialEmail,
+        limit: 5,
+        windowSeconds: 60 * 60,
+      });
+
+    if (!signupRateLimit.allowed) {
+      return rateLimitResponse(
+        signupRateLimit.retryAfterSeconds
       );
     }
 
