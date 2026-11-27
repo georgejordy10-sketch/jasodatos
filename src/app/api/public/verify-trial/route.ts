@@ -9,6 +9,75 @@ type VerifyTrialBody = {
   code?: string;
 };
 
+type VerifyTrialRpcResult = {
+  ok?: boolean;
+  reason?: string;
+  business_id?: string;
+  slug?: string;
+  trial_ends_at?: string;
+};
+
+function isMissingVerifyTrialRpcError(error: {
+  code?: string | null;
+  message?: string | null;
+}) {
+  if (error.code === "PGRST202") {
+    return true;
+  }
+
+  const message =
+    String(error.message ?? "").toLowerCase();
+
+  return (
+    message.includes("verify_trial_and_activate_atomic") &&
+    (
+      message.includes("schema cache") ||
+      message.includes("does not exist") ||
+      message.includes("could not find")
+    )
+  );
+}
+
+function verifyTrialFailure(
+  reason?: string
+) {
+  if (reason === "not_found") {
+    return {
+      status: 404,
+      error: "No se encontró el negocio solicitado.",
+    };
+  }
+
+  if (reason === "already_verified") {
+    return {
+      status: 409,
+      error:
+        "Este correo ya fue verificado. Usa la opción Acceder a mi negocio.",
+    };
+  }
+
+  if (reason === "attempts_exceeded") {
+    return {
+      status: 429,
+      error:
+        "Se alcanzó el máximo de intentos. Solicita un nuevo código de verificación.",
+    };
+  }
+
+  if (reason === "expired") {
+    return {
+      status: 400,
+      error:
+        "El código venció. Solicita un nuevo código de verificación.",
+    };
+  }
+
+  return {
+    status: 400,
+    error: "Código de verificación incorrecto.",
+  };
+}
+
 function cleanText(value: unknown) {
   if (typeof value !== "string") return "";
   return value.trim();
@@ -55,6 +124,92 @@ export async function POST(request: Request) {
     }
 
     const supabase = createAdminSupabaseClient();
+    const incomingHash =
+      hashVerificationCode(code);
+
+    const {
+      data: atomicVerification,
+      error: atomicVerificationError,
+    } = await supabase.rpc(
+      "verify_trial_and_activate_atomic",
+      {
+        p_slug: slug,
+        p_code_hash: incomingHash,
+      }
+    );
+
+    if (!atomicVerificationError) {
+      const result =
+        atomicVerification as VerifyTrialRpcResult | null;
+
+      if (result?.ok === true) {
+        const trialEndsAt =
+          result.trial_ends_at
+            ? new Date(result.trial_ends_at)
+            : null;
+
+        const expiresInSeconds =
+          trialEndsAt &&
+          Number.isFinite(trialEndsAt.getTime())
+            ? Math.max(
+                1,
+                Math.floor(
+                  (
+                    trialEndsAt.getTime() -
+                    Date.now()
+                  ) / 1000
+                )
+              )
+            : 3 * 24 * 60 * 60;
+
+        await setBusinessAccessSession({
+          businessId:
+            result.business_id ?? "",
+          slug:
+            result.slug ?? slug,
+          expiresInSeconds,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          redirectTo:
+            `/cargas?business=${encodeURIComponent(
+              result.slug ?? slug
+            )}`,
+        });
+      }
+
+      const failure =
+        verifyTrialFailure(result?.reason);
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: failure.error,
+        },
+        { status: failure.status }
+      );
+    }
+
+    if (
+      !isMissingVerifyTrialRpcError(
+        atomicVerificationError
+      )
+    ) {
+      console.error(
+        "[verify-trial] Error RPC atómico:",
+        atomicVerificationError
+      );
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "No se pudo verificar el correo.",
+        },
+        { status: 500 }
+      );
+    }
 
     const { data: business, error: businessError } = await supabase
       .from("businesses")
@@ -66,7 +221,7 @@ export async function POST(request: Request) {
 
     if (businessError) {
       return NextResponse.json(
-        { ok: false, error: businessError.message },
+        { ok: false, error: "No se pudo verificar el correo." },
         { status: 500 }
       );
     }
@@ -103,8 +258,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const incomingHash = hashVerificationCode(code);
-
     if (incomingHash !== business.email_verification_code_hash) {
       return NextResponse.json(
         { ok: false, error: "Código de verificación incorrecto." },
@@ -129,7 +282,7 @@ export async function POST(request: Request) {
 
     if (businessUpdateError) {
       return NextResponse.json(
-        { ok: false, error: businessUpdateError.message },
+        { ok: false, error: "No se pudo activar la prueba." },
         { status: 500 }
       );
     }
@@ -143,7 +296,7 @@ export async function POST(request: Request) {
 
     if (subscriptionReadError) {
       return NextResponse.json(
-        { ok: false, error: subscriptionReadError.message },
+        { ok: false, error: "No se pudo activar la prueba." },
         { status: 500 }
       );
     }
@@ -166,7 +319,7 @@ export async function POST(request: Request) {
 
       if (subscriptionUpdateError) {
         return NextResponse.json(
-          { ok: false, error: subscriptionUpdateError.message },
+          { ok: false, error: "No se pudo activar la prueba." },
           { status: 500 }
         );
       }
@@ -177,7 +330,7 @@ export async function POST(request: Request) {
 
       if (subscriptionInsertError) {
         return NextResponse.json(
-          { ok: false, error: subscriptionInsertError.message },
+          { ok: false, error: "No se pudo activar la prueba." },
           { status: 500 }
         );
       }
