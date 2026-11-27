@@ -337,7 +337,9 @@ console.log(
 
 const existingEmailResult = await supabase
   .from("businesses")
-  .select("id")
+  .select(
+    "id, slug, business_name, plan, status, email_verified_at, signup_source"
+  )
   .eq("commercial_email", commercialEmail)
   .limit(1);
 
@@ -352,20 +354,81 @@ if (existingEmailResult.error) {
   );
 }
 
-if (
-  existingEmailResult.data &&
-  existingEmailResult.data.length > 0
-) {
-  return NextResponse.json(
-    {
-      ok: false,
-      error:
-        "Ya existe un negocio registrado con este correo comercial.",
-    },
-    {
-      status: 409,
-    }
-  );
+const existingBusiness =
+  existingEmailResult.data?.[0] ?? null;
+
+if (existingBusiness) {
+  const canRefreshPendingSignup =
+    !existingBusiness.email_verified_at &&
+    existingBusiness.status === "suspended" &&
+    existingBusiness.signup_source === "landing_trial";
+
+  if (!canRefreshPendingSignup) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "Ya existe un negocio registrado con este correo comercial. Usa la opción Acceder a mi negocio.",
+      },
+      {
+        status: 409,
+      }
+    );
+  }
+
+  stage = "refresh_pending_verification";
+
+  const {
+    data: refreshedBusiness,
+    error: refreshError,
+  } = await supabase
+    .from("businesses")
+    .update({
+      business_name: businessName,
+      owner_name: ownerName,
+      owner_email: commercialEmail,
+      owner_whatsapp: commercialWhatsapp,
+      commercial_whatsapp: commercialWhatsapp,
+      ciudad,
+      provincia,
+      pais,
+      email_verification_code_hash:
+        verificationCodeHash,
+      email_verification_expires_at:
+        verificationExpiresAt.toISOString(),
+    })
+    .eq("id", existingBusiness.id)
+    .select(
+      "id, slug, business_name, plan, status, ciudad, provincia, pais, commercial_email"
+    )
+    .single();
+
+  if (refreshError || !refreshedBusiness) {
+    throw new Error(
+      refreshError?.message ||
+        "No se pudo renovar el código de verificación."
+    );
+  }
+
+  const emailResult = await sendVerificationEmail({
+    to: commercialEmail,
+    businessName,
+    code: verificationCode,
+  });
+
+  return NextResponse.json({
+    ok: true,
+    verification_required: true,
+    business: refreshedBusiness,
+    slug: refreshedBusiness.slug,
+    message:
+      "Te enviamos un nuevo código de verificación al correo registrado.",
+    debug_verification_code:
+      !emailResult.sent &&
+      process.env.NODE_ENV !== "production"
+        ? verificationCode
+        : undefined,
+  });
 }
 
     stage = "insert_business";
