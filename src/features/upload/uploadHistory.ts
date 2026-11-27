@@ -15,12 +15,40 @@ export type UploadHistoryItem = {
   productsCount: number;
   localsCount: number;
   channelsCount: number;
+  periodStart?: string | null;
+  periodEnd?: string | null;
 };
 
 export const UPLOAD_HISTORY_STORAGE_KEY = "jasodatos_upload_history_v1";
 
 function getCleanText(value: unknown) {
   return String(value ?? "").trim();
+}
+
+function toValidDate(value: unknown): Date | null {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  if (typeof value !== "string" && typeof value !== "number") {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getHistoryReferenceDate(item: UploadHistoryItem): Date {
+  const periodDate = item.periodEnd
+    ? new Date(item.periodEnd)
+    : null;
+
+  if (periodDate && !Number.isNaN(periodDate.getTime())) {
+    return periodDate;
+  }
+
+  return new Date(item.uploadedAt);
 }
 
 export function buildUploadHistoryItem(
@@ -36,7 +64,22 @@ export function buildUploadHistoryItem(
   const locals = new Set<string>();
   const channels = new Set<string>();
 
+  let periodStart: Date | null = null;
+  let periodEnd: Date | null = null;
+
   for (const row of processedData.validRows) {
+    const rowDate = toValidDate(row.fecha);
+
+    if (rowDate) {
+      if (!periodStart || rowDate < periodStart) {
+        periodStart = rowDate;
+      }
+
+      if (!periodEnd || rowDate > periodEnd) {
+        periodEnd = rowDate;
+      }
+    }
+
     if (!isCommercialSaleRow(row)) {
       continue;
     }
@@ -67,6 +110,8 @@ export function buildUploadHistoryItem(
     productsCount: products.size,
     localsCount: locals.size,
     channelsCount: channels.size,
+    periodStart: periodStart?.toISOString() ?? null,
+    periodEnd: periodEnd?.toISOString() ?? null,
   };
 }
 
@@ -118,7 +163,7 @@ export function findComparisonReference(
     return previousItems[0] ?? null;
   }
 
-  const currentDate = new Date(current.uploadedAt);
+  const currentDate = getHistoryReferenceDate(current);
 
   if (mode === "day") {
     const targetDate = new Date(currentDate);
@@ -126,7 +171,7 @@ export function findComparisonReference(
 
     return (
       previousItems.find((item) =>
-        isSameDay(new Date(item.uploadedAt), targetDate)
+        isSameDay(getHistoryReferenceDate(item), targetDate)
       ) ?? null
     );
   }
@@ -137,7 +182,7 @@ export function findComparisonReference(
 
     return (
       previousItems.find((item) => {
-        const itemDate = new Date(item.uploadedAt);
+        const itemDate = getHistoryReferenceDate(item);
         return itemDate >= fromDate && itemDate < currentDate;
       }) ?? null
     );
@@ -149,7 +194,7 @@ export function findComparisonReference(
 
     return (
       previousItems.find((item) => {
-        const itemDate = new Date(item.uploadedAt);
+        const itemDate = getHistoryReferenceDate(item);
         return (
           itemDate.getFullYear() === previousMonth.getFullYear() &&
           itemDate.getMonth() === previousMonth.getMonth()
@@ -163,7 +208,7 @@ export function findComparisonReference(
 
   return (
     previousItems.find((item) => {
-      const itemDate = new Date(item.uploadedAt);
+      const itemDate = getHistoryReferenceDate(item);
       return itemDate.getFullYear() === previousYear.getFullYear();
     }) ?? null
   );
