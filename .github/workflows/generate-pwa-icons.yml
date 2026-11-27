@@ -1,0 +1,90 @@
+name: Generate PWA icons
+
+on:
+  push:
+    branches:
+      - audit/hardening-01
+    paths:
+      - .github/workflows/generate-pwa-icons.yml
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout hardening branch
+        uses: actions/checkout@v5
+        with:
+          ref: audit/hardening-01
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Pillow
+        run: python -m pip install --disable-pip-version-check pillow
+
+      - name: Generate brand-preserving icons
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          source = Path("public/brand/jasodatos-logo-negativo.png")
+          logo = Image.open(source).convert("RGBA")
+
+          alpha = logo.getchannel("A")
+          bbox = alpha.getbbox()
+          if bbox:
+              logo = logo.crop(bbox)
+
+          def make_icon(size: int, target: Path):
+              canvas = Image.new("RGBA", (size, size), "#2E0D4F")
+
+              max_width = int(size * 0.82)
+              max_height = int(size * 0.50)
+              scale = min(
+                  max_width / logo.width,
+                  max_height / logo.height,
+              )
+
+              width = max(1, int(logo.width * scale))
+              height = max(1, int(logo.height * scale))
+
+              resized = logo.resize(
+                  (width, height),
+                  Image.Resampling.LANCZOS,
+              )
+
+              x = (size - width) // 2
+              y = (size - height) // 2
+
+              canvas.alpha_composite(resized, (x, y))
+              canvas.convert("RGB").save(
+                  target,
+                  format="PNG",
+                  optimize=True,
+              )
+
+          make_icon(192, Path("public/icon-192.png"))
+          make_icon(512, Path("public/icon-512.png"))
+          make_icon(180, Path("public/apple-touch-icon.png"))
+          PY
+
+      - name: Commit generated icons
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/icon-192.png public/icon-512.png public/apple-touch-icon.png
+
+          if git diff --cached --quiet; then
+            echo "PWA icons already current"
+            exit 0
+          fi
+
+          git commit -m "chore: generate branded PWA icons"
+          git push origin HEAD:audit/hardening-01
