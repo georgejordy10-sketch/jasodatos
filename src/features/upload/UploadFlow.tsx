@@ -66,6 +66,63 @@ function getAnalysisSessionKey(): string {
 function getUploadHistoryStorageKey(): string {
   return `${UPLOAD_HISTORY_STORAGE_KEY}:${getAnalysisSessionKey()}`;
 }
+
+function getCurrentBusinessSlug(): string {
+  const sessionKey = getAnalysisSessionKey();
+
+  if (!sessionKey.startsWith("business:")) {
+    return "";
+  }
+
+  return sessionKey.slice("business:".length).trim();
+}
+
+async function persistUploadHistoryRemotely(
+  item: UploadHistoryItem
+): Promise<void> {
+  const businessSlug = getCurrentBusinessSlug();
+
+  if (!businessSlug) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `/api/businesses/by-slug/${encodeURIComponent(
+        businessSlug
+      )}/upload-history`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: item.fileName,
+          totalRows: item.totalRows,
+          totalSales: item.totalSales,
+          totalUnits: item.totalUnits,
+          productsCount: item.productsCount,
+          localsCount: item.localsCount,
+          channelsCount: item.channelsCount,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => null);
+
+      console.warn(
+        "No se pudo sincronizar el historial de carga con el servidor.",
+        result?.error ?? response.status
+      );
+    }
+  } catch (persistError) {
+    console.warn(
+      "No se pudo sincronizar el historial de carga con el servidor.",
+      persistError
+    );
+  }
+}
   const [file, setFile] = useState<File | null>(null);
   const [hasDataConsent, setHasDataConsent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -566,6 +623,7 @@ if (previousUpload) {
 }
 
 saveUploadHistory(historyItem);
+void persistUploadHistoryRemotely(historyItem);
 
 setActiveUploadView("general");
 
